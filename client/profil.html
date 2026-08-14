@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>WariKo - Mon profil</title>
+
+    <link
+        rel="stylesheet"
+        href="../style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        .profile-header {
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            padding: 22px 20px 34px;
+            border-radius: 0 0 30px 30px;
+            text-align: center;
+        }
+
+        .profile-header .back-button {
+            display: block;
+            text-align: left;
+            color: var(--blanc);
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 84px;
+            height: 84px;
+            margin: 10px auto 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        .profile-header h1 {
+            margin-top: 14px;
+            font-size: 20px;
+        }
+
+        .profile-header p {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .profile-form {
+            padding: 24px 20px;
+        }
+
+        .profile-form label {
+            display: block;
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--gris-texte);
+        }
+
+        .profile-form input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #EEEEEE;
+            background: var(--gris);
+            color: var(--texte);
+            outline: none;
+        }
+
+        .profile-form input:disabled {
+            color: var(--gris-texte);
+            background: #EFEFEF;
+        }
+
+        .save-button {
+            width: 100%;
+            margin-top: 26px;
+            padding: 15px;
+            border-radius: 14px;
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .logout-button {
+            width: 100%;
+            margin-top: 14px;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid #E23744;
+            background: transparent;
+            color: #E23744;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        #status-message {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <header class="profile-header">
+
+            <a href="accueil.html" class="back-button">← Retour</a>
+
+            <div class="avatar" id="avatar-initials">?</div>
+
+            <h1 id="profile-name">Chargement...</h1>
+            <p id="profile-email"></p>
+
+        </header>
+
+
+        <section class="profile-form">
+
+            <form id="profile-form">
+
+                <label for="fullname">Nom complet</label>
+                <input id="fullname" type="text" required>
+
+                <label for="phone">Téléphone</label>
+                <input id="phone" type="tel" required>
+
+                <label for="email">E-mail</label>
+                <input id="email" type="email" disabled>
+
+                <p id="status-message"></p>
+
+                <button type="submit" class="save-button">
+                    Enregistrer les modifications
+                </button>
+
+            </form>
+
+            <button id="logout-btn" class="logout-button">
+                Se déconnecter
+            </button>
+
+        </section>
+
+
+        <nav class="bottom-nav">
+
+            <a href="accueil.html">
+                🏠
+                <span>Accueil</span>
+            </a>
+
+            <a href="#">
+                🔍
+                <span>Recherche</span>
+            </a>
+
+            <a href="#">
+                💬
+                <span>Messages</span>
+            </a>
+
+            <a href="#">
+                📦
+                <span>Commandes</span>
+            </a>
+
+            <a href="profil.html" class="active">
+                👤
+                <span>Profil</span>
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById("profile-form");
+        const statusMessage = document.getElementById("status-message");
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const user = session.user;
+            const fullName = user.user_metadata.full_name || "";
+            const phone = user.user_metadata.phone || "";
+            const email = user.email;
+
+            document.getElementById("fullname").value = fullName;
+            document.getElementById("phone").value = phone;
+            document.getElementById("email").value = email;
+
+            document.getElementById("profile-name").textContent = fullName || "Utilisateur WariKo";
+            document.getElementById("profile-email").textContent = email;
+
+            const initials = fullName
+                ? fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                : "?";
+            document.getElementById("avatar-initials").textContent = initials;
+        })();
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            statusMessage.textContent = "";
+            statusMessage.style.color = "green";
+
+            const fullname = document.getElementById("fullname").value;
+            const phone = document.getElementById("phone").value;
+
+            const { error } = await supabaseClient.auth.updateUser({
+                data: {
+                    full_name: fullname,
+                    phone: phone
+                }
+            });
+
+            if (error) {
+                statusMessage.style.color = "red";
+                statusMessage.textContent = "Erreur : " + error.message;
+            } else {
+                statusMessage.style.color = "green";
+                statusMessage.textContent = "Profil mis à jour ✓";
+
+                document.getElementById("profile-name").textContent = fullname;
+                const initials = fullname
+                    ? fullname.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                    : "?";
+                document.getElementById("avatar-initials").textContent = initials;
+            }
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "connexion.html";
+        });
+    </script>
+
+</body>
+
+</html>

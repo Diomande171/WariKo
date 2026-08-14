@@ -17,38 +17,206 @@
         href="../style.css"
     >
 
-    <style>
-        .welcome-page {
-            background-color: #000000;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 24px;
-        }
-
-        .welcome-text {
-            color: #D4AF37;
-            font-size: 28px;
-            font-weight: bold;
-            line-height: 1.5;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
 
 
 <body>
 
-    <main class="welcome-page">
+    <div class="app">
 
-        <p class="welcome-text">
-            Bonjour 👋<br>
-            Bienvenue sur WariKo !
-        </p>
+        <header class="header">
 
-    </main>
+            <div class="top-bar">
+                <div class="logo">WariKo</div>
+                <div class="notification">🔔</div>
+            </div>
+
+            <div class="location">📍 Abidjan, Côte d'Ivoire</div>
+
+            <h1 id="greeting">Bonjour 👋</h1>
+            <p>Que cherchez-vous aujourd'hui ?</p>
+
+            <div class="search-box">
+                🔍
+                <input
+                    type="text"
+                    placeholder="Rechercher un produit ou service"
+                >
+            </div>
+
+        </header>
+
+
+        <section class="section">
+
+            <div class="section-header">
+                <h2>Catégories</h2>
+                <button>Voir tout</button>
+            </div>
+
+            <div class="categories">
+
+                <div class="category">
+                    <div class="category-icon">📱</div>
+                    <span>Téléphones</span>
+                </div>
+
+                <div class="category">
+                    <div class="category-icon">👗</div>
+                    <span>Mode</span>
+                </div>
+
+                <div class="category">
+                    <div class="category-icon">💻</div>
+                    <span>Électronique</span>
+                </div>
+
+                <div class="category">
+                    <div class="category-icon">🏠</div>
+                    <span>Maison</span>
+                </div>
+
+                <div class="category">
+                    <div class="category-icon">🔧</div>
+                    <span>Travaux</span>
+                </div>
+
+                <div class="category">
+                    <div class="category-icon">💅</div>
+                    <span>Beauté</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="section">
+
+            <div class="service-card">
+
+                <div class="service-icon">🛠️</div>
+
+                <div>
+                    <h3>Besoin d'un prestataire ?</h3>
+                    <p>Plombiers, électriciens, coiffeurs et plus encore.</p>
+                    <span>Trouver un prestataire →</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="section">
+
+            <div class="section-header">
+                <h2>Produits populaires</h2>
+                <button>Voir tout</button>
+            </div>
+
+            <div class="products">
+
+                <div class="product-card">
+                    <div class="product-image">📱</div>
+                    <div class="product-info">
+                        <small>Téléphones</small>
+                        <h3>iPhone 12 - 64Go</h3>
+                        <span class="price">185 000 FCFA</span>
+                        <p>Cocody, Abidjan</p>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">👟</div>
+                    <div class="product-info">
+                        <small>Mode</small>
+                        <h3>Baskets Nike Air</h3>
+                        <span class="price">28 000 FCFA</span>
+                        <p>Yopougon, Abidjan</p>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">💻</div>
+                    <div class="product-info">
+                        <small>Électronique</small>
+                        <h3>Laptop HP EliteBook</h3>
+                        <span class="price">210 000 FCFA</span>
+                        <p>Marcory, Abidjan</p>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-image">🛋️</div>
+                    <div class="product-info">
+                        <small>Maison</small>
+                        <h3>Canapé 3 places</h3>
+                        <span class="price">95 000 FCFA</span>
+                        <p>Cocody, Abidjan</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <nav class="bottom-nav">
+
+            <a href="accueil.html" class="active">
+                🏠
+                <span>Accueil</span>
+            </a>
+
+            <a href="#">
+                🔍
+                <span>Recherche</span>
+            </a>
+
+            <a href="#">
+                💬
+                <span>Messages</span>
+            </a>
+
+            <a href="#">
+                📦
+                <span>Commandes</span>
+            </a>
+
+            <a href="#">
+                👤
+                <span>Profil</span>
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const fullName = session.user.user_metadata.full_name;
+            if (fullName) {
+                const firstName = fullName.split(" ")[0];
+                document.getElementById("greeting").textContent = "Bonjour " + firstName + " 👋";
+            }
+        })();
+    </script>
 
 </body>
 

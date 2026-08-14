@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+
 :root {
     --violet-fonce: #241044;
     --violet: #35156B;
@@ -16,7 +18,7 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', Arial, sans-serif;
     background: var(--gris);
     color: var(--texte);
 }
@@ -42,6 +44,42 @@ button {
 
 
 /* =========================
+   TYPOGRAPHIE / STYLES D'ÉCRITURE
+========================= */
+
+/* Logo WariKo : police élégante, style "signature" */
+.logo,
+.auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* Titres principaux : Poppins gras, moderne */
+h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+}
+
+h2, h3 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* Texte doré accentué (prix, éléments premium) */
+.text-dore {
+    color: var(--dore);
+    font-weight: 700;
+}
+
+/* Texte discret / secondaire */
+.text-muted {
+    color: var(--gris-texte);
+    font-size: 13px;
+}
+
+
+/* =========================
    HEADER
 ========================= */
 
@@ -60,7 +98,6 @@ button {
 
 .logo {
     font-size: 29px;
-    font-weight: 800;
 }
 
 .notification {
@@ -240,6 +277,7 @@ button {
     margin-top: 9px;
     color: var(--dore);
     font-size: 15px;
+    font-weight: 700;
 }
 
 .product-info p {
@@ -349,4 +387,93 @@ button {
 .bottom-nav a.active {
     color: var(--violet-fonce);
     font-weight: bold;
+}
+
+
+/* =========================
+   PAGES CONNEXION / INSCRIPTION
+========================= */
+
+.auth-page {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    margin: auto;
+    background: var(--violet-fonce);
+    color: var(--blanc);
+    padding: 24px 24px 40px;
+}
+
+.back-button {
+    display: inline-block;
+    color: var(--blanc);
+    text-decoration: none;
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.auth-logo {
+    margin-top: 28px;
+    font-size: 32px;
+    color: var(--jaune);
+    text-align: center;
+}
+
+.auth-content {
+    margin-top: 40px;
+}
+
+.auth-content h1 {
+    font-size: 24px;
+}
+
+.auth-content > p {
+    margin-top: 8px;
+    font-size: 14px;
+    opacity: 0.75;
+}
+
+.auth-content form {
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-content label {
+    margin-top: 16px;
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.auth-content input {
+    margin-top: 8px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--blanc);
+    outline: none;
+}
+
+.auth-content input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.forgot-password {
+    margin-top: 12px;
+    align-self: flex-end;
+    color: var(--jaune);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.primary-button {
+    margin-top: 24px;
+    padding: 15px;
+    border-radius: 14px;
+    background: var(--jaune);
+    color: var(--violet-fonce);
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
 }

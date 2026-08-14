@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>WariKo - Inscription</title>
+
+    <link
+        rel="stylesheet"
+        href="../style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+
+<body>
+
+    <main class="auth-page">
+
+        <a
+            href="connexion.html"
+            class="back-button"
+        >
+            ← Retour
+        </a>
+
+
+        <div class="auth-logo">
+            WariKo
+        </div>
+
+
+        <section class="auth-content">
+
+            <h1>
+                Créer un compte 🎉
+            </h1>
+
+            <p>
+                Rejoignez WariKo en quelques secondes.
+            </p>
+
+
+            <form id="signup-form">
+
+                <label for="fullname">
+                    Nom complet
+                </label>
+
+                <input
+                    id="fullname"
+                    type="text"
+                    placeholder="Votre nom complet"
+                    required
+                >
+
+
+                <label for="phone">
+                    Téléphone
+                </label>
+
+                <input
+                    id="phone"
+                    type="tel"
+                    placeholder="Ex : 07 00 00 00 00"
+                    required
+                >
+
+
+                <label for="email">
+                    E-mail
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Votre e-mail"
+                    required
+                >
+
+
+                <label for="password">
+                    Mot de passe
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    placeholder="Choisissez un mot de passe"
+                    required
+                    minlength="6"
+                >
+
+
+                <p id="error-message" style="color: red; display: none;"></p>
+
+                <p id="success-message" style="color: green; display: none;"></p>
+
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    Créer mon compte
+                </button>
+
+            </form>
+
+
+            <div class="auth-divider">
+                <span>OU</span>
+            </div>
+
+
+            <p class="create-text">
+                Vous avez déjà un compte ?
+            </p>
+
+
+            <a
+                href="connexion.html"
+                class="secondary-button"
+            >
+                Se connecter
+            </a>
+
+        </section>
+
+
+        <p class="auth-footer">
+            WariKo protège vos informations personnelles.
+        </p>
+
+    </main>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById("signup-form");
+        const errorMessage = document.getElementById("error-message");
+        const successMessage = document.getElementById("success-message");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            errorMessage.style.display = "none";
+            successMessage.style.display = "none";
+
+            const fullname = document.getElementById("fullname").value;
+            const phone = document.getElementById("phone").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullname,
+                        phone: phone
+                    }
+                }
+            });
+
+            if (error) {
+                errorMessage.textContent = "Erreur : " + error.message;
+                errorMessage.style.display = "block";
+            } else {
+                successMessage.textContent = "Compte créé ! Vous pouvez vous connecter.";
+                successMessage.style.display = "block";
+                form.reset();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

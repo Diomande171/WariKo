@@ -17,6 +17,8 @@
         href="../style.css"
     >
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 
 
@@ -48,16 +50,16 @@
             </p>
 
 
-            <form>
+            <form id="login-form">
 
                 <label for="identifier">
-                    Téléphone ou e-mail
+                    E-mail
                 </label>
 
                 <input
                     id="identifier"
-                    type="text"
-                    placeholder="Téléphone ou e-mail"
+                    type="email"
+                    placeholder="Votre e-mail"
                     required
                 >
 
@@ -80,6 +82,9 @@
                 >
                     Mot de passe oublié ?
                 </a>
+
+
+                <p id="error-message" style="color: red; display: none;"></p>
 
 
                 <button
@@ -117,6 +122,36 @@
         </p>
 
     </main>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById("login-form");
+        const errorMessage = document.getElementById("error-message");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById("identifier").value;
+            const password = document.getElementById("password").value;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                errorMessage.textContent = "Identifiants incorrects. Réessayez.";
+                errorMessage.style.display = "block";
+            } else {
+                window.location.href = "accueil.html";
+            }
+        });
+    </script>
 
 </body>
 

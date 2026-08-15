@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>WariKo - Demande de prestation</title>
+
+    <link
+        rel="stylesheet"
+        href="../style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+        }
+
+        .demande-header {
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            padding: 22px 20px 20px;
+        }
+
+        .demande-header .back-button {
+            display: block;
+            color: var(--blanc);
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 14px;
+        }
+
+        .demande-header h1 {
+            font-size: 20px;
+        }
+
+        .pro-summary {
+            margin: 0 20px 20px;
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .pro-summary .pro-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .pro-summary .pro-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .pro-summary .pro-category {
+            margin-top: 2px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+            font-weight: 600;
+        }
+
+        .demande-form {
+            padding: 0 20px 24px;
+        }
+
+        .demande-form label {
+            display: block;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.85;
+        }
+
+        .demande-form textarea,
+        .demande-form input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: none;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: 600;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .demande-form textarea::placeholder,
+        .demande-form input::placeholder {
+            color: var(--violet-fonce);
+            opacity: 0.55;
+            font-weight: 400;
+        }
+
+        .demande-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .submit-button {
+            width: 100%;
+            margin-top: 8px;
+            padding: 15px;
+            border-radius: 14px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: 800;
+            font-size: 15px;
+            text-align: center;
+            border: none;
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+        }
+
+        #status-message {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+            color: var(--blanc);
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <header class="demande-header">
+            <a href="recherche.html" class="back-button">← Retour</a>
+            <h1>Décris ton besoin</h1>
+        </header>
+
+        <div class="pro-summary">
+            <div class="pro-avatar" id="pro-avatar">?</div>
+            <div>
+                <div class="pro-name" id="pro-name">Professionnel</div>
+                <div class="pro-category" id="pro-category">Catégorie</div>
+            </div>
+        </div>
+
+        <section class="demande-form">
+
+            <form id="demande-form">
+
+                <div class="field-group">
+                    <label for="description">Décris ta demande</label>
+                    <textarea
+                        id="description"
+                        placeholder="Ex : J'ai une fuite d'eau sous l'évier de ma cuisine, disponible ce soir après 18h..."
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="field-group">
+                    <label for="telephone">Ton numéro de téléphone</label>
+                    <input
+                        id="telephone"
+                        type="tel"
+                        placeholder="Ex : 07 00 00 00 00"
+                        required
+                    >
+                </div>
+
+                <p id="status-message"></p>
+
+                <button type="submit" class="submit-button" id="submit-btn">
+                    Envoyer la demande
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <nav class="bottom-nav">
+
+            <a href="accueil.html">
+                🏠
+                <span>Accueil</span>
+            </a>
+
+            <a href="recherche.html" class="active">
+                🔍
+                <span>Recherche</span>
+            </a>
+
+            <a href="#">
+                💬
+                <span>Messages</span>
+            </a>
+
+            <a href="#">
+                📦
+                <span>Commandes</span>
+            </a>
+
+            <a href="profil.html">
+                👤
+                <span>Profil</span>
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Récupère le nom et la catégorie du professionnel depuis l'URL
+        // (ex: demande.html?nom=Koffi%20Aya&categorie=Plomberie)
+        const params = new URLSearchParams(window.location.search);
+        const proNom = params.get("nom") || "Professionnel WariKo";
+        const proCategorie = params.get("categorie") || "Service";
+
+        function initials(name) {
+            return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        }
+
+        document.getElementById("pro-name").textContent = proNom;
+        document.getElementById("pro-category").textContent = proCategorie;
+        document.getElementById("pro-avatar").textContent = initials(proNom);
+
+        const form = document.getElementById("demande-form");
+        const statusMessage = document.getElementById("status-message");
+        const submitBtn = document.getElementById("submit-btn");
+
+        let currentUser = null;
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            currentUser = session.user;
+
+            const savedPhone = currentUser.user_metadata.phone || "";
+            if (savedPhone) {
+                document.getElementById("telephone").value = savedPhone;
+            }
+        })();
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (!currentUser) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "Tu dois être connecté pour envoyer une demande.";
+                return;
+            }
+
+            const description = document.getElementById("description").value.trim();
+            const telephone = document.getElementById("telephone").value.trim();
+
+            if (!description || !telephone) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "Merci de remplir tous les champs.";
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Envoi en cours...";
+            statusMessage.textContent = "";
+
+            const { error } = await supabaseClient
+                .from("demandes")
+                .insert({
+                    client_id: currentUser.id,
+                    client_nom: currentUser.user_metadata.full_name || "",
+                    client_telephone: telephone,
+                    professionnel_nom: proNom,
+                    categorie: proCategorie,
+                    description: description,
+                    statut: "en_attente"
+                });
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Envoyer la demande";
+
+            if (error) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "Erreur : " + error.message;
+            } else {
+                statusMessage.style.color = "#D6FFD6";
+                statusMessage.textContent = "Demande envoyée ✓ Le professionnel va être notifié.";
+                form.reset();
+                setTimeout(() => {
+                    window.location.href = "accueil.html";
+                }, 1800);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

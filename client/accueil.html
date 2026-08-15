@@ -180,6 +180,53 @@
             color: var(--violet-fonce);
         }
 
+        /* --- Marketplace --- */
+        .marketplace-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .marketplace-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .product-card {
+            flex: 0 0 132px;
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 12px;
+            text-decoration: none;
+        }
+
+        .product-card .product-image {
+            width: 100%;
+            height: 72px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .product-card h4 {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            line-height: 1.3;
+        }
+
+        .product-card .product-price {
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
         .steps {
             display: flex;
             flex-direction: column;
@@ -318,6 +365,50 @@
                 </div>
 
             </a>
+
+        </section>
+
+
+        <section class="section">
+
+            <div class="section-header">
+                <h2>Produits populaires</h2>
+                <a href="#">Voir tout</a>
+            </div>
+
+            <div class="marketplace-scroll">
+
+                <a href="#" class="product-card">
+                    <div class="product-image">📱</div>
+                    <h4>iPhone 11 reconditionné</h4>
+                    <div class="product-price">180 000 FCFA</div>
+                </a>
+
+                <a href="#" class="product-card">
+                    <div class="product-image">👟</div>
+                    <h4>Baskets sneakers</h4>
+                    <div class="product-price">15 000 FCFA</div>
+                </a>
+
+                <a href="#" class="product-card">
+                    <div class="product-image">💻</div>
+                    <h4>Ordinateur portable</h4>
+                    <div class="product-price">220 000 FCFA</div>
+                </a>
+
+                <a href="#" class="product-card">
+                    <div class="product-image">🛋️</div>
+                    <h4>Canapé 3 places</h4>
+                    <div class="product-price">95 000 FCFA</div>
+                </a>
+
+                <a href="#" class="product-card">
+                    <div class="product-image">👗</div>
+                    <h4>Robe soirée</h4>
+                    <div class="product-price">12 000 FCFA</div>
+                </a>
+
+            </div>
 
         </section>
 

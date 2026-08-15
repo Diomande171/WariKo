@@ -367,8 +367,9 @@
             filtered.forEach(pro => {
                 const catLabel = CATEGORIES.find(c => c.id === pro.categorie)?.label || pro.categorie;
 
+                const catLabelForLink = catLabel;
                 const card = document.createElement("a");
-                card.href = "#";
+                card.href = `demande.html?nom=${encodeURIComponent(pro.nom)}&categorie=${encodeURIComponent(catLabelForLink)}`;
                 card.className = "pro-card";
                 card.innerHTML = `
                     <div class="pro-avatar">${initials(pro.nom)}</div>

@@ -1,15 +1,237 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WariKo - Espace vendeur</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>WariKo - Espace Vendeur</title>
+
+    <link
+        rel="stylesheet"
+        href="../style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+
+        .header {
+            padding: 22px 20px 18px;
+            color: var(--blanc);
+        }
+
+        .header .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .header h1 {
+            margin-top: 10px;
+            font-size: 20px;
+        }
+
+        .header p {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .section {
+            padding: 10px 20px;
+        }
+
+        .demande-card {
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .demande-card .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demande-card h3 {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .demande-card .badge {
+            flex-shrink: 0;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            white-space: nowrap;
+        }
+
+        .demande-card .categorie-tag {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+        }
+
+        .demande-card p.description {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--violet-fonce);
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .demande-card .infos {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.7;
+        }
+
+        .demande-card .actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .demande-card button {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .btn-accepter {
+            background: var(--violet-fonce);
+            color: var(--jaune);
+        }
+
+        .btn-refuser {
+            background: var(--blanc);
+            color: var(--violet-fonce);
+        }
+
+        .empty {
+            color: var(--blanc);
+            opacity: 0.6;
+            text-align: center;
+            padding: 50px 20px;
+            font-size: 13px;
+        }
+    </style>
+
 </head>
+
 
 <body>
 
-    <h1>WariKo</h1>
-    <p>Espace vendeur</p>
+    <div class="app">
+
+        <header class="header">
+            <div class="logo">WariKo Pro</div>
+            <h1>Mes demandes</h1>
+            <p>Toutes les demandes clients en un coup d'œil</p>
+        </header>
+
+        <section class="section" id="liste-demandes">
+            <p class="empty">Chargement...</p>
+        </section>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const container = document.getElementById("liste-demandes");
+
+        function badgeLabel(statut) {
+            if (statut === "acceptee") return "Acceptée";
+            if (statut === "refusee") return "Refusée";
+            return "En attente";
+        }
+
+        async function chargerDemandes() {
+            const { data, error } = await supabaseClient
+                .from("demandes")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                container.innerHTML = '<p class="empty">Erreur : ' + error.message + '</p>';
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p class="empty">Aucune demande pour le moment</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(function (d) {
+                const enAttente = !d.statut || d.statut === "en_attente";
+                return `
+                    <div class="demande-card">
+                        <div class="top-row">
+                            <h3>${d.client_nom || "Client"}</h3>
+                            <span class="badge">${badgeLabel(d.statut)}</span>
+                        </div>
+                        <span class="categorie-tag">📂 ${d.categorie || "-"}</span>
+                        <p class="description">${d.description || ""}</p>
+                        <div class="infos">📞 ${d.client_telephone || "-"}</div>
+                        ${enAttente ? `
+                        <div class="actions">
+                            <button class="btn-accepter" onclick="mettreAJourStatut('${d.id}', 'acceptee')">Accepter</button>
+                            <button class="btn-refuser" onclick="mettreAJourStatut('${d.id}', 'refusee')">Refuser</button>
+                        </div>` : ""}
+                    </div>
+                `;
+            }).join("");
+        }
+
+        async function mettreAJourStatut(id, statut) {
+            const { error } = await supabaseClient
+                .from("demandes")
+                .update({ statut: statut })
+                .eq("id", id);
+
+            if (error) {
+                alert("Erreur : " + error.message);
+                return;
+            }
+            chargerDemandes();
+        }
+
+        chargerDemandes();
+    </script>
 
 </body>
+
 </html>

@@ -19,6 +19,207 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 22px 20px 26px;
+            color: var(--blanc);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .top-bar .notification {
+            font-size: 18px;
+        }
+
+        .location {
+            margin-top: 14px;
+            font-size: 12px;
+            opacity: 0.75;
+        }
+
+        .header h1 {
+            margin-top: 10px;
+            font-size: 22px;
+        }
+
+        .header p {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .search-box {
+            margin-top: 18px;
+            background: var(--jaune);
+            border-radius: 14px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 14px;
+            color: var(--violet-fonce);
+            font-weight: 600;
+            background: transparent;
+            pointer-events: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--violet-fonce);
+            opacity: 0.65;
+        }
+
+        .section {
+            padding: 6px 20px 22px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 16px;
+            color: var(--blanc);
+        }
+
+        .section-header a {
+            font-size: 12px;
+            color: var(--jaune);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .category {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 14px 6px;
+            text-decoration: none;
+        }
+
+        .category .category-icon {
+            font-size: 22px;
+        }
+
+        .category span {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+            text-align: center;
+        }
+
+        .service-card {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            background: var(--jaune);
+            border-radius: 18px;
+            padding: 18px;
+            text-decoration: none;
+        }
+
+        .service-card .service-icon {
+            font-size: 30px;
+        }
+
+        .service-card h3 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .service-card p {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.8;
+        }
+
+        .service-card .cta {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .step {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 14px 16px;
+        }
+
+        .step .step-number {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: 800;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .step p {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.9;
+        }
+
+        .bottom-nav {
+            background: var(--violet-fonce);
+        }
+    </style>
+
 </head>
 
 
@@ -36,15 +237,16 @@
             <div class="location">📍 Abidjan, Côte d'Ivoire</div>
 
             <h1 id="greeting">Bonjour 👋</h1>
-            <p>Que cherchez-vous aujourd'hui ?</p>
+            <p>Quel service cherches-tu aujourd'hui ?</p>
 
-            <div class="search-box">
+            <a href="recherche.html" class="search-box">
                 🔍
                 <input
                     type="text"
-                    placeholder="Rechercher un produit ou service"
+                    placeholder="Rechercher un service ou un professionnel"
+                    disabled
                 >
-            </div>
+            </a>
 
         </header>
 
@@ -53,40 +255,50 @@
 
             <div class="section-header">
                 <h2>Catégories</h2>
-                <button>Voir tout</button>
+                <a href="recherche.html">Voir tout</a>
             </div>
 
             <div class="categories">
 
-                <div class="category">
-                    <div class="category-icon">📱</div>
-                    <span>Téléphones</span>
-                </div>
-
-                <div class="category">
-                    <div class="category-icon">👗</div>
-                    <span>Mode</span>
-                </div>
-
-                <div class="category">
-                    <div class="category-icon">💻</div>
-                    <span>Électronique</span>
-                </div>
-
-                <div class="category">
-                    <div class="category-icon">🏠</div>
-                    <span>Maison</span>
-                </div>
-
-                <div class="category">
+                <a href="recherche.html?categorie=plomberie" class="category">
                     <div class="category-icon">🔧</div>
-                    <span>Travaux</span>
-                </div>
+                    <span>Plomberie</span>
+                </a>
 
-                <div class="category">
-                    <div class="category-icon">💅</div>
-                    <span>Beauté</span>
-                </div>
+                <a href="recherche.html?categorie=electricite" class="category">
+                    <div class="category-icon">💡</div>
+                    <span>Électricité</span>
+                </a>
+
+                <a href="recherche.html?categorie=menage" class="category">
+                    <div class="category-icon">🧹</div>
+                    <span>Ménage</span>
+                </a>
+
+                <a href="recherche.html?categorie=coiffure" class="category">
+                    <div class="category-icon">💇</div>
+                    <span>Coiffure</span>
+                </a>
+
+                <a href="recherche.html?categorie=peinture" class="category">
+                    <div class="category-icon">🎨</div>
+                    <span>Peinture</span>
+                </a>
+
+                <a href="recherche.html?categorie=demenagement" class="category">
+                    <div class="category-icon">🚚</div>
+                    <span>Déménagement</span>
+                </a>
+
+                <a href="recherche.html?categorie=electromenager" class="category">
+                    <div class="category-icon">🔌</div>
+                    <span>Électroménager</span>
+                </a>
+
+                <a href="recherche.html?categorie=jardinage" class="category">
+                    <div class="category-icon">🌿</div>
+                    <span>Jardinage</span>
+                </a>
 
             </div>
 
@@ -95,17 +307,17 @@
 
         <section class="section">
 
-            <div class="service-card">
+            <a href="recherche.html" class="service-card">
 
                 <div class="service-icon">🛠️</div>
 
                 <div>
                     <h3>Besoin d'un prestataire ?</h3>
-                    <p>Plombiers, électriciens, coiffeurs et plus encore.</p>
-                    <span>Trouver un prestataire →</span>
+                    <p>Plombiers, électriciens, coiffeurs et plus encore, près de chez toi.</p>
+                    <span class="cta">Trouver un prestataire →</span>
                 </div>
 
-            </div>
+            </a>
 
         </section>
 
@@ -113,50 +325,24 @@
         <section class="section">
 
             <div class="section-header">
-                <h2>Produits populaires</h2>
-                <button>Voir tout</button>
+                <h2>Comment ça marche</h2>
             </div>
 
-            <div class="products">
+            <div class="steps">
 
-                <div class="product-card">
-                    <div class="product-image">📱</div>
-                    <div class="product-info">
-                        <small>Téléphones</small>
-                        <h3>iPhone 12 - 64Go</h3>
-                        <span class="price">185 000 FCFA</span>
-                        <p>Cocody, Abidjan</p>
-                    </div>
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <p>Choisis une catégorie et trouve un professionnel près de toi.</p>
                 </div>
 
-                <div class="product-card">
-                    <div class="product-image">👟</div>
-                    <div class="product-info">
-                        <small>Mode</small>
-                        <h3>Baskets Nike Air</h3>
-                        <span class="price">28 000 FCFA</span>
-                        <p>Yopougon, Abidjan</p>
-                    </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <p>Décris ton besoin et envoie ta demande directement depuis l'app.</p>
                 </div>
 
-                <div class="product-card">
-                    <div class="product-image">💻</div>
-                    <div class="product-info">
-                        <small>Électronique</small>
-                        <h3>Laptop HP EliteBook</h3>
-                        <span class="price">210 000 FCFA</span>
-                        <p>Marcory, Abidjan</p>
-                    </div>
-                </div>
-
-                <div class="product-card">
-                    <div class="product-image">🛋️</div>
-                    <div class="product-info">
-                        <small>Maison</small>
-                        <h3>Canapé 3 places</h3>
-                        <span class="price">95 000 FCFA</span>
-                        <p>Cocody, Abidjan</p>
-                    </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <p>Le professionnel intervient, puis tu payes via Wave, Orange Money, MTN ou Moov Money.</p>
                 </div>
 
             </div>
@@ -171,7 +357,7 @@
                 <span>Accueil</span>
             </a>
 
-            <a href="#">
+            <a href="recherche.html">
                 🔍
                 <span>Recherche</span>
             </a>
@@ -186,7 +372,7 @@
                 <span>Commandes</span>
             </a>
 
-            <a href="#">
+            <a href="profil.html">
                 👤
                 <span>Profil</span>
             </a>

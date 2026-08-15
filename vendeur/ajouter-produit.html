@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo Pro - Ajouter un produit</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 40px;
+        }
+
+        .top-logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        h1 {
+            color: var(--blanc);
+            font-size: 22px;
+            margin-top: 14px;
+        }
+
+        p.subtitle {
+            color: var(--blanc);
+            opacity: 0.75;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 22px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            color: var(--jaune);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        input, textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            border-radius: 12px;
+            padding: 13px 14px;
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--blanc);
+            color: var(--violet-fonce);
+            font-weight: 600;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .error-msg {
+            background: rgba(255, 80, 80, 0.15);
+            color: #ff8080;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: none;
+        }
+
+        button[type="submit"] {
+            margin-top: 8px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 18px;
+            color: var(--jaune);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="top-logo">WariKo Pro</div>
+
+        <a href="mes-produits.html" class="back-link">← Mes produits</a>
+
+        <h1>Ajouter un produit</h1>
+        <p class="subtitle">Renseigne les informations de l'article que tu veux vendre</p>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <form id="produitForm">
+
+            <div>
+                <label>Nom du produit</label>
+                <input type="text" id="nom" placeholder="Ex : iPhone 11 reconditionné" required>
+            </div>
+
+            <div>
+                <label>Prix (FCFA)</label>
+                <input type="number" id="prix" placeholder="Ex : 180000" min="0" required>
+            </div>
+
+            <div>
+                <label>Description</label>
+                <textarea id="description" placeholder="État, détails, garantie..."></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">Publier le produit</button>
+
+        </form>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const errorMsg = document.getElementById("errorMsg");
+        const submitBtn = document.getElementById("submitBtn");
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = "block";
+        }
+
+        let boutiqueId = null;
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const { data: boutique, error } = await supabaseClient
+                .from("boutiques")
+                .select("id")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+
+            if (error || !boutique) {
+                showError("Tu dois d'abord créer ta boutique avant d'ajouter un produit.");
+                submitBtn.disabled = true;
+                return;
+            }
+
+            boutiqueId = boutique.id;
+        })();
+
+        document.getElementById("produitForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorMsg.style.display = "none";
+
+            if (!boutiqueId) {
+                showError("Boutique introuvable. Réessaie plus tard.");
+                return;
+            }
+
+            const nom = document.getElementById("nom").value.trim();
+            const prix = parseFloat(document.getElementById("prix").value);
+            const description = document.getElementById("description").value.trim();
+
+            if (!nom || isNaN(prix) || prix < 0) {
+                showError("Merci de remplir le nom et un prix valide.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Publication...";
+
+            const { error } = await supabaseClient
+                .from("produits")
+                .insert({
+                    boutique_id: boutiqueId,
+                    nom: nom,
+                    prix: prix,
+                    description: description,
+                    statut: "disponible"
+                });
+
+            if (error) {
+                showError("Erreur : " + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Publier le produit";
+                return;
+            }
+
+            window.location.href = "mes-produits.html";
+        });
+    </script>
+
+</body>
+
+</html>

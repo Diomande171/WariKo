@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo Pro - Mes produits</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 40px;
+        }
+
+        .top-logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+        }
+
+        h1 {
+            color: var(--blanc);
+            font-size: 22px;
+        }
+
+        .add-btn {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        p.subtitle {
+            color: var(--blanc);
+            opacity: 0.75;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 22px;
+        }
+
+        .empty-state {
+            color: var(--blanc);
+            opacity: 0.7;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .produit-card {
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .produit-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .produit-nom {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .produit-prix {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            white-space: nowrap;
+        }
+
+        .produit-desc {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.8;
+        }
+
+        .produit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .statut-select {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: inherit;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+        }
+
+        .produit-actions button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .btn-supprimer {
+            background: var(--blanc);
+            color: #c0392b;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 4px;
+            color: var(--jaune);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <div class="top-logo">WariKo Pro</div>
+        <a href="index.html" class="back-link">← Mes demandes</a>
+
+        <div class="header-row">
+            <h1>Mes produits</h1>
+            <a href="ajouter-produit.html" class="add-btn">+ Ajouter</a>
+        </div>
+
+        <p class="subtitle">Gère les articles en vente dans ta boutique</p>
+
+        <div id="produitsList"></div>
+        <div class="empty-state" id="emptyState" style="display:none;">
+            Aucun produit pour l'instant. Ajoute ton premier article !
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const produitsList = document.getElementById("produitsList");
+        const emptyState = document.getElementById("emptyState");
+
+        function formatPrix(prix) {
+            return Number(prix).toLocaleString("fr-FR") + " FCFA";
+        }
+
+        function renderProduits(produits) {
+            produitsList.innerHTML = "";
+
+            if (produits.length === 0) {
+                emptyState.style.display = "block";
+                return;
+            }
+
+            emptyState.style.display = "none";
+
+            produits.forEach((p) => {
+                const card = document.createElement("div");
+                card.className = "produit-card";
+
+                const statut = p.statut || "disponible";
+
+                card.innerHTML = `
+                    <div class="produit-top">
+                        <div class="produit-nom">${p.nom}</div>
+                        <div class="produit-prix">${formatPrix(p.prix)}</div>
+                    </div>
+                    ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
+                    <div class="produit-actions">
+                        <select class="statut-select" data-id="${p.id}" data-action="statut">
+                            <option value="disponible" ${statut === "disponible" ? "selected" : ""}>Disponible</option>
+                            <option value="epuise" ${statut === "epuise" ? "selected" : ""}>Épuisé</option>
+                            <option value="vendu" ${statut === "vendu" ? "selected" : ""}>Vendu</option>
+                        </select>
+                        <button class="btn-supprimer" data-id="${p.id}" data-action="delete">
+                            Supprimer
+                        </button>
+                    </div>
+                `;
+
+                produitsList.appendChild(card);
+            });
+        }
+
+        async function loadProduits(boutiqueId) {
+            const { data, error } = await supabaseClient
+                .from("produits")
+                .select("*")
+                .eq("boutique_id", boutiqueId)
+                .order("id", { ascending: false });
+
+            if (error) {
+                produitsList.innerHTML = `<div class="empty-state">Erreur de chargement : ${error.message}</div>`;
+                return;
+            }
+
+            renderProduits(data);
+        }
+
+        let currentBoutiqueId = null;
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const { data: boutique, error } = await supabaseClient
+                .from("boutiques")
+                .select("id")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+
+            if (error || !boutique) {
+                produitsList.innerHTML = "";
+                emptyState.style.display = "block";
+                emptyState.textContent = "Tu dois d'abord créer ta boutique.";
+                return;
+            }
+
+            currentBoutiqueId = boutique.id;
+            loadProduits(currentBoutiqueId);
+        })();
+
+        produitsList.addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-action='delete']");
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+            if (!confirm("Supprimer ce produit ?")) return;
+
+            const { error } = await supabaseClient.from("produits").delete().eq("id", id);
+            if (error) {
+                alert("Erreur : " + error.message);
+                return;
+            }
+            loadProduits(currentBoutiqueId);
+        });
+
+        produitsList.addEventListener("change", async (e) => {
+            const select = e.target.closest("select[data-action='statut']");
+            if (!select) return;
+
+            const id = select.dataset.id;
+            const nouveauStatut = select.value;
+
+            const { error } = await supabaseClient
+                .from("produits")
+                .update({ statut: nouveauStatut })
+                .eq("id", id);
+
+            if (error) {
+                alert("Erreur : " + error.message);
+                loadProduits(currentBoutiqueId);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

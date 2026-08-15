@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Boutique</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        .header {
+            padding: 22px 20px 18px;
+            color: var(--blanc);
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.75;
+            text-decoration: none;
+        }
+
+        .boutique-header {
+            margin-top: 16px;
+            background: var(--jaune);
+            border-radius: 18px;
+            padding: 20px;
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .boutique-header h1 {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .categorie-tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .badge {
+            flex-shrink: 0;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            white-space: nowrap;
+        }
+
+        .description {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--violet-fonce);
+            opacity: 0.85;
+            line-height: 1.4;
+        }
+
+        .contact-btn {
+            margin-top: 16px;
+            display: block;
+            width: 100%;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: inherit;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .section {
+            padding: 20px 20px 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--blanc);
+            margin-bottom: 12px;
+        }
+
+        .produit-card {
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .produit-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .produit-nom {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .produit-prix {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            white-space: nowrap;
+        }
+
+        .produit-desc {
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.8;
+        }
+
+        .produit-statut {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            background: rgba(255, 255, 255, 0.4);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .produit-statut.epuise, .produit-statut.vendu {
+            opacity: 0.6;
+        }
+
+        .empty {
+            color: var(--blanc);
+            opacity: 0.6;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 13px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="marketplace.html" class="back-link">← Marketplace</a>
+
+            <div class="boutique-header" id="boutiqueHeader">
+                <p class="empty" style="padding:0;">Chargement...</p>
+            </div>
+        </header>
+
+        <section class="section">
+            <div class="section-title">Produits</div>
+            <div id="listeProduits">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const categorieLabels = {
+            telephones: "Téléphones",
+            mode: "Mode",
+            electronique: "Électronique",
+            maison: "Maison",
+            autre: "Autre"
+        };
+
+        const statutLabels = {
+            disponible: "Disponible",
+            epuise: "Épuisé",
+            vendu: "Vendu"
+        };
+
+        function formatPrix(prix) {
+            return Number(prix).toLocaleString("fr-FR") + " FCFA";
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const boutiqueId = params.get("id");
+
+        const boutiqueHeader = document.getElementById("boutiqueHeader");
+        const listeProduits = document.getElementById("listeProduits");
+
+        async function chargerBoutique() {
+            if (!boutiqueId) {
+                boutiqueHeader.innerHTML = '<p class="empty" style="padding:0;">Boutique introuvable</p>';
+                listeProduits.innerHTML = "";
+                return;
+            }
+
+            const { data: boutique, error } = await supabaseClient
+                .from("boutiques_publiques")
+                .select("*")
+                .eq("id", boutiqueId)
+                .maybeSingle();
+
+            if (error || !boutique) {
+                boutiqueHeader.innerHTML = '<p class="empty" style="padding:0;">Boutique introuvable</p>';
+                listeProduits.innerHTML = "";
+                return;
+            }
+
+            boutiqueHeader.innerHTML = `
+                <div class="top-row">
+                    <div>
+                        <h1>${boutique.nom_boutique}</h1>
+                        <span class="categorie-tag">${categorieLabels[boutique.categorie] || boutique.categorie || ""}</span>
+                    </div>
+                    <span class="badge">Ouverte</span>
+                </div>
+                ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
+                <a href="../client/messagerie.html?boutique=${boutique.id}" class="contact-btn">💬 Contacter le vendeur</a>
+            `;
+
+            chargerProduits(boutique.id);
+        }
+
+        async function chargerProduits(id) {
+            const { data, error } = await supabaseClient
+                .from("produits")
+                .select("*")
+                .eq("boutique_id", id)
+                .order("id", { ascending: false });
+
+            if (error) {
+                listeProduits.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listeProduits.innerHTML = '<p class="empty">Aucun produit pour l\'instant</p>';
+                return;
+            }
+
+            listeProduits.innerHTML = data.map((p) => {
+                const statut = p.statut || "disponible";
+                return `
+                    <div class="produit-card">
+                        <div class="produit-top">
+                            <div class="produit-nom">${p.nom}</div>
+                            <div class="produit-prix">${formatPrix(p.prix)}</div>
+                        </div>
+                        ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
+                        <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        chargerBoutique();
+    </script>
+
+</body>
+
+</html>

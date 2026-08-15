@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>WariKo - Recherche</title>
+
+    <link
+        rel="stylesheet"
+        href="../style.css"
+    >
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+        }
+
+        .search-header {
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            padding: 22px 20px 26px;
+        }
+
+        .search-header .back-button {
+            display: block;
+            color: var(--blanc);
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 14px;
+        }
+
+        .search-header h1 {
+            font-size: 20px;
+        }
+
+        .search-header p {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .search-box {
+            margin-top: 18px;
+            background: var(--jaune);
+            border-radius: 14px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 14px;
+            color: var(--violet-fonce);
+            font-weight: 600;
+            background: transparent;
+        }
+
+        .search-box input::placeholder {
+            color: var(--violet-fonce);
+            opacity: 0.65;
+        }
+
+        .section-title {
+            padding: 22px 20px 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--blanc);
+        }
+
+        .categories-scroll {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px 4px;
+            overflow-x: auto;
+        }
+
+        .category-chip {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: var(--jaune);
+            border: 2px solid transparent;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            font-weight: 600;
+            min-width: 74px;
+            cursor: pointer;
+        }
+
+        .category-chip .icon {
+            font-size: 22px;
+        }
+
+        .category-chip.active {
+            background: var(--jaune);
+            border-color: var(--blanc);
+            color: var(--violet-fonce);
+            font-weight: 800;
+        }
+
+        .pro-list {
+            padding: 6px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .pro-card {
+            display: flex;
+            gap: 14px;
+            background: var(--jaune);
+            border: none;
+            border-radius: 16px;
+            padding: 14px;
+            text-decoration: none;
+            color: var(--violet-fonce);
+        }
+
+        .pro-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .pro-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pro-info .name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pro-info .pro-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .pro-info .pro-rating {
+            font-size: 12px;
+            color: var(--violet-fonce);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pro-info .pro-category {
+            margin-top: 2px;
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+            font-weight: 600;
+        }
+
+        .pro-info .pro-meta {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pro-info .pro-location {
+            font-size: 12px;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+            font-weight: 600;
+        }
+
+        .pro-info .pro-price {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--blanc);
+            opacity: 0.75;
+            font-size: 14px;
+        }
+
+        .bottom-nav {
+            background: var(--violet-fonce);
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <header class="search-header">
+
+            <a href="accueil.html" class="back-button">← Retour</a>
+
+            <h1>Trouver un professionnel</h1>
+            <p>Choisis une catégorie et découvre les prestataires près de toi</p>
+
+            <div class="search-box">
+                🔍
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Rechercher un service ou un nom..."
+                >
+            </div>
+
+        </header>
+
+
+        <h2 class="section-title">Catégories</h2>
+
+        <div class="categories-scroll" id="categories-scroll"></div>
+
+
+        <h2 class="section-title" id="results-title">Professionnels disponibles</h2>
+
+        <div class="pro-list" id="pro-list"></div>
+
+
+        <nav class="bottom-nav">
+
+            <a href="accueil.html">
+                🏠
+                <span>Accueil</span>
+            </a>
+
+            <a href="recherche.html" class="active">
+                🔍
+                <span>Recherche</span>
+            </a>
+
+            <a href="#">
+                💬
+                <span>Messages</span>
+            </a>
+
+            <a href="#">
+                📦
+                <span>Commandes</span>
+            </a>
+
+            <a href="profil.html">
+                👤
+                <span>Profil</span>
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <script>
+        // Données de démonstration (mock).
+        // À remplacer plus tard par un fetch Supabase sur une table "professionnels".
+        const CATEGORIES = [
+            { id: "plomberie", label: "Plomberie", icon: "🔧" },
+            { id: "electricite", label: "Électricité", icon: "💡" },
+            { id: "menage", label: "Ménage", icon: "🧹" },
+            { id: "coiffure", label: "Coiffure", icon: "💇" },
+            { id: "peinture", label: "Peinture", icon: "🎨" },
+            { id: "demenagement", label: "Déménagement", icon: "🚚" },
+            { id: "electromenager", label: "Électroménager", icon: "🔌" },
+            { id: "jardinage", label: "Jardinage", icon: "🌿" },
+        ];
+
+        const PROFESSIONNELS = [
+            { nom: "Koffi Aya", categorie: "plomberie", ville: "Cocody", tarif: "5 000 F / interv.", note: 4.8 },
+            { nom: "Bamba Souleymane", categorie: "plomberie", ville: "Yopougon", tarif: "4 500 F / interv.", note: 4.6 },
+            { nom: "Traoré Fatou", categorie: "electricite", ville: "Marcory", tarif: "6 000 F / interv.", note: 4.9 },
+            { nom: "Diaby Ibrahim", categorie: "electricite", ville: "Abobo", tarif: "5 500 F / interv.", note: 4.5 },
+            { nom: "Coulibaly Awa", categorie: "menage", ville: "Cocody", tarif: "3 000 F / heure", note: 4.7 },
+            { nom: "N'Guessan Marie", categorie: "menage", ville: "Plateau", tarif: "3 500 F / heure", note: 4.9 },
+            { nom: "Ouattara Aïcha", categorie: "coiffure", ville: "Yopougon", tarif: "2 000 F / prest.", note: 4.6 },
+            { nom: "Kouadio Jean", categorie: "peinture", ville: "Bingerville", tarif: "8 000 F / pièce", note: 4.4 },
+            { nom: "Sanogo Moussa", categorie: "demenagement", ville: "Abobo", tarif: "15 000 F / trajet", note: 4.7 },
+            { nom: "Yao Grace", categorie: "electromenager", ville: "Marcory", tarif: "4 000 F / interv.", note: 4.8 },
+            { nom: "Kone Salif", categorie: "jardinage", ville: "Cocody", tarif: "3 500 F / heure", note: 4.5 },
+        ];
+
+        let activeCategory = null;
+        let searchTerm = "";
+
+        const categoriesScroll = document.getElementById("categories-scroll");
+        const proList = document.getElementById("pro-list");
+        const resultsTitle = document.getElementById("results-title");
+        const searchInput = document.getElementById("search-input");
+
+        function initials(name) {
+            return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        }
+
+        function renderCategories() {
+            categoriesScroll.innerHTML = "";
+
+            CATEGORIES.forEach(cat => {
+                const chip = document.createElement("div");
+                chip.className = "category-chip" + (activeCategory === cat.id ? " active" : "");
+                chip.innerHTML = `<span class="icon">${cat.icon}</span><span>${cat.label}</span>`;
+                chip.addEventListener("click", () => {
+                    activeCategory = (activeCategory === cat.id) ? null : cat.id;
+                    renderCategories();
+                    renderProList();
+                });
+                categoriesScroll.appendChild(chip);
+            });
+        }
+
+        function renderProList() {
+            const term = searchTerm.trim().toLowerCase();
+
+            const filtered = PROFESSIONNELS.filter(pro => {
+                const matchCategory = !activeCategory || pro.categorie === activeCategory;
+                const matchTerm = !term
+                    || pro.nom.toLowerCase().includes(term)
+                    || pro.categorie.toLowerCase().includes(term)
+                    || pro.ville.toLowerCase().includes(term);
+                return matchCategory && matchTerm;
+            });
+
+            resultsTitle.textContent = activeCategory
+                ? `${CATEGORIES.find(c => c.id === activeCategory).label} près de toi`
+                : "Professionnels disponibles";
+
+            proList.innerHTML = "";
+
+            if (filtered.length === 0) {
+                proList.innerHTML = `<div class="empty-state">Aucun professionnel trouvé pour cette recherche.</div>`;
+                return;
+            }
+
+            filtered.forEach(pro => {
+                const catLabel = CATEGORIES.find(c => c.id === pro.categorie)?.label || pro.categorie;
+
+                const card = document.createElement("a");
+                card.href = "#";
+                card.className = "pro-card";
+                card.innerHTML = `
+                    <div class="pro-avatar">${initials(pro.nom)}</div>
+                    <div class="pro-info">
+                        <div class="name-row">
+                            <span class="pro-name">${pro.nom}</span>
+                            <span class="pro-rating">⭐ ${pro.note}</span>
+                        </div>
+                        <div class="pro-category">${catLabel}</div>
+                        <div class="pro-meta">
+                            <span class="pro-location">📍 ${pro.ville}</span>
+                            <span class="pro-price">${pro.tarif}</span>
+                        </div>
+                    </div>
+                `;
+                proList.appendChild(card);
+            });
+        }
+
+        searchInput.addEventListener("input", (e) => {
+            searchTerm = e.target.value;
+            renderProList();
+        });
+
+        renderCategories();
+        renderProList();
+    </script>
+
+</body>
+
+</html>

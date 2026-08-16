@@ -212,4 +212,92 @@
             return Number(prix).toLocaleString("fr-FR") + " FCFA";
         }
 
-        
+        const params = new URLSearchParams(window.location.search);
+        const boutiqueId = params.get("id");
+
+        const boutiqueHeader = document.getElementById("boutiqueHeader");
+        const listeProduits = document.getElementById("listeProduits");
+
+        async function chargerBoutique() {
+            if (!boutiqueId) {
+                boutiqueHeader.innerHTML = '<p class="empty" style="padding:0;">Boutique introuvable</p>';
+                listeProduits.innerHTML = "";
+                return;
+            }
+
+            try {
+                const { data: boutique, error } = await supabaseClient
+                    .from("boutiques_publiques")
+                    .select("*")
+                    .eq("id", boutiqueId)
+                    .maybeSingle();
+
+                if (error) {
+                    boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Erreur : ${error.message}</p>`;
+                    listeProduits.innerHTML = "";
+                    return;
+                }
+
+                if (!boutique) {
+                    boutiqueHeader.innerHTML = '<p class="empty" style="padding:0;">Boutique introuvable</p>';
+                    listeProduits.innerHTML = "";
+                    return;
+                }
+
+                boutiqueHeader.innerHTML = `
+                    <div class="top-row">
+                        <div>
+                            <h1>${boutique.nom_boutique}</h1>
+                            <span class="categorie-tag">${categorieLabels[boutique.categorie] || boutique.categorie || ""}</span>
+                        </div>
+                        <span class="badge">Ouverte</span>
+                    </div>
+                    ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
+                    <a href="messagerie.html?boutique=${boutique.id}" class="contact-btn">💬 Contacter le vendeur</a>
+                `;
+
+                chargerProduits(boutique.id);
+            } catch (e) {
+                boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Exception : ${e.message}</p>`;
+                listeProduits.innerHTML = "";
+            }
+        }
+
+        async function chargerProduits(id) {
+            const { data, error } = await supabaseClient
+                .from("produits")
+                .select("*")
+                .eq("boutique_id", id)
+                .order("id", { ascending: false });
+
+            if (error) {
+                listeProduits.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listeProduits.innerHTML = '<p class="empty">Aucun produit pour l\'instant</p>';
+                return;
+            }
+
+            listeProduits.innerHTML = data.map((p) => {
+                const statut = p.statut || "disponible";
+                return `
+                    <div class="produit-card">
+                        <div class="produit-top">
+                            <div class="produit-nom">${p.nom}</div>
+                            <div class="produit-prix">${formatPrix(p.prix)}</div>
+                        </div>
+                        ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
+                        <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        chargerBoutique();
+    </script>
+
+</body>
+
+</html>

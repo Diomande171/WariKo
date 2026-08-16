@@ -11,9 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body {
-            background: var(--violet-fonce);
-        }
+        body { background: var(--violet-fonce); }
 
         .app {
             background: var(--violet-fonce);
@@ -80,6 +78,11 @@
             font-size: 13px;
         }
 
+        .empty a {
+            color: var(--jaune);
+            font-weight: 700;
+        }
+
         .zone-envoi {
             display: flex;
             gap: 10px;
@@ -98,9 +101,7 @@
             color: var(--texte);
         }
 
-        .zone-envoi input::placeholder {
-            color: var(--gris-texte);
-        }
+        .zone-envoi input::placeholder { color: var(--gris-texte); }
 
         .zone-envoi button {
             background: var(--jaune);
@@ -129,7 +130,7 @@
             <p class="empty">Chargement des messages...</p>
         </div>
 
-        <form class="zone-envoi" id="formEnvoi">
+        <form class="zone-envoi" id="formEnvoi" style="display:none;">
             <input type="text" id="inputMessage" placeholder="Écrire un message..." autocomplete="off" required>
             <button type="submit">Envoyer</button>
         </form>
@@ -143,6 +144,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const boutiqueId = params.get("boutique");
+        const clientParam = params.get("client");
 
         const chatZone = document.getElementById("chatZone");
         const titreConversation = document.getElementById("titreConversation");
@@ -152,6 +154,7 @@
         let userId = null;
         let vendeurId = null;
         let clientId = null;
+        let estVendeur = false;
 
         async function init() {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -181,20 +184,27 @@
                 return;
             }
 
-            titreConversation.textContent = boutique.nom_boutique;
             vendeurId = boutique.user_id;
 
-            // Si je suis le vendeur, le client est l'autre personne dans la conversation.
-            // Pour le prototype (client → vendeur), je suis toujours le client ici.
-            clientId = userId;
-
             if (userId === vendeurId) {
-                titreConversation.textContent = "Vous ne pouvez pas discuter avec vous-même";
-                chatZone.innerHTML = '<p class="empty">Ceci est votre propre boutique</p>';
-                formEnvoi.style.display = "none";
-                return;
+                // Je suis le vendeur : je dois savoir avec quel client je discute
+                estVendeur = true;
+
+                if (!clientParam) {
+                    titreConversation.textContent = "Sélectionnez une conversation";
+                    chatZone.innerHTML = '<p class="empty">Ouvrez cette page depuis <a href="../vendeur/messages.html">vos messages vendeur</a></p>';
+                    return;
+                }
+
+                clientId = clientParam;
+                titreConversation.textContent = boutique.nom_boutique + " · Conversation client";
+            } else {
+                // Je suis le client
+                clientId = userId;
+                titreConversation.textContent = boutique.nom_boutique;
             }
 
+            formEnvoi.style.display = "flex";
             chargerMessages();
             ecouterNouveauxMessages();
         }

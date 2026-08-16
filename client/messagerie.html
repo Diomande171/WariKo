@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Messagerie</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 18px 20px;
+            color: var(--blanc);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.75;
+            text-decoration: none;
+        }
+
+        .header h1 {
+            font-size: 17px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .chat-zone {
+            flex: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bulle {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .bulle.moi {
+            align-self: flex-end;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border-bottom-right-radius: 4px;
+        }
+
+        .bulle.autre {
+            align-self: flex-start;
+            background: var(--gris);
+            color: var(--texte);
+            border-bottom-left-radius: 4px;
+        }
+
+        .empty {
+            color: var(--blanc);
+            opacity: 0.6;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 13px;
+        }
+
+        .zone-envoi {
+            display: flex;
+            gap: 10px;
+            padding: 14px 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .zone-envoi input {
+            flex: 1;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--gris);
+            color: var(--texte);
+        }
+
+        .zone-envoi input::placeholder {
+            color: var(--gris-texte);
+        }
+
+        .zone-envoi button {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 20px;
+            padding: 0 20px;
+            font-weight: 800;
+            font-size: 13px;
+            font-family: inherit;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="marketplace.html" class="back-link">← Retour</a>
+            <h1 id="titreConversation">Chargement...</h1>
+        </header>
+
+        <div class="chat-zone" id="chatZone">
+            <p class="empty">Chargement des messages...</p>
+        </div>
+
+        <form class="zone-envoi" id="formEnvoi">
+            <input type="text" id="inputMessage" placeholder="Écrire un message..." autocomplete="off" required>
+            <button type="submit">Envoyer</button>
+        </form>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const params = new URLSearchParams(window.location.search);
+        const boutiqueId = params.get("boutique");
+
+        const chatZone = document.getElementById("chatZone");
+        const titreConversation = document.getElementById("titreConversation");
+        const formEnvoi = document.getElementById("formEnvoi");
+        const inputMessage = document.getElementById("inputMessage");
+
+        let userId = null;
+        let vendeurId = null;
+        let clientId = null;
+
+        async function init() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            if (!user) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            userId = user.id;
+
+            if (!boutiqueId) {
+                titreConversation.textContent = "Conversation introuvable";
+                chatZone.innerHTML = '<p class="empty">Aucune boutique sélectionnée</p>';
+                return;
+            }
+
+            const { data: boutique, error } = await supabaseClient
+                .from("boutiques_publiques")
+                .select("*")
+                .eq("id", boutiqueId)
+                .maybeSingle();
+
+            if (error || !boutique) {
+                titreConversation.textContent = "Boutique introuvable";
+                chatZone.innerHTML = '<p class="empty">Cette boutique n\'existe pas</p>';
+                return;
+            }
+
+            titreConversation.textContent = boutique.nom_boutique;
+            vendeurId = boutique.user_id;
+
+            // Si je suis le vendeur, le client est l'autre personne dans la conversation.
+            // Pour le prototype (client → vendeur), je suis toujours le client ici.
+            clientId = userId;
+
+            if (userId === vendeurId) {
+                titreConversation.textContent = "Vous ne pouvez pas discuter avec vous-même";
+                chatZone.innerHTML = '<p class="empty">Ceci est votre propre boutique</p>';
+                formEnvoi.style.display = "none";
+                return;
+            }
+
+            chargerMessages();
+            ecouterNouveauxMessages();
+        }
+
+        async function chargerMessages() {
+            const { data, error } = await supabaseClient
+                .from("messages")
+                .select("*")
+                .eq("boutique_id", boutiqueId)
+                .eq("client_id", clientId)
+                .order("created_at", { ascending: true });
+
+            if (error) {
+                chatZone.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                chatZone.innerHTML = '<p class="empty">Aucun message pour l\'instant. Dites bonjour !</p>';
+                return;
+            }
+
+            chatZone.innerHTML = "";
+            data.forEach(afficherMessage);
+            chatZone.scrollTop = chatZone.scrollHeight;
+        }
+
+        function afficherMessage(msg) {
+            const bulle = document.createElement("div");
+            bulle.className = "bulle " + (msg.expediteur_id === userId ? "moi" : "autre");
+            bulle.textContent = msg.contenu;
+            chatZone.appendChild(bulle);
+        }
+
+        function ecouterNouveauxMessages() {
+            supabaseClient
+                .channel("messages-" + boutiqueId + "-" + clientId)
+                .on("postgres_changes", {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                    filter: `boutique_id=eq.${boutiqueId}`
+                }, (payload) => {
+                    if (payload.new.client_id === clientId) {
+                        if (chatZone.querySelector(".empty")) {
+                            chatZone.innerHTML = "";
+                        }
+                        afficherMessage(payload.new);
+                        chatZone.scrollTop = chatZone.scrollHeight;
+                    }
+                })
+                .subscribe();
+        }
+
+        formEnvoi.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const contenu = inputMessage.value.trim();
+            if (!contenu) return;
+
+            const { error } = await supabaseClient
+                .from("messages")
+                .insert({
+                    boutique_id: boutiqueId,
+                    client_id: clientId,
+                    vendeur_id: vendeurId,
+                    expediteur_id: userId,
+                    contenu: contenu
+                });
+
+            if (error) {
+                alert("Erreur lors de l'envoi : " + error.message);
+                return;
+            }
+
+            inputMessage.value = "";
+        });
+
+        init();
+    </script>
+
+</body>
+
+</html>

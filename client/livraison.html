@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demander une livraison - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:20px 16px 40px; }
+  h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin-bottom:4px; }
+  p.sous-titre { font-size:13px; opacity:0.8; margin-bottom:20px; }
+  label { display:block; font-size:13px; margin:16px 0 6px; color:var(--jaune); }
+  input, textarea { width:100%; padding:12px 14px; border-radius:10px; border:none; background:rgba(255,255,255,0.08); color:var(--blanc); font-size:14px; box-sizing:border-box; font-family:inherit; }
+  textarea { resize:none; height:70px; }
+  .carte-estimation { background:rgba(255,255,255,0.06); border-radius:12px; padding:14px; margin-top:20px; text-align:center; }
+  .carte-estimation .valeur { font-size:22px; font-weight:bold; color:var(--jaune); }
+  .carte-estimation .label { font-size:12px; opacity:0.7; }
+  button { width:100%; margin-top:24px; padding:14px; border:none; border-radius:12px; background:var(--jaune); color:var(--violet-fonce); font-weight:bold; font-size:15px; }
+  button:disabled { opacity:0.5; }
+  .statut { margin-top:12px; font-size:13px; text-align:center; }
+  .err { color:#ff8080; }
+</style>
+</head>
+<body>
+
+<h1>Demander une livraison</h1>
+<p class="sous-titre">Ta position sera utilisée pour estimer la distance et le temps de livraison.</p>
+
+<div id="contenu">Localisation en cours...</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const params = new URLSearchParams(window.location.search);
+const boutiqueId = params.get('boutique');
+let positionClient = null;
+let boutique = null;
+
+// Calcul de distance à vol d'oiseau (formule de Haversine)
+function calculerDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // rayon de la Terre en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = 'connexion.html';
+    return;
+  }
+
+  if (!boutiqueId) {
+    document.getElementById('contenu').innerHTML = '<p class="err">Boutique introuvable.</p>';
+    return;
+  }
+
+  const { data: b } = await supabase
+    .from('boutiques')
+    .select('id, nom_boutique, lat, lng')
+    .eq('id', boutiqueId)
+    .single();
+
+  boutique = b;
+
+  if (!boutique) {
+    document.getElementById('contenu').innerHTML = '<p class="err">Boutique introuvable.</p>';
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    document.getElementById('contenu').innerHTML = '<p class="err">Géolocalisation non disponible sur cet appareil.</p>';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition((position) => {
+    positionClient = { lat: position.coords.latitude, lng: position.coords.longitude };
+    afficherFormulaire();
+  }, () => {
+    document.getElementById('contenu').innerHTML = '<p class="err">Localisation refusée. Active-la dans Réglages > Safari > Position pour continuer.</p>';
+  });
+}
+
+function afficherFormulaire() {
+  let estimationHTML = '';
+
+  if (boutique.lat && boutique.lng) {
+    const distance = calculerDistance(positionClient.lat, positionClient.lng, boutique.lat, boutique.lng);
+    const tempsMin = Math.max(10, Math.round((distance / 25) * 60)); // vitesse moyenne moto 25km/h, min 10 min
+    estimationHTML = `
+      <div class="carte-estimation">
+        <div class="valeur">${distance.toFixed(1)} km</div>
+        <div class="label">≈ ${tempsMin} minutes estimées</div>
+      </div>
+    `;
+  } else {
+    estimationHTML = `<p style="font-size:12px;opacity:0.7;margin-top:16px;">⚠️ Ce vendeur n'a pas encore activé sa position — le temps de livraison ne peut pas être estimé pour l'instant.</p>`;
+  }
+
+  document.getElementById('contenu').innerHTML = `
+    <h2 style="font-size:15px;color:var(--jaune);margin-top:0;">${boutique.nom_boutique}</h2>
+    ${estimationHTML}
+
+    <label>Adresse de livraison</label>
+    <textarea id="adresse" placeholder="Ex: Cocody Angré, 8ème tranche, près de la pharmacie..."></textarea>
+
+    <label>Notes pour le livreur (optionnel)</label>
+    <input type="text" id="notes" placeholder="Ex: Appeler en arrivant">
+
+    <button id="btn-envoyer" onclick="envoyerDemande()">Demander une livraison</button>
+    <p class="statut" id="statut"></p>
+  `;
+}
+
+async function envoyerDemande() {
+  const adresse = document.getElementById('adresse').value.trim();
+  const notes = document.getElementById('notes').value.trim();
+  const statut = document.getElementById('statut');
+  const bouton = document.getElementById('btn-envoyer');
+
+  if (!adresse) {
+    statut.textContent = 'Merci de préciser une adresse de livraison.';
+    statut.className = 'statut err';
+    return;
+  }
+
+  bouton.disabled = true;
+  bouton.textContent = 'Envoi en cours...';
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let distance_km = null, temps_estime_min = null;
+  if (boutique.lat && boutique.lng) {
+    distance_km = calculerDistance(positionClient.lat, positionClient.lng, boutique.lat, boutique.lng);
+    temps_estime_min = Math.max(10, Math.round((distance_km / 25) * 60));
+  }
+
+  const { data: livraison, error } = await supabase.from('livraisons').insert({
+    boutique_id: boutiqueId,
+    client_id: user.id,
+    adresse_client: adresse + (notes ? ' — Note: ' + notes : ''),
+    adresse_lat: positionClient.lat,
+    adresse_lng: positionClient.lng,
+    boutique_lat: boutique.lat,
+    boutique_lng: boutique.lng,
+    distance_km,
+    temps_estime_min,
+    statut: 'en_attente'
+  }).select().single();
+
+  if (error) {
+    statut.textContent = 'Erreur : ' + error.message;
+    statut.className = 'statut err';
+    bouton.disabled = false;
+    bouton.textContent = 'Demander une livraison';
+    return;
+  }
+
+  statut.textContent = '✅ Demande envoyée ! Un livreur va bientôt l\'accepter.';
+  statut.className = 'statut';
+  bouton.textContent = 'Demande envoyée';
+}
+
+init();
+</script>
+</body>
+</html>

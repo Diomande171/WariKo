@@ -254,6 +254,7 @@
                     </div>
                     ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
                     <a href="messagerie.html?boutique=${boutique.id}" class="contact-btn">💬 Contacter le vendeur</a>
+                    <a href="livraison.html?boutique=${boutique.id}" class="contact-btn" style="margin-top:8px; background:var(--jaune); color:var(--violet-fonce);">🛵 Demander une livraison</a>
                 `;
 
                 chargerProduits(boutique.id);

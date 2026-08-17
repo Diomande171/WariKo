@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position de ma boutique - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:20px 16px 40px; }
+  h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin-bottom:8px; }
+  p { font-size:13px; opacity:0.8; margin-bottom:24px; }
+  button { width:100%; padding:14px; border:none; border-radius:12px; background:var(--jaune); color:var(--violet-fonce); font-weight:bold; font-size:15px; }
+  .statut { margin-top:16px; font-size:13px; text-align:center; }
+  .ok { color:#8fd98f; }
+  .err { color:#ff8080; }
+</style>
+</head>
+<body>
+
+<h1>Position de ma boutique</h1>
+<p>Active ta position actuelle pour permettre aux clients de commander une livraison avec un temps estimé précis.</p>
+
+<button onclick="definirPosition()">📍 Utiliser ma position actuelle</button>
+<p class="statut" id="statut"></p>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+async function definirPosition() {
+  const statut = document.getElementById('statut');
+  statut.textContent = 'Localisation en cours...';
+  statut.className = 'statut';
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    statut.textContent = "La géolocalisation n'est pas disponible sur cet appareil.";
+    statut.className = 'statut err';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
+    const { error } = await supabase
+      .from('boutiques')
+      .update({ lat, lng })
+      .eq('user_id', user.id);
+
+    if (error) {
+      statut.textContent = "Erreur : " + error.message;
+      statut.className = 'statut err';
+    } else {
+      statut.textContent = "✅ Position enregistrée avec succès !";
+      statut.className = 'statut ok';
+    }
+  }, (err) => {
+    statut.textContent = "Impossible d'obtenir ta position. Vérifie que la localisation est autorisée pour Safari dans les Réglages.";
+    statut.className = 'statut err';
+  });
+}
+</script>
+</body>
+</html>

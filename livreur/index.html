@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord livreur - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 40px; }
+  h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin:0 0 4px; }
+  .statut-bloc { display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.06); border-radius:12px; padding:14px; margin:16px 0; }
+  .statut-bloc span { font-size:14px; }
+  .toggle { background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:bold; }
+  .toggle.occupe { background:rgba(255,255,255,0.15); color:var(--blanc); }
+  h2 { font-size:15px; color:var(--jaune); margin:24px 0 10px; }
+  .carte-livraison { background:rgba(255,255,255,0.06); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .carte-livraison h3 { margin:0 0 6px; font-size:14px; }
+  .carte-livraison p { margin:2px 0; font-size:12px; opacity:0.8; }
+  .badge { display:inline-block; font-size:11px; padding:3px 8px; border-radius:8px; margin-top:6px; }
+  .badge.attente { background:rgba(255,193,7,0.2); color:var(--jaune); }
+  .badge.acceptee { background:rgba(76,175,80,0.2); color:#8fd98f; }
+  .badge.encours { background:rgba(33,150,243,0.2); color:#8fc8f5; }
+  .actions { display:flex; gap:8px; margin-top:10px; }
+  .actions button, .actions a { flex:1; padding:9px; border-radius:8px; border:none; font-size:12px; text-align:center; text-decoration:none; }
+  .btn-accepter { background:var(--jaune); color:var(--violet-fonce); font-weight:bold; }
+  .btn-progresser { background:rgba(255,255,255,0.12); color:var(--blanc); }
+  .btn-contacter { background:rgba(255,255,255,0.08); color:var(--jaune); border:1px solid var(--jaune); }
+  .vide { text-align:center; opacity:0.5; font-size:13px; padding:20px; }
+</style>
+</head>
+<body>
+
+<h1>Tableau de bord livreur</h1>
+<div id="contenu">Chargement...</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let monLivreur = null;
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data: livreur } = await supabase
+    .from('livreurs')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!livreur) {
+    window.location.href = 'inscription.html';
+    return;
+  }
+
+  monLivreur = livreur;
+  await afficherTableauDeBord();
+}
+
+async function afficherTableauDeBord() {
+  const contenu = document.getElementById('contenu');
+
+  const { data: disponibles } = await supabase
+    .from('livraisons')
+    .select('*, boutiques(nom_boutique)')
+    .eq('statut', 'en_attente')
+    .order('created_at', { ascending: true });
+
+  const { data: mesLivraisons } = await supabase
+    .from('livraisons')
+    .select('*, boutiques(nom_boutique)')
+    .eq('livreur_id', monLivreur.id)
+    .in('statut', ['acceptee', 'en_cours'])
+    .order('created_at', { ascending: true });
+
+  contenu.innerHTML = `
+    <div class="statut-bloc">
+      <span>Statut : <strong>${monLivreur.statut === 'disponible' ? '🟢 Disponible' : '⚪ Occupé'}</strong></span>
+      <button class="toggle ${monLivreur.statut !== 'disponible' ? 'occupe' : ''}" onclick="basculerStatut()">
+        ${monLivreur.statut === 'disponible' ? 'Passer occupé' : 'Passer disponible'}
+      </button>
+    </div>
+
+    <h2>Livraisons en attente</h2>
+    <div id="liste-attente">
+      ${disponibles && disponibles.length > 0 ? disponibles.map(carteAttente).join('') : '<p class="vide">Aucune livraison en attente pour le moment.</p>'}
+    </div>
+
+    <h2>Mes livraisons en cours</h2>
+    <div id="liste-mes-livraisons">
+      ${mesLivraisons && mesLivraisons.length > 0 ? mesLivraisons.map(carteEnCours).join('') : '<p class="vide">Aucune livraison en cours.</p>'}
+    </div>
+  `;
+}
+
+function carteAttente(l) {
+  const distance = l.distance_km ? `${l.distance_km.toFixed(1)} km` : 'Distance inconnue';
+  const temps = l.temps_estime_min ? `${l.temps_estime_min} min estimées` : '';
+  return `
+    <div class="carte-livraison">
+      <h3>${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}</h3>
+      <p>📍 ${l.adresse_client || 'Adresse non précisée'}</p>
+      <p>${distance} ${temps ? '· ' + temps : ''}</p>
+      <span class="badge attente">En attente</span>
+      <div class="actions">
+        <button class="btn-accepter" onclick="accepterLivraison('${l.id}')">Accepter</button>
+      </div>
+    </div>
+  `;
+}
+
+function carteEnCours(l) {
+  const badgeClasse = l.statut === 'acceptee' ? 'acceptee' : 'encours';
+  const badgeTexte = l.statut === 'acceptee' ? 'Acceptée' : 'En cours';
+  const prochainStatut = l.statut === 'acceptee' ? 'en_cours' : 'livree';
+  const texteBouton = l.statut === 'acceptee' ? 'Démarrer la livraison' : 'Marquer comme livrée';
+  return `
+    <div class="carte-livraison">
+      <h3>${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}</h3>
+      <p>📍 ${l.adresse_client || 'Adresse non précisée'}</p>
+      <span class="badge ${badgeClasse}">${badgeTexte}</span>
+      <div class="actions">
+        <button class="btn-progresser" onclick="changerStatut('${l.id}','${prochainStatut}')">${texteBouton}</button>
+        <a class="btn-contacter" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id}">Contacter</a>
+      </div>
+    </div>
+  `;
+}
+
+async function basculerStatut() {
+  const nouveauStatut = monLivreur.statut === 'disponible' ? 'occupe' : 'disponible';
+  const { error } = await supabase.from('livreurs').update({ statut: nouveauStatut }).eq('id', monLivreur.id);
+  if (!error) {
+    monLivreur.statut = nouveauStatut;
+    await afficherTableauDeBord();
+  }
+}
+
+async function accepterLivraison(livraisonId) {
+  const { error } = await supabase
+    .from('livraisons')
+    .update({ livreur_id: monLivreur.id, statut: 'acceptee' })
+    .eq('id', livraisonId)
+    .eq('statut', 'en_attente');
+
+  if (error) {
+    alert('Cette livraison a peut-être déjà été prise par un autre livreur.');
+  }
+  await afficherTableauDeBord();
+}
+
+async function changerStatut(livraisonId, nouveauStatut) {
+  const { error } = await supabase.from('livraisons').update({ statut: nouveauStatut }).eq('id', livraisonId);
+  if (error) {
+    alert('Erreur : ' + error.message);
+  }
+  await afficherTableauDeBord();
+}
+
+init();
+</script>
+</body>
+</html>

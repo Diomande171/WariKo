@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galerie de ma boutique - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 40px; }
+  h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin:0 0 4px; }
+  p.info { font-size:12px; opacity:0.75; margin-bottom:16px; }
+  .compteur { background:rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:16px; text-align:center; }
+  .compteur.alerte { background:rgba(255,193,7,0.15); color:var(--jaune); }
+  .btn-ajouter { width:100%; padding:14px; border:none; border-radius:12px; background:var(--jaune); color:var(--violet-fonce); font-weight:bold; font-size:15px; margin-bottom:20px; }
+  .btn-ajouter:disabled { opacity:0.4; }
+  .grille { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .carte-photo { background:rgba(255,255,255,0.06); border-radius:12px; overflow:hidden; }
+  .carte-photo img { width:100%; height:110px; object-fit:cover; display:block; }
+  .carte-photo .infos { padding:8px 10px; }
+  .carte-photo .prix { font-size:13px; font-weight:bold; color:var(--jaune); }
+  .carte-photo .legende { font-size:11px; opacity:0.7; margin-top:2px; }
+  .carte-photo button { width:100%; margin-top:6px; background:rgba(255,80,80,0.15); color:#ff8080; border:none; border-radius:6px; padding:6px; font-size:11px; }
+  .vide { text-align:center; opacity:0.6; padding:20px; font-size:13px; grid-column: span 2; }
+</style>
+</head>
+<body>
+
+<h1>Galerie de ma boutique</h1>
+<p class="info">Ajoute des photos de tes appareils avec leur prix, ou tes travaux réalisés si tu es prestataire. Minimum 2 photos, maximum 20.</p>
+
+<div class="compteur" id="compteur">Chargement...</div>
+
+<button class="btn-ajouter" id="btn-ajouter" onclick="document.getElementById('fichier-photo').click()">📷 Ajouter une photo</button>
+<input type="file" id="fichier-photo" accept="image/*" capture="environment" style="display:none;" onchange="ajouterPhoto()">
+
+<div class="grille" id="grille">Chargement...</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let maBoutique = null;
+let mesPhotos = [];
+let suppressionsAujourdhui = 0;
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { window.location.href = '../client/connexion.html'; return; }
+
+  const { data: boutique } = await supabase
+    .from('boutiques')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!boutique) {
+    document.getElementById('grille').innerHTML = '<p class="vide">Aucune boutique trouvée. Crée d\'abord ta boutique.</p>';
+    return;
+  }
+
+  maBoutique = boutique;
+  await chargerGalerie();
+}
+
+async function chargerGalerie() {
+  const { data: photos } = await supabase
+    .from('galerie_boutique')
+    .select('*')
+    .eq('boutique_id', maBoutique.id)
+    .order('created_at', { ascending: false });
+
+  mesPhotos = photos || [];
+
+  const aujourdhui = new Date().toISOString().split('T')[0];
+  const { data: suppressionRow } = await supabase
+    .from('galerie_suppressions')
+    .select('*')
+    .eq('boutique_id', maBoutique.id)
+    .eq('jour', aujourdhui)
+    .maybeSingle();
+
+  suppressionsAujourdhui = suppressionRow ? suppressionRow.compteur : 0;
+
+  afficherCompteur();
+  afficherGrille();
+}
+
+function afficherCompteur() {
+  const compteur = document.getElementById('compteur');
+  const n = mesPhotos.length;
+  const btnAjouter = document.getElementById('btn-ajouter');
+
+  if (n < 2) {
+    compteur.className = 'compteur alerte';
+    compteur.textContent = `${n}/20 photos — ajoute au moins ${2 - n} photo(s) de plus (minimum 2)`;
+  } else if (n >= 20) {
+    compteur.className = 'compteur alerte';
+    compteur.textContent = `20/20 photos (maximum atteint) — ${3 - suppressionsAujourdhui} remplacement(s) possible(s) aujourd'hui`;
+  } else {
+    compteur.className = 'compteur';
+    compteur.textContent = `${n}/20 photos`;
+  }
+
+  btnAjouter.disabled = (n >= 20 && suppressionsAujourdhui >= 3);
+  btnAjouter.textContent = (n >= 20) ? '📷 Remplacer une photo (supprime-en une d\'abord)' : '📷 Ajouter une photo';
+}
+
+function afficherGrille() {
+  const grille = document.getElementById('grille');
+  if (mesPhotos.length === 0) {
+    grille.innerHTML = '<p class="vide">Aucune photo pour l\'instant.</p>';
+    return;
+  }
+
+  grille.innerHTML = mesPhotos.map(p => `
+    <div class="carte-photo">
+      <img src="${p.photo_url}" alt="photo">
+      <div class="infos">
+        ${p.prix ? `<div class="prix">${Number(p.prix).toLocaleString('fr-FR')} FCFA</div>` : ''}
+        ${p.legende ? `<div class="legende">${escapeHTML(p.legende)}</div>` : ''}
+        <button onclick="supprimerPhoto('${p.id}')">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function ajouterPhoto() {
+  const input = document.getElementById('fichier-photo');
+  const fichier = input.files[0];
+  if (!fichier) return;
+
+  if (mesPhotos.length >= 20) {
+    alert('Tu es déjà à 20 photos. Supprime-en une d\'abord pour la remplacer.');
+    input.value = '';
+    return;
+  }
+
+  const prix = prompt('Prix en FCFA (laisse vide si pas concerné) :');
+  const legende = prompt('Légende / description courte (optionnel) :') || '';
+
+  const chemin = `${maBoutique.id}/${Date.now()}_${fichier.name}`;
+  const { error: uploadError } = await supabase.storage.from('galerie-boutique').upload(chemin, fichier);
+
+  if (uploadError) {
+    alert('Erreur upload : ' + uploadError.message);
+    input.value = '';
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('galerie-boutique').getPublicUrl(chemin);
+
+  const { error } = await supabase.from('galerie_boutique').insert({
+    boutique_id: maBoutique.id,
+    photo_url: urlData.publicUrl,
+    prix: prix ? Number(prix) : null,
+    legende
+  });
+
+  input.value = '';
+
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  await chargerGalerie();
+}
+
+async function supprimerPhoto(photoId) {
+  if (mesPhotos.length <= 2) {
+    alert('Impossible : tu dois garder au minimum 2 photos dans ta galerie.');
+    return;
+  }
+
+  if (mesPhotos.length >= 20 && suppressionsAujourdhui >= 3) {
+    alert('Limite atteinte : maximum 3 suppressions/remplacements par jour quand la galerie est à 20 photos. Réessaie demain.');
+    return;
+  }
+
+  if (!confirm('Supprimer cette photo ?')) return;
+
+  const etaitPleine = mesPhotos.length >= 20;
+
+  const { error } = await supabase.from('galerie_boutique').delete().eq('id', photoId);
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  if (etaitPleine) {
+    const aujourdhui = new Date().toISOString().split('T')[0];
+    const { data: existant } = await supabase
+      .from('galerie_suppressions')
+      .select('*')
+      .eq('boutique_id', maBoutique.id)
+      .eq('jour', aujourdhui)
+      .maybeSingle();
+
+    if (existant) {
+      await supabase.from('galerie_suppressions').update({ compteur: existant.compteur + 1 }).eq('id', existant.id);
+    } else {
+      await supabase.from('galerie_suppressions').insert({ boutique_id: maBoutique.id, jour: aujourdhui, compteur: 1 });
+    }
+  }
+
+  await chargerGalerie();
+}
+
+init();
+</script>
+</body>
+</html>

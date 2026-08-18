@@ -1,290 +1,291 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WariKo - Messagerie</title>
-
-    <link rel="stylesheet" href="../style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        body { background: var(--violet-fonce); }
-
-        .app {
-            background: var(--violet-fonce);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            padding: 18px 20px;
-            color: var(--blanc);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .back-link {
-            font-size: 13px;
-            color: var(--blanc);
-            opacity: 0.75;
-            text-decoration: none;
-        }
-
-        .header h1 {
-            font-size: 17px;
-            font-weight: 800;
-            margin-top: 8px;
-        }
-
-        .chat-zone {
-            flex: 1;
-            padding: 16px 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .bulle {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 14px;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .bulle.moi {
-            align-self: flex-end;
-            background: var(--jaune);
-            color: var(--violet-fonce);
-            border-bottom-right-radius: 4px;
-        }
-
-        .bulle.autre {
-            align-self: flex-start;
-            background: var(--gris);
-            color: var(--texte);
-            border-bottom-left-radius: 4px;
-        }
-
-        .empty {
-            color: var(--blanc);
-            opacity: 0.6;
-            text-align: center;
-            padding: 30px 20px;
-            font-size: 13px;
-        }
-
-        .empty a {
-            color: var(--jaune);
-            font-weight: 700;
-        }
-
-        .zone-envoi {
-            display: flex;
-            gap: 10px;
-            padding: 14px 16px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .zone-envoi input {
-            flex: 1;
-            border: none;
-            border-radius: 20px;
-            padding: 12px 16px;
-            font-size: 13px;
-            font-family: inherit;
-            background: var(--gris);
-            color: var(--texte);
-        }
-
-        .zone-envoi input::placeholder { color: var(--gris-texte); }
-
-        .zone-envoi button {
-            background: var(--jaune);
-            color: var(--violet-fonce);
-            border: none;
-            border-radius: 20px;
-            padding: 0 20px;
-            font-weight: 800;
-            font-size: 13px;
-            font-family: inherit;
-        }
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messagerie - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width: 430px; margin: 0 auto; background: var(--violet-fonce); color: var(--blanc); font-family: 'Poppins', sans-serif; padding-bottom: 80px; }
+  .header-chat { display:flex; align-items:center; gap:10px; padding:16px; background: var(--violet-fonce); border-bottom:1px solid rgba(255,255,255,0.1); position:sticky; top:0; z-index:10; }
+  .header-chat a { color: var(--jaune); text-decoration:none; font-size:22px; }
+  .header-chat h2 { font-family:'Playfair Display', serif; font-size:18px; margin:0; }
+  .avertissement { background: rgba(255,193,7,0.15); color: var(--jaune); font-size:12px; padding:10px 16px; text-align:center; }
+  #messages { padding:16px; display:flex; flex-direction:column; gap:10px; min-height:60vh; }
+  .bulle { max-width:75%; padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.4; }
+  .bulle.moi { align-self:flex-end; background: var(--jaune); color: var(--violet-fonce); border-bottom-right-radius:4px; }
+  .bulle.autre { align-self:flex-start; background: rgba(255,255,255,0.08); color: var(--blanc); border-bottom-left-radius:4px; }
+  .bulle img, .bulle video { max-width:100%; border-radius:10px; display:block; margin-bottom:4px; }
+  .heure { font-size:10px; opacity:0.6; margin-top:4px; display:block; }
+  .zone-saisie { position:fixed; bottom:0; left:0; right:0; max-width:430px; margin:0 auto; background: var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); padding:10px 12px; display:flex; gap:8px; align-items:center; }
+  .zone-saisie input[type="text"] { flex:1; border:none; border-radius:20px; padding:12px 16px; background: rgba(255,255,255,0.08); color: var(--blanc); font-size:14px; }
+  .zone-saisie input::placeholder { color: rgba(255,255,255,0.5); }
+  .zone-saisie button { background: var(--jaune); color: var(--violet-fonce); border:none; border-radius:50%; width:44px; height:44px; font-size:18px; font-weight:bold; flex-shrink:0; }
+  .btn-media { background: rgba(255,255,255,0.1); color: var(--jaune); border:none; border-radius:50%; width:44px; height:44px; font-size:18px; flex-shrink:0; }
+  .conv-item { display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); text-decoration:none; color: var(--blanc); }
+  .conv-avatar { width:44px; height:44px; border-radius:50%; background: var(--jaune); color: var(--violet-fonce); display:flex; align-items:center; justify-content:center; font-weight:bold; }
+  .conv-info h4 { margin:0; font-size:14px; }
+  .conv-info p { margin:2px 0 0; font-size:12px; opacity:0.7; }
+  .vide { text-align:center; padding:40px 20px; opacity:0.6; font-size:14px; }
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; max-width:430px; margin:0 auto; background: var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:10px 0; }
+  .bottom-nav a { color: rgba(255,255,255,0.6); text-decoration:none; font-size:11px; text-align:center; }
+  .bottom-nav a.actif { color: var(--jaune); }
+  .envoi-cours { text-align:center; font-size:12px; opacity:0.6; padding:6px; }
+</style>
 </head>
-
 <body>
 
-    <div class="app">
+<div class="header-chat">
+  <a href="javascript:history.back()">←</a>
+  <h2 id="titre-chat">Messages</h2>
+</div>
 
-        <header class="header">
-            <a href="marketplace.html" class="back-link">← Retour</a>
-            <h1 id="titreConversation">Chargement...</h1>
-        </header>
+<div id="contenu"></div>
 
-        <div class="chat-zone" id="chatZone">
-            <p class="empty">Chargement des messages...</p>
-        </div>
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        <form class="zone-envoi" id="formEnvoi" style="display:none;">
-            <input type="text" id="inputMessage" placeholder="Écrire un message..." autocomplete="off" required>
-            <button type="submit">Envoyer</button>
-        </form>
+const params = new URLSearchParams(window.location.search);
+const boutiqueId = params.get('boutique');
 
+function contientNumero(texte) {
+  const nettoye = texte.replace(/[\s.\-()]/g, '');
+  return /\d{7,}/.test(nettoye);
+}
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = 'connexion.html';
+    return;
+  }
+
+  if (boutiqueId) {
+    await chargerConversation(user, boutiqueId);
+  } else {
+    await chargerBoiteReception(user);
+  }
+}
+
+async function chargerConversation(user, boutiqueId) {
+  const { data: boutique, error } = await supabase
+    .from('boutiques')
+    .select('id, nom_boutique, user_id')
+    .eq('id', boutiqueId)
+    .single();
+
+  if (error || !boutique) {
+    document.getElementById('contenu').innerHTML = '<p class="vide">Boutique introuvable.</p>';
+    return;
+  }
+
+  const vendeurId = boutique.user_id;
+  const estVendeur = user.id === vendeurId;
+  const clientId = estVendeur ? params.get('client') : user.id;
+
+  if (!clientId) {
+    document.getElementById('contenu').innerHTML = '<p class="vide">Conversation introuvable.</p>';
+    return;
+  }
+
+  document.getElementById('titre-chat').textContent = boutique.nom_boutique;
+
+  document.getElementById('contenu').innerHTML = `
+    <p class="avertissement">🔒 Le partage de numéro de téléphone est interdit pour votre sécurité.</p>
+    <div id="messages"></div>
+    <p class="envoi-cours" id="envoi-cours" style="display:none;">Envoi en cours...</p>
+    <div class="zone-saisie">
+      <button class="btn-media" onclick="document.getElementById('fichier-media').click()">📷</button>
+      <input type="file" id="fichier-media" accept="image/*,video/*" capture="environment" style="display:none;" onchange="envoyerMedia('${vendeurId}','${clientId}','${boutiqueId}')">
+      <input type="text" id="champ-message" placeholder="Écrire un message...">
+      <button onclick="envoyerMessage('${vendeurId}','${clientId}','${boutiqueId}')">➤</button>
     </div>
+  `;
 
-    <script>
-        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
 
-        const params = new URLSearchParams(window.location.search);
-        const boutiqueId = params.get("boutique");
-        const clientParam = params.get("client");
+  supabase
+    .channel('messages-' + boutiqueId + clientId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `boutique_id=eq.${boutiqueId}` }, () => {
+      afficherMessages(vendeurId, clientId, boutiqueId, user.id);
+    })
+    .subscribe();
+}
 
-        const chatZone = document.getElementById("chatZone");
-        const titreConversation = document.getElementById("titreConversation");
-        const formEnvoi = document.getElementById("formEnvoi");
-        const inputMessage = document.getElementById("inputMessage");
+async function afficherMessages(vendeurId, clientId, boutiqueId, currentUserId) {
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('boutique_id', boutiqueId)
+    .eq('vendeur_id', vendeurId)
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: true });
 
-        let userId = null;
-        let vendeurId = null;
-        let clientId = null;
-        let estVendeur = false;
+  const zone = document.getElementById('messages');
+  if (!messages || messages.length === 0) {
+    zone.innerHTML = '<p class="vide">Aucun message. Démarrez la conversation !</p>';
+    return;
+  }
 
-        async function init() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
+  zone.innerHTML = messages.map(m => {
+    const moi = m.expediteur_id === currentUserId;
+    const heure = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    let media = '';
+    if (m.media_url && m.media_type === 'image') {
+      media = `<img src="${m.media_url}" alt="photo">`;
+    } else if (m.media_url && m.media_type === 'video') {
+      media = `<video src="${m.media_url}" controls></video>`;
+    }
+    const texte = m.contenu ? escapeHTML(m.contenu) : '';
+    return `<div class="bulle ${moi ? 'moi' : 'autre'}">${media}${texte}<span class="heure">${heure}</span></div>`;
+  }).join('');
 
-            if (!user) {
-                window.location.href = "connexion.html";
-                return;
-            }
+  window.scrollTo(0, document.body.scrollHeight);
+}
 
-            userId = user.id;
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-            if (!boutiqueId) {
-                titreConversation.textContent = "Conversation introuvable";
-                chatZone.innerHTML = '<p class="empty">Aucune boutique sélectionnée</p>';
-                return;
-            }
+async function envoyerMessage(vendeurId, clientId, boutiqueId) {
+  const champ = document.getElementById('champ-message');
+  const texte = champ.value.trim();
+  if (!texte) return;
 
-            const { data: boutique, error } = await supabaseClient
-                .from("boutiques_publiques")
-                .select("*")
-                .eq("id", boutiqueId)
-                .maybeSingle();
+  if (contientNumero(texte)) {
+    alert('⚠️ Le partage de numéro de téléphone n\'est pas autorisé sur WariKo.');
+    return;
+  }
 
-            if (error || !boutique) {
-                titreConversation.textContent = "Boutique introuvable";
-                chatZone.innerHTML = '<p class="empty">Cette boutique n\'existe pas</p>';
-                return;
-            }
+  const { data: { user } } = await supabase.auth.getUser();
 
-            vendeurId = boutique.user_id;
+  const { error } = await supabase.from('messages').insert({
+    boutique_id: boutiqueId,
+    vendeur_id: vendeurId,
+    client_id: clientId,
+    expediteur_id: user.id,
+    contenu: texte
+  });
 
-            if (userId === vendeurId) {
-                // Je suis le vendeur : je dois savoir avec quel client je discute
-                estVendeur = true;
+  if (error) {
+    alert('Erreur lors de l\'envoi : ' + error.message);
+    return;
+  }
 
-                if (!clientParam) {
-                    titreConversation.textContent = "Sélectionnez une conversation";
-                    chatZone.innerHTML = '<p class="empty">Ouvrez cette page depuis <a href="../vendeur/messages.html">vos messages vendeur</a></p>';
-                    return;
-                }
+  champ.value = '';
+  await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
+}
 
-                clientId = clientParam;
-                titreConversation.textContent = boutique.nom_boutique + " · Conversation client";
-            } else {
-                // Je suis le client
-                clientId = userId;
-                titreConversation.textContent = boutique.nom_boutique;
-            }
+async function envoyerMedia(vendeurId, clientId, boutiqueId) {
+  const input = document.getElementById('fichier-media');
+  const fichier = input.files[0];
+  if (!fichier) return;
 
-            formEnvoi.style.display = "flex";
-            chargerMessages();
-            ecouterNouveauxMessages();
-        }
+  const indicateur = document.getElementById('envoi-cours');
+  indicateur.style.display = 'block';
 
-        async function chargerMessages() {
-            const { data, error } = await supabaseClient
-                .from("messages")
-                .select("*")
-                .eq("boutique_id", boutiqueId)
-                .eq("client_id", clientId)
-                .order("created_at", { ascending: true });
+  const { data: { user } } = await supabase.auth.getUser();
+  const type = fichier.type.startsWith('video') ? 'video' : 'image';
+  const cheminFichier = `${boutiqueId}/${Date.now()}_${fichier.name}`;
 
-            if (error) {
-                chatZone.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
-                return;
-            }
+  const { error: uploadError } = await supabase.storage
+    .from('messages-media')
+    .upload(cheminFichier, fichier);
 
-            if (!data || data.length === 0) {
-                chatZone.innerHTML = '<p class="empty">Aucun message pour l\'instant. Dites bonjour !</p>';
-                return;
-            }
+  if (uploadError) {
+    indicateur.style.display = 'none';
+    alert('Erreur d\'envoi du fichier : ' + uploadError.message);
+    return;
+  }
 
-            chatZone.innerHTML = "";
-            data.forEach(afficherMessage);
-            chatZone.scrollTop = chatZone.scrollHeight;
-        }
+  const { data: urlData } = supabase.storage.from('messages-media').getPublicUrl(cheminFichier);
 
-        function afficherMessage(msg) {
-            const bulle = document.createElement("div");
-            bulle.className = "bulle " + (msg.expediteur_id === userId ? "moi" : "autre");
-            bulle.textContent = msg.contenu;
-            chatZone.appendChild(bulle);
-        }
+  const { error } = await supabase.from('messages').insert({
+    boutique_id: boutiqueId,
+    vendeur_id: vendeurId,
+    client_id: clientId,
+    expediteur_id: user.id,
+    contenu: '',
+    media_url: urlData.publicUrl,
+    media_type: type
+  });
 
-        function ecouterNouveauxMessages() {
-            supabaseClient
-                .channel("messages-" + boutiqueId + "-" + clientId)
-                .on("postgres_changes", {
-                    event: "INSERT",
-                    schema: "public",
-                    table: "messages",
-                    filter: `boutique_id=eq.${boutiqueId}`
-                }, (payload) => {
-                    if (payload.new.client_id === clientId) {
-                        if (chatZone.querySelector(".empty")) {
-                            chatZone.innerHTML = "";
-                        }
-                        afficherMessage(payload.new);
-                        chatZone.scrollTop = chatZone.scrollHeight;
-                    }
-                })
-                .subscribe();
-        }
+  indicateur.style.display = 'none';
+  input.value = '';
 
-        formEnvoi.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const contenu = inputMessage.value.trim();
-            if (!contenu) return;
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
 
-            const { error } = await supabaseClient
-                .from("messages")
-                .insert({
-                    boutique_id: boutiqueId,
-                    client_id: clientId,
-                    vendeur_id: vendeurId,
-                    expediteur_id: userId,
-                    contenu: contenu
-                });
+  await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
+}
 
-            if (error) {
-                alert("Erreur lors de l'envoi : " + error.message);
-                return;
-            }
+async function chargerBoiteReception(user) {
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('*, boutiques(nom_boutique)')
+    .or(`client_id.eq.${user.id},vendeur_id.eq.${user.id}`)
+    .order('created_at', { ascending: false });
 
-            inputMessage.value = "";
-        });
+  const contenu = document.getElementById('contenu');
 
-        init();
-    </script>
+  if (!messages || messages.length === 0) {
+    contenu.innerHTML = `
+      <p class="vide">Aucune conversation pour le moment.</p>
+      <div class="bottom-nav">
+        <a href="accueil.html">🏠<br>Accueil</a>
+        <a href="recherche.html">🔍<br>Recherche</a>
+        <a href="messagerie.html" class="actif">💬<br>Messages</a>
+        <a href="#">📦<br>Commandes</a>
+        <a href="profil.html">👤<br>Profil</a>
+      </div>
+    `;
+    return;
+  }
 
+  const conversations = {};
+  messages.forEach(m => {
+    const cle = m.boutique_id + '-' + m.client_id;
+    if (!conversations[cle]) conversations[cle] = m;
+  });
+
+  const liste = Object.values(conversations).map(m => {
+    const estVendeur = m.vendeur_id === user.id;
+    const lienClient = estVendeur ? `&client=${m.client_id}` : '';
+    const nomBoutique = m.boutiques ? m.boutiques.nom_boutique : 'Boutique';
+    const initiale = nomBoutique.charAt(0).toUpperCase();
+    const apercu = m.media_url ? (m.media_type === 'video' ? '🎥 Vidéo' : '📷 Photo') : `${m.contenu.substring(0, 40)}${m.contenu.length > 40 ? '...' : ''}`;
+    return `
+      <a class="conv-item" href="messagerie.html?boutique=${m.boutique_id}${lienClient}">
+        <div class="conv-avatar">${initiale}</div>
+        <div class="conv-info">
+          <h4>${escapeHTML(nomBoutique)}</h4>
+          <p>${escapeHTML(apercu)}</p>
+        </div>
+      </a>
+    `;
+  }).join('');
+
+  contenu.innerHTML = `
+    <div>${liste}</div>
+    <div class="bottom-nav">
+      <a href="accueil.html">🏠<br>Accueil</a>
+      <a href="recherche.html">🔍<br>Recherche</a>
+      <a href="messagerie.html" class="actif">💬<br>Messages</a>
+      <a href="#">📦<br>Commandes</a>
+      <a href="profil.html">👤<br>Profil</a>
+    </div>
+  `;
+}
+
+init();
+</script>
 </body>
-
 </html>

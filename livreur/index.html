@@ -96,6 +96,8 @@ async function afficherTableauDeBord() {
     <div id="liste-mes-livraisons">
       ${mesLivraisons && mesLivraisons.length > 0 ? mesLivraisons.map(carteEnCours).join('') : '<p class="vide">Aucune livraison en cours.</p>'}
     </div>
+
+    <input type="file" id="fichier-preuve" accept="image/*" capture="environment" style="display:none;">
   `;
 }
 
@@ -118,15 +120,21 @@ function carteAttente(l) {
 function carteEnCours(l) {
   const badgeClasse = l.statut === 'acceptee' ? 'acceptee' : 'encours';
   const badgeTexte = l.statut === 'acceptee' ? 'Acceptée' : 'En cours';
-  const prochainStatut = l.statut === 'acceptee' ? 'en_cours' : 'livree';
-  const texteBouton = l.statut === 'acceptee' ? 'Démarrer la livraison' : 'Marquer comme livrée';
+
+  let boutonAction = '';
+  if (l.statut === 'acceptee') {
+    boutonAction = `<button class="btn-progresser" onclick="changerStatut('${l.id}','en_cours')">Démarrer la livraison</button>`;
+  } else {
+    boutonAction = `<button class="btn-progresser" onclick="demarrerPhotoLivraison('${l.id}')">📷 Confirmer avec photo</button>`;
+  }
+
   return `
     <div class="carte-livraison">
       <h3>${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}</h3>
       <p>📍 ${l.adresse_client || 'Adresse non précisée'}</p>
       <span class="badge ${badgeClasse}">${badgeTexte}</span>
       <div class="actions">
-        <button class="btn-progresser" onclick="changerStatut('${l.id}','${prochainStatut}')">${texteBouton}</button>
+        ${boutonAction}
         <a class="btn-contacter" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id}">Contacter</a>
       </div>
     </div>
@@ -160,6 +168,49 @@ async function changerStatut(livraisonId, nouveauStatut) {
   if (error) {
     alert('Erreur : ' + error.message);
   }
+  await afficherTableauDeBord();
+}
+
+let livraisonEnAttentePhoto = null;
+
+function demarrerPhotoLivraison(livraisonId) {
+  livraisonEnAttentePhoto = livraisonId;
+  const input = document.getElementById('fichier-preuve');
+  input.onchange = () => confirmerLivraisonAvecPhoto(livraisonId);
+  input.click();
+}
+
+async function confirmerLivraisonAvecPhoto(livraisonId) {
+  const input = document.getElementById('fichier-preuve');
+  const fichier = input.files[0];
+  if (!fichier) return;
+
+  const cheminFichier = `${livraisonId}/livreur_${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('livraison-preuves')
+    .upload(cheminFichier, fichier);
+
+  if (uploadError) {
+    alert("Erreur d'envoi de la photo : " + uploadError.message);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
+
+  const { error } = await supabase
+    .from('livraisons')
+    .update({ statut: 'livree', photo_livreur: urlData.publicUrl })
+    .eq('id', livraisonId);
+
+  input.value = '';
+
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  alert('✅ Livraison confirmée avec photo !');
   await afficherTableauDeBord();
 }
 

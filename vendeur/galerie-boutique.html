@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Photos boutique</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app { min-height: 100vh; padding-bottom: 40px; }
+
+        .header { padding: 22px 20px 18px; color: var(--blanc); }
+
+        .back-link { font-size: 13px; color: var(--blanc); opacity: 0.75; text-decoration: none; }
+
+        h1 { margin-top: 12px; font-size: 20px; color: var(--blanc); }
+
+        .sous-titre { margin-top: 4px; font-size: 13px; color: var(--blanc); opacity: 0.7; }
+
+        .section { padding: 20px; }
+
+        .upload-btn {
+            display: block; width: 100%; background: var(--jaune); color: var(--violet-fonce);
+            border: none; border-radius: 14px; padding: 16px; font-size: 14px; font-weight: 800;
+            font-family: inherit; text-align: center;
+        }
+
+        .upload-btn:disabled { opacity: 0.6; }
+
+        .erreur {
+            margin-top: 12px; background: rgba(255,100,100,0.15); color: #ff9b9b;
+            padding: 12px 14px; border-radius: 10px; font-size: 13px;
+        }
+
+        .grille-media {
+            margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+
+        .media-item { position: relative; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.05); }
+
+        .media-item img, .media-item video {
+            width: 100%; height: 130px; object-fit: cover; display: block;
+        }
+
+        .supprimer-btn {
+            position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); color: #fff;
+            border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 13px;
+        }
+
+        .empty { color: var(--blanc); opacity: 0.6; text-align: center; padding: 30px 20px; font-size: 13px; }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="../client/boutique.html" class="back-link" id="lienRetour">← Retour à la boutique</a>
+            <h1>Photos & vidéos</h1>
+            <p class="sous-titre">Montre ta boutique et tes produits en image</p>
+        </header>
+
+        <section class="section">
+            <input type="file" id="fichierInput" accept="image/*,video/*" capture="environment" style="display:none;">
+            <button class="upload-btn" id="boutonUpload" onclick="document.getElementById('fichierInput').click()">
+                + Ajouter une photo ou vidéo
+            </button>
+            <div id="zoneErreur"></div>
+
+            <div class="grille-media" id="grilleMedia">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const params = new URLSearchParams(window.location.search);
+        const boutiqueId = params.get("boutique");
+
+        const grilleMedia = document.getElementById("grilleMedia");
+        const zoneErreur = document.getElementById("zoneErreur");
+        const boutonUpload = document.getElementById("boutonUpload");
+        const fichierInput = document.getElementById("fichierInput");
+
+        if (boutiqueId) {
+            document.getElementById("lienRetour").href = "../client/boutique.html?id=" + boutiqueId;
+        }
+
+        function estVideo(fichierOuUrl) {
+            const nom = fichierOuUrl.name || fichierOuUrl;
+            return /\.(mp4|mov|webm)$/i.test(nom) || (fichierOuUrl.type && fichierOuUrl.type.startsWith("video"));
+        }
+
+        async function verifierAcces() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "../client/connexion.html";
+                return null;
+            }
+            if (!boutiqueId) {
+                zoneErreur.innerHTML = '<div class="erreur">Boutique introuvable.</div>';
+                boutonUpload.disabled = true;
+                return null;
+            }
+
+            const { data: boutique, error } = await supabaseClient
+                .from("boutiques")
+                .select("id, user_id, nom_boutique")
+                .eq("id", boutiqueId)
+                .single();
+
+            if (error || !boutique) {
+                zoneErreur.innerHTML = '<div class="erreur">Boutique introuvable.</div>';
+                boutonUpload.disabled = true;
+                return null;
+            }
+
+            if (boutique.user_id !== session.user.id) {
+                zoneErreur.innerHTML = '<div class="erreur">Cette boutique ne vous appartient pas.</div>';
+                boutonUpload.disabled = true;
+                return null;
+            }
+
+            return boutique;
+        }
+
+        async function chargerMedias() {
+            const { data, error } = await supabaseClient
+                .from("boutique_medias")
+                .select("*")
+                .eq("boutique_id", boutiqueId)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                grilleMedia.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                grilleMedia.innerHTML = '<p class="empty">Aucune photo ou vidéo pour l\'instant</p>';
+                return;
+            }
+
+            grilleMedia.innerHTML = data.map(m => `
+                <div class="media-item">
+                    ${m.type === "video"
+                        ? `<video src="${m.url}" controls></video>`
+                        : `<img src="${m.url}" alt="media boutique">`}
+                    <button class="supprimer-btn" onclick="supprimerMedia('${m.id}', '${m.url}')">✕</button>
+                </div>
+            `).join("");
+        }
+
+        async function supprimerMedia(id, url) {
+            if (!confirm("Supprimer ce média ?")) return;
+
+            const { error } = await supabaseClient.from("boutique_medias").delete().eq("id", id);
+            if (error) {
+                alert("Erreur lors de la suppression : " + error.message);
+                return;
+            }
+
+            try {
+                const chemin = url.split("/boutiques-media/")[1];
+                if (chemin) await supabaseClient.storage.from("boutiques-media").remove([chemin]);
+            } catch (e) {}
+
+            chargerMedias();
+        }
+
+        fichierInput.addEventListener("change", async () => {
+            const fichier = fichierInput.files[0];
+            if (!fichier) return;
+
+            boutonUpload.disabled = true;
+            boutonUpload.textContent = "Envoi en cours...";
+            zoneErreur.innerHTML = "";
+
+            const type = estVideo(fichier) ? "video" : "image";
+            const chemin = `${boutiqueId}/${Date.now()}_${fichier.name}`;
+
+            const { error: uploadError } = await supabaseClient.storage
+                .from("boutiques-media")
+                .upload(chemin, fichier);
+
+            if (uploadError) {
+                zoneErreur.innerHTML = `<div class="erreur">Erreur d'envoi : ${uploadError.message}</div>`;
+                boutonUpload.disabled = false;
+                boutonUpload.textContent = "+ Ajouter une photo ou vidéo";
+                return;
+            }
+
+            const { data: urlData } = supabaseClient.storage.from("boutiques-media").getPublicUrl(chemin);
+
+            const { error } = await supabaseClient.from("boutique_medias").insert({
+                boutique_id: boutiqueId,
+                url: urlData.publicUrl,
+                type: type
+            });
+
+            fichierInput.value = "";
+            boutonUpload.disabled = false;
+            boutonUpload.textContent = "+ Ajouter une photo ou vidéo";
+
+            if (error) {
+                zoneErreur.innerHTML = `<div class="erreur">Erreur : ${error.message}</div>`;
+                return;
+            }
+
+            chargerMedias();
+        });
+
+        (async () => {
+            const boutique = await verifierAcces();
+            if (boutique) chargerMedias();
+        })();
+    </script>
+
+</body>
+
+</html>

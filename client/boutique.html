@@ -18,7 +18,7 @@
         .app {
             background: var(--violet-fonce);
             min-height: 100vh;
-            padding-bottom: 60px;
+            padding-bottom: 90px;
         }
 
         .header {
@@ -97,6 +97,13 @@
             text-decoration: none;
         }
 
+        .contact-btn.secondaire {
+            margin-top: 8px;
+            background: transparent;
+            border: 2px solid var(--violet-fonce);
+            color: var(--violet-fonce);
+        }
+
         .section {
             padding: 20px 20px 0;
         }
@@ -113,6 +120,15 @@
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 14px;
+        }
+
+        .produit-media {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            max-height: 180px;
+            object-fit: cover;
+            display: block;
         }
 
         .produit-top {
@@ -157,12 +173,157 @@
             opacity: 0.6;
         }
 
+        .panier-controle {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qte-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .qte-valeur {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .ajouter-panier-btn {
+            margin-top: 12px;
+            width: 100%;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .ajouter-panier-btn:disabled {
+            opacity: 0.5;
+        }
+
         .empty {
             color: var(--blanc);
             opacity: 0.6;
             text-align: center;
             padding: 30px 20px;
             font-size: 13px;
+        }
+
+        #barrePanier {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--jaune);
+            padding: 14px 20px;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            font-size: 13px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        #overlayPanier {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 30;
+        }
+
+        #feuillePanier {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #feuillePanier h3 {
+            color: var(--blanc);
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+
+        .ligne-panier {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ligne-panier .nom {
+            color: var(--blanc);
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .ligne-panier .prix {
+            color: var(--jaune);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .total-panier {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            color: var(--blanc);
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .valider-btn {
+            margin-top: 16px;
+            width: 100%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .fermer-panier {
+            display: block;
+            text-align: center;
+            color: var(--blanc);
+            opacity: 0.6;
+            font-size: 12px;
+            margin-top: 12px;
+            background: none;
+            border: none;
+            width: 100%;
         }
     </style>
 
@@ -189,6 +350,24 @@
 
     </div>
 
+    <div id="barrePanier" onclick="ouvrirPanier()">
+        <span id="texteBarrePanier">0 article</span>
+        <span id="totalBarrePanier">0 FCFA</span>
+    </div>
+
+    <div id="overlayPanier" onclick="fermerPanierClic(event)">
+        <div id="feuillePanier">
+            <h3>Mon panier</h3>
+            <div id="contenuPanier"></div>
+            <div class="total-panier">
+                <span>Total</span>
+                <span id="totalFeuille">0 FCFA</span>
+            </div>
+            <button class="valider-btn" onclick="validerCommande()">Envoyer la commande au vendeur</button>
+            <button class="fermer-panier" onclick="fermerPanier()">Fermer</button>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
@@ -212,11 +391,152 @@
             return Number(prix).toLocaleString("fr-FR") + " FCFA";
         }
 
+        function estVideo(url) {
+            return /\.(mp4|mov|webm)(\?.*)?$/i.test(url || "");
+        }
+
         const params = new URLSearchParams(window.location.search);
         const boutiqueId = params.get("id");
+        const cleParnier = "panier_" + boutiqueId;
 
         const boutiqueHeader = document.getElementById("boutiqueHeader");
         const listeProduits = document.getElementById("listeProduits");
+
+        let utilisateurActuel = null;
+        let boutiqueActuelle = null;
+        let estProprietaire = false;
+
+        function chargerPanier() {
+            try {
+                return JSON.parse(localStorage.getItem(cleParnier)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function sauvegarderPanier(panier) {
+            localStorage.setItem(cleParnier, JSON.stringify(panier));
+        }
+
+        function quantiteDans(panier, produitId) {
+            const ligne = panier.find(l => l.produit_id === produitId);
+            return ligne ? ligne.quantite : 0;
+        }
+
+        function changerQuantite(produit, delta) {
+            let panier = chargerPanier();
+            let ligne = panier.find(l => l.produit_id === produit.id);
+            if (!ligne) {
+                if (delta > 0) {
+                    panier.push({ produit_id: produit.id, nom: produit.nom, prix: produit.prix, quantite: 1 });
+                }
+            } else {
+                ligne.quantite += delta;
+                if (ligne.quantite <= 0) {
+                    panier = panier.filter(l => l.produit_id !== produit.id);
+                }
+            }
+            sauvegarderPanier(panier);
+            mettreAJourAffichage();
+        }
+
+        function mettreAJourAffichage() {
+            const panier = chargerPanier();
+            document.querySelectorAll(".qte-valeur").forEach(el => {
+                const id = el.dataset.produit;
+                el.textContent = quantiteDans(panier, id);
+            });
+
+            const barrePanier = document.getElementById("barrePanier");
+            const totalArticles = panier.reduce((s, l) => s + l.quantite, 0);
+            const totalPrix = panier.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
+
+            if (totalArticles > 0) {
+                barrePanier.style.display = "flex";
+                document.getElementById("texteBarrePanier").textContent = totalArticles + (totalArticles > 1 ? " articles" : " article");
+                document.getElementById("totalBarrePanier").textContent = formatPrix(totalPrix);
+            } else {
+                barrePanier.style.display = "none";
+            }
+        }
+
+        function ouvrirPanier() {
+            const panier = chargerPanier();
+            const contenu = document.getElementById("contenuPanier");
+
+            if (panier.length === 0) {
+                contenu.innerHTML = '<p class="empty">Panier vide</p>';
+            } else {
+                contenu.innerHTML = panier.map(l => `
+                    <div class="ligne-panier">
+                        <span class="nom">${l.nom} × ${l.quantite}</span>
+                        <span class="prix">${formatPrix(l.quantite * l.prix)}</span>
+                    </div>
+                `).join("");
+            }
+
+            const total = panier.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
+            document.getElementById("totalFeuille").textContent = formatPrix(total);
+            document.getElementById("overlayPanier").style.display = "block";
+        }
+
+        function fermerPanier() {
+            document.getElementById("overlayPanier").style.display = "none";
+        }
+
+        function fermerPanierClic(e) {
+            if (e.target.id === "overlayPanier") fermerPanier();
+        }
+
+        async function validerCommande() {
+            const panier = chargerPanier();
+            if (panier.length === 0) return;
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const total = panier.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
+
+            const { data: commande, error } = await supabaseClient
+                .from("commandes")
+                .insert({
+                    boutique_id: boutiqueActuelle.id,
+                    client_id: session.user.id,
+                    vendeur_id: boutiqueActuelle.user_id,
+                    statut: "en_attente",
+                    total: total
+                })
+                .select()
+                .single();
+
+            if (error) {
+                alert("Erreur lors de l'envoi : " + error.message);
+                return;
+            }
+
+            const lignes = panier.map(l => ({
+                commande_id: commande.id,
+                produit_id: l.produit_id,
+                nom_produit: l.nom,
+                prix_unitaire: l.prix,
+                quantite: l.quantite
+            }));
+
+            const { error: errLignes } = await supabaseClient.from("commande_produits").insert(lignes);
+
+            if (errLignes) {
+                alert("Erreur lors de l'envoi du détail : " + errLignes.message);
+                return;
+            }
+
+            localStorage.removeItem(cleParnier);
+            fermerPanier();
+            mettreAJourAffichage();
+            alert("Commande envoyée au vendeur ! Il va l'accepter ou la refuser.");
+        }
 
         async function chargerBoutique() {
             if (!boutiqueId) {
@@ -224,6 +544,9 @@
                 listeProduits.innerHTML = "";
                 return;
             }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            utilisateurActuel = session ? session.user : null;
 
             try {
                 const { data: boutique, error } = await supabaseClient
@@ -244,6 +567,15 @@
                     return;
                 }
 
+                boutiqueActuelle = boutique;
+                estProprietaire = utilisateurActuel && utilisateurActuel.id === boutique.user_id;
+
+                const boutonsAction = estProprietaire
+                    ? `<a href="../vendeur/ajouter-produit.html?boutique=${boutique.id}" class="contact-btn">+ Ajouter un produit</a>
+                       <a href="../vendeur/mes-produits.html?boutique=${boutique.id}" class="contact-btn secondaire">Gérer mes produits</a>`
+                    : `<a href="messagerie.html?boutique=${boutique.id}" class="contact-btn">💬 Contacter le vendeur</a>
+                       <a href="livraison.html?boutique=${boutique.id}" class="contact-btn secondaire">🛵 Demander une livraison</a>`;
+
                 boutiqueHeader.innerHTML = `
                     <div class="top-row">
                         <div>
@@ -253,8 +585,7 @@
                         <span class="badge">Ouverte</span>
                     </div>
                     ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
-                    <a href="messagerie.html?boutique=${boutique.id}" class="contact-btn">💬 Contacter le vendeur</a>
-                    <a href="livraison.html?boutique=${boutique.id}" class="contact-btn" style="margin-top:8px; background:var(--jaune); color:var(--violet-fonce);">🛵 Demander une livraison</a>
+                    ${boutonsAction}
                 `;
 
                 chargerProduits(boutique.id);
@@ -283,17 +614,38 @@
 
             listeProduits.innerHTML = data.map((p) => {
                 const statut = p.statut || "disponible";
+                const disponible = statut === "disponible";
+
+                let media = "";
+                if (p.image_url) {
+                    media = estVideo(p.image_url)
+                        ? `<video class="produit-media" src="${p.image_url}" controls></video>`
+                        : `<img class="produit-media" src="${p.image_url}" alt="${p.nom}">`;
+                }
+
+                const controlePanier = (!estProprietaire && disponible) ? `
+                    <div class="panier-controle">
+                        <button class="qte-btn" onclick='changerQuantite(${JSON.stringify(p)}, -1)'>−</button>
+                        <span class="qte-valeur" data-produit="${p.id}">0</span>
+                        <button class="qte-btn" onclick='changerQuantite(${JSON.stringify(p)}, 1)'>+</button>
+                    </div>
+                ` : "";
+
                 return `
                     <div class="produit-card">
+                        ${media}
                         <div class="produit-top">
                             <div class="produit-nom">${p.nom}</div>
                             <div class="produit-prix">${formatPrix(p.prix)}</div>
                         </div>
                         ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
                         <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
+                        ${controlePanier}
                     </div>
                 `;
             }).join("");
+
+            mettreAJourAffichage();
         }
 
         chargerBoutique();

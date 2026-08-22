@@ -99,7 +99,7 @@ async function chargerConversation(user, boutiqueId) {
     <p class="envoi-cours" id="envoi-cours" style="display:none;">Envoi en cours...</p>
     <div class="zone-saisie">
       <button class="btn-media" onclick="document.getElementById('fichier-media').click()">📷</button>
-      <input type="file" id="fichier-media" accept="image/*,video/*" capture="environment" style="display:none;" onchange="envoyerMedia('${vendeurId}','${clientId}','${boutiqueId}')">
+      <input type="file" id="fichier-media" accept="image/*,video/*" style="display:none;" onchange="envoyerMedia('${vendeurId}','${clientId}','${boutiqueId}')">
       <input type="text" id="champ-message" placeholder="Écrire un message...">
       <button onclick="envoyerMessage('${vendeurId}','${clientId}','${boutiqueId}')">➤</button>
     </div>

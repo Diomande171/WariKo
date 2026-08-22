@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Devenir prestataire</title>
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+
+        .header {
+            padding: 22px 20px 18px;
+            color: var(--blanc);
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.75;
+            text-decoration: none;
+        }
+
+        .header h1 {
+            margin-top: 14px;
+            font-size: 22px;
+        }
+
+        .header p {
+            margin-top: 6px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .section {
+            padding: 10px 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.8;
+            margin-bottom: 8px;
+            margin-top: 18px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            background: var(--jaune);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+            outline: none;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        select {
+            appearance: none;
+        }
+
+        button.submit-btn {
+            width: 100%;
+            margin-top: 26px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        button.submit-btn:disabled {
+            opacity: 0.6;
+        }
+
+        .info-box {
+            margin-top: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: var(--blanc);
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .message.error {
+            color: #ff6b6b;
+        }
+
+        .message.success {
+            color: var(--jaune);
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="../client/accueil.html" class="back-link">← Retour</a>
+            <h1>Devenir prestataire</h1>
+            <p>Propose tes services directement sur WariKo</p>
+        </header>
+
+        <section class="section">
+
+            <form id="form-prestataire">
+
+                <label for="metier">Ton métier</label>
+                <select id="metier" required>
+                    <option value="">Choisir un métier</option>
+                    <option value="plombier">Plombier</option>
+                    <option value="electricien">Électricien</option>
+                    <option value="menuisier">Menuisier</option>
+                    <option value="peintre">Peintre</option>
+                    <option value="macon">Maçon</option>
+                    <option value="mecanicien">Mécanicien</option>
+                    <option value="coiffeur">Coiffeur / Coiffeuse</option>
+                    <option value="couturier">Couturier / Couturière</option>
+                    <option value="cordonnier">Cordonnier</option>
+                    <option value="reparation_informatique">Réparateur informatique / téléphone</option>
+                    <option value="photographe">Photographe</option>
+                    <option value="traiteur">Traiteur</option>
+                    <option value="menage">Ménage / Nettoyage</option>
+                    <option value="demenagement">Déménagement</option>
+                    <option value="jardinier">Jardinier</option>
+                    <option value="climatisation">Climatisation / Frigoriste</option>
+                    <option value="soudeur">Soudeur</option>
+                    <option value="vitrier">Vitrier</option>
+                    <option value="autre">Autre</option>
+                </select>
+
+                <label for="description">Description</label>
+                <textarea
+                    id="description"
+                    placeholder="Présente ton expérience et tes services en quelques mots"
+                ></textarea>
+
+                <label for="telephone">Ton numéro de téléphone</label>
+                <input
+                    type="tel"
+                    id="telephone"
+                    placeholder="Ex : 0777183792"
+                    required
+                >
+
+                <button type="submit" class="submit-btn" id="btn-submit">Créer mon profil</button>
+
+                <p id="message" class="message"></p>
+
+            </form>
+
+            <div class="info-box">
+                🔒 Ton numéro de téléphone reste privé. Les clients verront ton profil et ton métier, mais devront échanger avec toi via la messagerie WariKo — pas de contact direct.
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById("form-prestataire");
+        const btnSubmit = document.getElementById("btn-submit");
+        const messageEl = document.getElementById("message");
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "../client/connexion.html";
+            }
+        })();
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const metier = document.getElementById("metier").value;
+            const description = document.getElementById("description").value.trim();
+            const telephone = document.getElementById("telephone").value.trim();
+
+            if (!metier || !telephone) {
+                messageEl.textContent = "Merci de remplir tous les champs obligatoires.";
+                messageEl.className = "message error";
+                return;
+            }
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = "Création en cours...";
+            messageEl.textContent = "";
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            const { error } = await supabaseClient
+                .from("prestataires")
+                .insert({
+                    user_id: session.user.id,
+                    metier: metier,
+                    description: description,
+                    telephone: telephone
+                });
+
+            if (error) {
+                messageEl.textContent = "Erreur : " + error.message;
+                messageEl.className = "message error";
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Créer mon profil";
+                return;
+            }
+
+            messageEl.textContent = "Profil créé avec succès !";
+            messageEl.className = "message success";
+
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 1200);
+        });
+    </script>
+
+</body>
+
+</html>

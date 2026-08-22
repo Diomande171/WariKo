@@ -4,19 +4,10 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo Pro - Espace Vendeur</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>WariKo - Espace Vendeur</title>
-
-    <link
-        rel="stylesheet"
-        href="../style.css"
-    >
-
+    <link rel="stylesheet" href="../style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -27,7 +18,7 @@
         .app {
             background: var(--violet-fonce);
             min-height: 100vh;
-            padding-bottom: 30px;
+            padding-bottom: 70px;
         }
 
         .header {
@@ -52,96 +43,75 @@
             opacity: 0.75;
         }
 
-        .section {
+        .grille-menu {
             padding: 10px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
         }
 
-        .demande-card {
-            background: var(--jaune);
+        .carte-menu {
+            background: rgba(255,255,255,0.06);
             border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
-        }
-
-        .demande-card .top-row {
+            padding: 20px 16px;
+            text-decoration: none;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .demande-card h3 {
+        .carte-menu .icone {
+            font-size: 26px;
+        }
+
+        .carte-menu .titre {
+            color: var(--blanc);
             font-size: 14px;
-            font-weight: 800;
-            color: var(--violet-fonce);
-        }
-
-        .demande-card .badge {
-            flex-shrink: 0;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: var(--violet-fonce);
-            color: var(--jaune);
-            white-space: nowrap;
-        }
-
-        .demande-card .categorie-tag {
-            display: inline-block;
-            margin-top: 8px;
-            font-size: 11px;
             font-weight: 700;
-            color: var(--violet-fonce);
-            opacity: 0.75;
         }
 
-        .demande-card p.description {
-            margin-top: 8px;
-            font-size: 13px;
-            color: var(--violet-fonce);
-            opacity: 0.9;
-            line-height: 1.4;
+        .carte-menu .sous-titre {
+            color: var(--blanc);
+            opacity: 0.6;
+            font-size: 11px;
         }
 
-        .demande-card .infos {
-            margin-top: 10px;
-            font-size: 12px;
+        .carte-menu.accent {
+            background: var(--jaune);
+        }
+
+        .carte-menu.accent .titre {
+            color: var(--violet-fonce);
+        }
+
+        .carte-menu.accent .sous-titre {
             color: var(--violet-fonce);
             opacity: 0.7;
         }
 
-        .demande-card .actions {
-            margin-top: 14px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .demande-card button {
-            flex: 1;
-            border: none;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .btn-accepter {
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
             background: var(--violet-fonce);
-            color: var(--jaune);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
         }
 
-        .btn-refuser {
-            background: var(--blanc);
-            color: var(--violet-fonce);
-        }
-
-        .empty {
-            color: var(--blanc);
-            opacity: 0.6;
+        .bottom-nav a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 11px;
             text-align: center;
-            padding: 50px 20px;
-            font-size: 13px;
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
         }
     </style>
 
@@ -154,82 +124,72 @@
 
         <header class="header">
             <div class="logo">WariKo Pro</div>
-            <h1>Mes demandes</h1>
-            <p>Toutes les demandes clients en un coup d'œil</p>
+            <h1 id="titre-bienvenue">Bienvenue</h1>
+            <p>Gère ta boutique en un coup d'œil</p>
         </header>
 
-        <section class="section" id="liste-demandes">
-            <p class="empty">Chargement...</p>
+        <section class="grille-menu">
+
+            <a href="mes-produits.html" class="carte-menu accent">
+                <span class="icone">🛍️</span>
+                <span class="titre">Mes produits</span>
+                <span class="sous-titre">Gérer mes articles</span>
+            </a>
+
+            <a href="galerie.html" class="carte-menu">
+                <span class="icone">🖼️</span>
+                <span class="titre">Galerie</span>
+                <span class="sous-titre">Photos de la boutique</span>
+            </a>
+
+            <a href="messages.html" class="carte-menu">
+                <span class="icone">💬</span>
+                <span class="titre">Messages</span>
+                <span class="sous-titre">Discussions clients</span>
+            </a>
+
+            <a href="position.html" class="carte-menu">
+                <span class="icone">📍</span>
+                <span class="titre">Position</span>
+                <span class="sous-titre">Localiser ma boutique</span>
+            </a>
+
+            <a href="profil.html" class="carte-menu">
+                <span class="icone">👤</span>
+                <span class="titre">Mon profil</span>
+                <span class="sous-titre">Infos et photo</span>
+            </a>
+
         </section>
 
     </div>
 
 
+    <nav class="bottom-nav">
+        <a href="index.html" class="active">🏠<br>Accueil</a>
+        <a href="mes-produits.html">🛍️<br>Produits</a>
+        <a href="galerie.html">🖼️<br>Galerie</a>
+        <a href="messages.html">💬<br>Messages</a>
+        <a href="profil.html">👤<br>Profil</a>
+    </nav>
+
+
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const container = document.getElementById("liste-demandes");
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
 
-        function badgeLabel(statut) {
-            if (statut === "acceptee") return "Acceptée";
-            if (statut === "refusee") return "Refusée";
-            return "En attente";
-        }
-
-        async function chargerDemandes() {
-            const { data, error } = await supabaseClient
-                .from("demandes")
-                .select("*")
-                .order("created_at", { ascending: false });
-
-            if (error) {
-                container.innerHTML = '<p class="empty">Erreur : ' + error.message + '</p>';
+            if (!session) {
+                window.location.href = "../client/connexion.html";
                 return;
             }
 
-            if (!data || data.length === 0) {
-                container.innerHTML = '<p class="empty">Aucune demande pour le moment</p>';
-                return;
-            }
-
-            container.innerHTML = data.map(function (d) {
-                const enAttente = !d.statut || d.statut === "en_attente";
-                return `
-                    <div class="demande-card">
-                        <div class="top-row">
-                            <h3>${d.client_nom || "Client"}</h3>
-                            <span class="badge">${badgeLabel(d.statut)}</span>
-                        </div>
-                        <span class="categorie-tag">📂 ${d.categorie || "-"}</span>
-                        <p class="description">${d.description || ""}</p>
-                        <div class="infos">📞 ${d.client_telephone || "-"}</div>
-                        ${enAttente ? `
-                        <div class="actions">
-                            <button class="btn-accepter" onclick="mettreAJourStatut('${d.id}', 'acceptee')">Accepter</button>
-                            <button class="btn-refuser" onclick="mettreAJourStatut('${d.id}', 'refusee')">Refuser</button>
-                        </div>` : ""}
-                    </div>
-                `;
-            }).join("");
-        }
-
-        async function mettreAJourStatut(id, statut) {
-            const { error } = await supabaseClient
-                .from("demandes")
-                .update({ statut: statut })
-                .eq("id", id);
-
-            if (error) {
-                alert("Erreur : " + error.message);
-                return;
-            }
-            chargerDemandes();
-        }
-
-        chargerDemandes();
+            const nom = session.user.user_metadata.full_name || "Vendeur";
+            document.getElementById("titre-bienvenue").textContent = "Bonjour, " + nom.split(" ")[0];
+        })();
     </script>
 
 </body>

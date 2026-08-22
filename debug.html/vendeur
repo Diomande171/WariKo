@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug Position</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background:#1a0a2e;color:#fff;font-family:sans-serif;padding:20px;">
+
+<h1>Debug Position</h1>
+<button onclick="testDebug()" style="padding:14px;width:100%;">Tester étape par étape</button>
+<p id="log" style="white-space:pre-wrap;margin-top:20px;font-size:13px;"></p>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const log = document.getElementById('log');
+
+function ecrire(msg) {
+  log.textContent += msg + "\n";
+}
+
+async function testDebug() {
+  log.textContent = "";
+  ecrire("1. Script démarré ✅");
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    ecrire("2. Appel auth terminé");
+    if (error) ecrire("   Erreur auth: " + error.message);
+    if (!user) { ecrire("   ❌ Pas d'utilisateur connecté"); return; }
+    ecrire("   ✅ Connecté, user.id = " + user.id);
+
+    const { data, error: err2 } = await supabase.from('boutiques').select('id, nom').eq('user_id', user.id);
+    ecrire("3. Requête boutiques terminée");
+    if (err2) { ecrire("   ❌ Erreur requête: " + err2.message); return; }
+    ecrire("   ✅ Boutiques trouvées: " + JSON.stringify(data));
+
+    if (!navigator.geolocation) { ecrire("4. ❌ Géolocalisation non supportée"); return; }
+    ecrire("4. Géolocalisation disponible, demande en cours...");
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => ecrire("5. ✅ Position reçue: " + pos.coords.latitude + ", " + pos.coords.longitude),
+      (err) => ecrire("5. ❌ Erreur géoloc: code " + err.code + " - " + err.message),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  } catch (e) {
+    ecrire("💥 Exception JS: " + e.message);
+  }
+}
+</script>
+</body>
+</html>

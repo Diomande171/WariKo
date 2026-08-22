@@ -73,6 +73,33 @@
             min-height: 80px;
         }
 
+        .photo-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .photo-btn {
+            width: 100%;
+            border: 2px dashed var(--jaune);
+            background: transparent;
+            color: var(--jaune);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        #apercuPhoto {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            display: none;
+        }
+
         .error-msg {
             background: rgba(255, 80, 80, 0.15);
             color: #ff8080;
@@ -125,6 +152,13 @@
 
         <form id="produitForm">
 
+            <div class="photo-zone">
+                <label>Photo du produit</label>
+                <img id="apercuPhoto" alt="Aperçu">
+                <button type="button" class="photo-btn" id="btnPhoto">📷 Ajouter une photo (galerie ou appareil photo)</button>
+                <input type="file" id="photoInput" accept="image/*" style="display:none;">
+            </div>
+
             <div>
                 <label>Nom du produit</label>
                 <input type="text" id="nom" placeholder="Ex : iPhone 11 reconditionné" required>
@@ -153,6 +187,22 @@
 
         const errorMsg = document.getElementById("errorMsg");
         const submitBtn = document.getElementById("submitBtn");
+        const photoInput = document.getElementById("photoInput");
+        const btnPhoto = document.getElementById("btnPhoto");
+        const apercuPhoto = document.getElementById("apercuPhoto");
+
+        let fichierPhoto = null;
+
+        btnPhoto.addEventListener("click", () => photoInput.click());
+
+        photoInput.addEventListener("change", () => {
+            const fichier = photoInput.files[0];
+            if (!fichier) return;
+            fichierPhoto = fichier;
+            apercuPhoto.src = URL.createObjectURL(fichier);
+            apercuPhoto.style.display = "block";
+            btnPhoto.textContent = "📷 Changer la photo";
+        });
 
         function showError(msg) {
             errorMsg.textContent = msg;
@@ -203,6 +253,54 @@
             }
 
             submitBtn.disabled = true;
+            submitBtn.textContent = "Vérification...";
+
+            // Vérifie la limite de 20 produits par boutique
+            const { count, error: countError } = await supabaseClient
+                .from("produits")
+                .select("id", { count: "exact", head: true })
+                .eq("boutique_id", boutiqueId);
+
+            if (countError) {
+                showError("Erreur : " + countError.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Publier le produit";
+                return;
+            }
+
+            if (count >= 20) {
+                showError("Tu as atteint la limite de 20 produits pour cette boutique.");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Publier le produit";
+                return;
+            }
+
+            let imageUrl = null;
+
+            if (fichierPhoto) {
+                submitBtn.textContent = "Envoi de la photo...";
+                const nomFichier = `${boutiqueId}/${Date.now()}_${fichierPhoto.name}`;
+
+                const { error: uploadError } = await supabaseClient
+                    .storage
+                    .from("produits-images")
+                    .upload(nomFichier, fichierPhoto);
+
+                if (uploadError) {
+                    showError("Erreur photo : " + uploadError.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Publier le produit";
+                    return;
+                }
+
+                const { data: urlData } = supabaseClient
+                    .storage
+                    .from("produits-images")
+                    .getPublicUrl(nomFichier);
+
+                imageUrl = urlData.publicUrl;
+            }
+
             submitBtn.textContent = "Publication...";
 
             const { error } = await supabaseClient
@@ -212,7 +310,8 @@
                     nom: nom,
                     prix: prix,
                     description: description,
-                    statut: "disponible"
+                    statut: "disponible",
+                    image_url: imageUrl
                 });
 
             if (error) {

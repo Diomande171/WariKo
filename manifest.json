@@ -2,7 +2,7 @@
   "name": "WariKo",
   "short_name": "WariKo",
   "description": "Marketplace et services en ligne pour Abidjan",
-  "start_url": "/index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#3D037A",
   "theme_color": "#3D037A",

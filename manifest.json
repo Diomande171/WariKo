@@ -4,8 +4,8 @@
   "description": "Marketplace et services en ligne pour Abidjan",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#1a0033",
-  "theme_color": "#1a0033",
+  "background_color": "#3D037A",
+  "theme_color": "#3D037A",
   "orientation": "portrait",
   "icons": [
     {

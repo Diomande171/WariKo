@@ -7,6 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WariKo Pro - Mes produits</title>
 
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
     <link rel="stylesheet" href="../style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -149,7 +156,7 @@
     <div class="app">
 
         <div class="top-logo">WariKo Pro</div>
-        <a href="index.html" class="back-link">← Mes demandes</a>
+        <a href="index.html" class="back-link">← Retour</a>
 
         <div class="header-row">
             <h1>Mes produits</h1>
@@ -198,7 +205,7 @@
                         <div class="produit-nom">${p.nom}</div>
                         <div class="produit-prix">${formatPrix(p.prix)}</div>
                     </div>
-                    ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
+                    {p.description ? `<div class="produit-desc">{p.description}</div>` : ""}
                     <div class="produit-actions">
                         <select class="statut-select" data-id="${p.id}" data-action="statut">
                             <option value="disponible" ${statut === "disponible" ? "selected" : ""}>Disponible</option>
@@ -236,7 +243,7 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
 
             if (!session) {
-                window.location.href = "connexion.html";
+                window.location.href = "../client/connexion.html";
                 return;
             }
 

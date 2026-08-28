@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Position de ma boutique - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
 <link rel="stylesheet" href="../style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -16,9 +24,12 @@
   .ok { color:#8fd98f; }
   .err { color:#ff8080; }
   select { width:100%; padding:12px; border-radius:10px; margin-bottom:16px; background:var(--gris); color:var(--blanc); border:1px solid var(--jaune); font-size:14px; }
+  .back-link { display:inline-block; margin-bottom:16px; color:var(--jaune); font-size:13px; font-weight:700; text-decoration:none; }
 </style>
 </head>
 <body>
+
+<a href="index.html" class="back-link">← Retour</a>
 
 <h1>Position de ma boutique</h1>
 <p>Active ta position actuelle pour permettre aux clients de commander une livraison avec un temps estimé précis.</p>

@@ -5,9 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Galerie de ma boutique - WariKo</title>
 <link rel="stylesheet" href="../style.css">
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 40px; }
+  .back-link { display:block; font-size:13px; color:var(--blanc); opacity:0.75; text-decoration:none; margin-bottom:14px; }
   h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin:0 0 4px; }
   p.info { font-size:12px; opacity:0.75; margin-bottom:16px; }
   .compteur { background:rgba(255,255,255,0.06); border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:16px; text-align:center; }
@@ -25,6 +34,8 @@
 </style>
 </head>
 <body>
+
+<a href="index.html" class="back-link">← Retour</a>
 
 <h1>Galerie de ma boutique</h1>
 <p class="info">Ajoute des photos de tes appareils avec leur prix, ou tes travaux réalisés si tu es prestataire. Minimum 2 photos, maximum 20.</p>

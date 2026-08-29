@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position de mon atelier - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:20px 16px 40px; }
+h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin-bottom:8px; }
+p { font-size:13px; opacity:0.8; margin-bottom:24px; }
+button { width:100%; padding:14px; border:none; border-radius:12px; background:var(--jaune); color:var(--violet-fonce); font-weight:bold; font-size:15px; }
+button:disabled { opacity:0.6; }
+.statut { margin-top:16px; font-size:13px; text-align:center; }
+.ok { color:#8fd98f; }
+.err { color:#ff8080; }
+.back-link { display:inline-block; margin-bottom:16px; color:var(--jaune); font-size:13px; font-weight:700; text-decoration:none; }
+</style>
+
+</head>
+
+<body>
+
+<a href="index.html" class="back-link">← Retour</a>
+
+<h1>Position de mon atelier</h1>
+<p>Active ta position actuelle pour permettre aux clients de te localiser et estimer les délais de service.</p>
+
+<button id="btnPosition" onclick="definirPosition()">📍 Utiliser ma position actuelle</button>
+
+<p class="statut" id="statut"></p>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let prestataireId = null;
+const btn = document.getElementById('btnPosition');
+const statut = document.getElementById('statut');
+
+async function chargerPrestataire() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('prestataires')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    statut.textContent = "Aucun profil prestataire trouvé sur ton compte.";
+    statut.className = 'statut err';
+    btn.disabled = true;
+    return;
+  }
+
+  prestataireId = data.id;
+}
+
+chargerPrestataire();
+
+async function definirPosition() {
+  statut.textContent = 'Localisation en cours...';
+  statut.className = 'statut';
+
+  if (!prestataireId) {
+    statut.textContent = "Profil prestataire introuvable.";
+    statut.className = 'statut err';
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    statut.textContent = "La géolocalisation n'est pas disponible sur cet appareil.";
+    statut.className = 'statut err';
+    return;
+  }
+
+  const ua = navigator.userAgent || '';
+  if (ua.includes('WhatsApp') || ua.includes('FBAN') || ua.includes('FBAV') || ua.includes('Instagram')) {
+    statut.textContent = "Ouvre ce lien dans Safari directement (pas depuis WhatsApp/Instagram) pour activer ta position.";
+    statut.className = 'statut err';
+    return;
+  }
+
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
+    const { data, error } = await supabase
+      .from('prestataires')
+      .update({ lat, lng })
+      .eq('id', prestataireId)
+      .select();
+
+    btn.disabled = false;
+
+    if (error) {
+      statut.textContent = "Erreur : " + error.message;
+      statut.className = 'statut err';
+    } else if (!data || data.length === 0) {
+      statut.textContent = "Échec silencieux : vérifie les règles de sécurité (RLS) sur la table prestataires.";
+      statut.className = 'statut err';
+    } else {
+      statut.textContent = "✅ Position enregistrée avec succès !";
+      statut.className = 'statut ok';
+    }
+  }, (err) => {
+    btn.disabled = false;
+    let message = "Impossible d'obtenir ta position. Vérifie que la localisation est autorisée pour Safari dans les Réglages.";
+    if (err.code === err.PERMISSION_DENIED) {
+      message = "Tu as refusé l'accès à la position — active-la dans Réglages > Confidentialité > Service de localisation > Safari.";
+    }
+    statut.textContent = message;
+    statut.className = 'statut err';
+  }, { enableHighAccuracy: true, timeout: 15000 });
+}
+</script>
+
+</body>
+
+</html>

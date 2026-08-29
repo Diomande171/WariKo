@@ -8,6 +8,14 @@
     <title>WariKo - Espace Prestataire</title>
 
     <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -171,7 +179,7 @@
         <header class="header">
             <div class="logo">WariKo Pro</div>
             <h1 id="titre-bienvenue">Mes demandes</h1>
-            <p>Toutes les demandes clients en un coup d'œil</p>
+            <p>Toutes tes demandes clients en un coup d'œil</p>
         </header>
 
         <section class="section" id="liste-demandes">
@@ -196,6 +204,8 @@
 
         const container = document.getElementById("liste-demandes");
 
+        let monNomComplet = "";
+
         function badgeLabel(statut) {
             if (statut === "acceptee") return "Acceptée";
             if (statut === "refusee") return "Refusée";
@@ -210,8 +220,8 @@
                 return;
             }
 
-            const nom = session.user.user_metadata.full_name || "Prestataire";
-            document.getElementById("titre-bienvenue").textContent = "Bonjour, " + nom.split(" ")[0];
+            monNomComplet = session.user.user_metadata.full_name || "";
+            document.getElementById("titre-bienvenue").textContent = "Bonjour, " + (monNomComplet.split(" ")[0] || "Prestataire");
 
             chargerDemandes();
         })();
@@ -220,6 +230,7 @@
             const { data, error } = await supabaseClient
                 .from("demandes")
                 .select("*")
+                .eq("professionnel_nom", monNomComplet)
                 .order("created_at", { ascending: false });
 
             if (error) {

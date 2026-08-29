@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WariKo - Mes commandes</title>
+
+<link rel="stylesheet" href="../style.css">
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body { background: var(--violet-fonce); }
+.app { min-height: 100vh; padding: 0 0 90px; color: var(--blanc); font-family: 'Poppins', sans-serif; }
+.header { padding: 22px 20px 18px; }
+.back-link { font-size: 13px; color: var(--blanc); opacity: 0.75; text-decoration: none; }
+.header h1 { margin-top: 12px; font-size: 20px; font-family: 'Playfair Display', serif; color: var(--jaune); }
+
+.onglets { display: flex; gap: 8px; padding: 0 20px 16px; }
+.onglet { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(255,255,255,0.06); font-size: 12px; font-weight: 700; color: var(--blanc); opacity: 0.6; }
+.onglet.actif { background: var(--jaune); color: var(--violet-fonce); opacity: 1; }
+
+.section { padding: 0 20px 24px; }
+.section-title { font-size: 14px; font-weight: 800; color: var(--jaune); margin-bottom: 12px; }
+
+.carte { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.carte h3 { font-size: 14px; color: var(--blanc); margin-bottom: 4px; }
+.carte p { font-size: 12px; opacity: 0.75; margin: 2px 0; }
+.badge { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-top: 8px; }
+.badge.en_attente { background: rgba(255,193,7,0.2); color: var(--jaune); }
+.badge.acceptee { background: rgba(76,175,80,0.2); color: #8fd98f; }
+.badge.livree { background: rgba(76,175,80,0.3); color: #8fd98f; }
+.badge.refusee { background: rgba(255,100,100,0.2); color: #ff9b9b; }
+.total { margin-top: 8px; font-weight: 800; color: var(--jaune); font-size: 13px; }
+.lien-boutique { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 800; color: var(--jaune); text-decoration: none; }
+
+.empty { text-align: center; opacity: 0.5; font-size: 13px; padding: 24px; }
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+<a href="accueil.html" class="back-link">← Retour</a>
+<h1>Mes commandes</h1>
+</header>
+
+<div class="onglets">
+<div class="onglet actif" data-onglet="panier" onclick="changerOnglet('panier')">Panier</div>
+<div class="onglet" data-onglet="encours" onclick="changerOnglet('encours')">En cours</div>
+<div class="onglet" data-onglet="historique" onclick="changerOnglet('historique')">Historique</div>
+</div>
+
+<section class="section" id="vue-panier">
+<div class="section-title">Mon panier</div>
+<div id="listePanier"><p class="empty">Chargement...</p></div>
+</section>
+
+<section class="section" id="vue-encours" style="display:none;">
+<div class="section-title">Commandes en cours</div>
+<div id="listeEnCours"><p class="empty">Chargement...</p></div>
+</section>
+
+<section class="section" id="vue-historique" style="display:none;">
+<div class="section-title">Historique d'achats</div>
+<div id="listeHistorique"><p class="empty">Chargement...</p></div>
+</section>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function formatPrix(prix) {
+  return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
+}
+
+function changerOnglet(nom) {
+  document.querySelectorAll(".onglet").forEach(o => o.classList.toggle("actif", o.dataset.onglet === nom));
+  document.getElementById("vue-panier").style.display = nom === "panier" ? "block" : "none";
+  document.getElementById("vue-encours").style.display = nom === "encours" ? "block" : "none";
+  document.getElementById("vue-historique").style.display = nom === "historique" ? "block" : "none";
+}
+
+// ---------- Panier (localStorage, par boutique) ----------
+function chargerPaniersLocaux() {
+  const conteneur = document.getElementById("listePanier");
+  const paniers = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const cle = localStorage.key(i);
+    if (cle && cle.startsWith("panier_")) {
+      try {
+        const lignes = JSON.parse(localStorage.getItem(cle)) || [];
+        if (lignes.length > 0) {
+          const boutiqueId = cle.replace("panier_", "");
+          const total = lignes.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
+          paniers.push({ boutiqueId, lignes, total });
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (paniers.length === 0) {
+    conteneur.innerHTML = '<p class="empty">Ton panier est vide.</p>';
+    return;
+  }
+
+  conteneur.innerHTML = paniers.map(p => `
+    <div class="carte">
+      <h3>Boutique</h3>
+      ${p.lignes.map(l => `<p>${l.nom} × ${l.quantite}</p>`).join("")}
+      <div class="total">${formatPrix(p.total)}</div>
+      <a class="lien-boutique" href="boutique.html?id=${p.boutiqueId}">Voir la boutique et valider →</a>
+    </div>
+  `).join("");
+}
+
+// ---------- Commandes en cours / historique ----------
+const statutsEnCours = ["en_attente", "acceptee"];
+const statutsHistorique = ["livree", "refusee"];
+const badgeLabels = { en_attente: "En attente", acceptee: "Acceptée", livree: "Livrée", refusee: "Refusée" };
+
+let toutesCommandeProduits = {};
+
+async function chargerCommandes() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = "connexion.html";
+    return;
+  }
+
+  const { data: commandes, error } = await supabaseClient
+    .from("commandes")
+    .select("*, boutiques(nom_boutique)")
+    .eq("client_id", session.user.id)
+    .order("id", { ascending: false });
+
+  if (error) {
+    document.getElementById("listeEnCours").innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+    document.getElementById("listeHistorique").innerHTML = "";
+    return;
+  }
+
+  const ids = (commandes || []).map(c => c.id);
+  if (ids.length > 0) {
+    const { data: lignes } = await supabaseClient
+      .from("commande_produits")
+      .select("*")
+      .in("commande_id", ids);
+
+    (lignes || []).forEach(l => {
+      if (!toutesCommandeProduits[l.commande_id]) toutesCommandeProduits[l.commande_id] = [];
+      toutesCommandeProduits[l.commande_id].push(l);
+    });
+  }
+
+  const enCours = (commandes || []).filter(c => statutsEnCours.includes(c.statut));
+  const historique = (commandes || []).filter(c => statutsHistorique.includes(c.statut));
+
+  afficherListe("listeEnCours", enCours, "Aucune commande en cours.");
+  afficherListe("listeHistorique", historique, "Aucun achat pour l'instant.");
+}
+
+function afficherListe(idConteneur, commandes, texteVide) {
+  const conteneur = document.getElementById(idConteneur);
+
+  if (commandes.length === 0) {
+    conteneur.innerHTML = `<p class="empty">${texteVide}</p>`;
+    return;
+  }
+
+  conteneur.innerHTML = commandes.map(c => {
+    const lignes = toutesCommandeProduits[c.id] || [];
+    const nomBoutique = c.boutiques ? c.boutiques.nom_boutique : "Boutique";
+    return `
+      <div class="carte">
+        <h3>${nomBoutique}</h3>
+        ${lignes.map(l => `<p>${l.nom_produit} × ${l.quantite}</p>`).join("")}
+        <span class="badge ${c.statut}">${badgeLabels[c.statut] || c.statut}</span>
+        <div class="total">${formatPrix(c.total)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+chargerPaniersLocaux();
+chargerCommandes();
+</script>
+
+</body>
+
+</html>

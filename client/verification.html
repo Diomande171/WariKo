@@ -207,15 +207,14 @@
                     return;
                 }
 
-                const { data: urlData } = supabaseClient.storage
-                    .from("identite")
-                    .getPublicUrl(cheminFichier);
-
+                // On stocke uniquement le CHEMIN du fichier dans le bucket privé,
+                // jamais une URL publique. L'accès se fera via une URL signée
+                // générée à la demande côté admin (voir SQL/policies à part).
                 const { error: dbError } = await supabaseClient
                     .from("verifications_identite")
                     .upsert({
                         user_id: userId,
-                        carte_identite_url: urlData.publicUrl,
+                        carte_identite_url: cheminFichier,
                         statut: "en_attente"
                     }, { onConflict: "user_id" });
 

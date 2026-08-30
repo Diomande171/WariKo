@@ -34,10 +34,22 @@
             color: var(--blanc);
         }
 
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .header .logo {
             font-size: 20px;
             font-weight: 800;
             color: var(--jaune);
+        }
+
+        .top-bar .notification {
+            font-size: 18px;
+            text-decoration: none;
+            color: inherit;
         }
 
         .header h1 {
@@ -177,7 +189,10 @@
     <div class="app">
 
         <header class="header">
-            <div class="logo">WariKo Pro</div>
+            <div class="top-bar">
+                <div class="logo">WariKo Pro</div>
+                <a href="../notifications.html" class="notification">🔔</a>
+            </div>
             <h1 id="titre-bienvenue">Mes demandes</h1>
             <p>Toutes tes demandes clients en un coup d'œil</p>
         </header>

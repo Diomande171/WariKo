@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Vérifications</title>
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 90px;
+            color: var(--blanc);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--blanc);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .sous-titre {
+            font-size: 13px;
+            opacity: 0.75;
+            margin-bottom: 20px;
+        }
+
+        .onglets {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .onglet {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--blanc);
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .onglet.actif {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            opacity: 1;
+        }
+
+        .verif-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .verif-card .uid {
+            font-size: 11px;
+            opacity: 0.6;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+
+        .verif-card img {
+            width: 100%;
+            border-radius: 10px;
+            display: block;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.1);
+            min-height: 120px;
+            object-fit: contain;
+        }
+
+        .verif-card .chargement-image {
+            font-size: 12px;
+            opacity: 0.6;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .statut-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .statut-tag.en_attente {
+            background: rgba(255, 209, 0, 0.15);
+            color: var(--jaune);
+        }
+
+        .statut-tag.approuve {
+            background: rgba(0, 200, 100, 0.15);
+            color: #00c864;
+        }
+
+        .statut-tag.refuse {
+            background: rgba(255, 60, 60, 0.15);
+            color: #ff5c5c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .actions button {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .btn-approuver {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+        }
+
+        .btn-refuser {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.3) !important;
+            color: var(--blanc);
+        }
+
+        .empty {
+            text-align: center;
+            opacity: 0.6;
+            padding: 50px 20px;
+            font-size: 13px;
+        }
+
+        .acces-refuse {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .bottom-nav a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app" id="app" style="display:none;">
+
+        <div class="header">
+            <h1>Vérifications</h1>
+            <button class="logout-btn" id="btn-logout">Déconnexion</button>
+        </div>
+        <p class="sous-titre">Vérification des pièces d'identité</p>
+
+        <div class="onglets">
+            <div class="onglet actif" data-statut="en_attente">En attente</div>
+            <div class="onglet" data-statut="approuve">Approuvées</div>
+            <div class="onglet" data-statut="refuse">Refusées</div>
+        </div>
+
+        <div id="liste-verifications">
+            <p class="empty">Chargement...</p>
+        </div>
+
+    </div>
+
+    <div id="acces-refuse-zone" style="display:none;">
+        <div class="acces-refuse">
+            <p style="color:#fff;">Accès réservé à l'administration.</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="nav-admin" style="display:none;">
+        <a href="index.html">📊<br>Tableau de bord</a>
+        <a href="verifications.html" class="active">🪪<br>Vérifications</a>
+        <a href="utilisateurs.html">👥<br>Utilisateurs</a>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const ADMIN_UID = "895d437b-aa9b-4c68-9f82-11ed30953687";
+
+        const appEl = document.getElementById("app");
+        const accesRefuseEl = document.getElementById("acces-refuse-zone");
+        const navEl = document.getElementById("nav-admin");
+        const listeEl = document.getElementById("liste-verifications");
+        const onglets = document.querySelectorAll(".onglet");
+
+        let statutActif = "en_attente";
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session || session.user.id !== ADMIN_UID) {
+                accesRefuseEl.style.display = "block";
+                setTimeout(() => {
+                    window.location.href = "../client/connexion.html";
+                }, 1500);
+                return;
+            }
+
+            appEl.style.display = "block";
+            navEl.style.display = "flex";
+            chargerVerifications();
+        })();
+
+        onglets.forEach(onglet => {
+            onglet.addEventListener("click", () => {
+                onglets.forEach(o => o.classList.remove("actif"));
+                onglet.classList.add("actif");
+                statutActif = onglet.dataset.statut;
+                chargerVerifications();
+            });
+        });
+
+        async function chargerVerifications() {
+            listeEl.innerHTML = '<p class="empty">Chargement...</p>';
+
+            const { data, error } = await supabaseClient
+                .from("verifications_identite")
+                .select("*")
+                .eq("statut", statutActif)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                listeEl.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listeEl.innerHTML = '<p class="empty">Aucune vérification ici</p>';
+                return;
+            }
+
+            listeEl.innerHTML = data.map(v => `
+                <div class="verif-card" id="carte-${v.user_id}">
+                    <span class="statut-tag ${v.statut}">${libelleStatut(v.statut)}</span>
+                    <p class="uid">Utilisateur : ${v.user_id}</p>
+                    <div class="chargement-image">Chargement du document...</div>
+                    ${v.statut === "en_attente" ? `
+                    <div class="actions">
+                        <button class="btn-approuver" onclick="changerStatut('${v.user_id}', 'approuve')">✅ Approuver</button>
+                        <button class="btn-refuser" onclick="changerStatut('${v.user_id}', 'refuse')">❌ Refuser</button>
+                    </div>` : ""}
+                </div>
+            `).join("");
+
+            data.forEach(v => afficherImage(v.user_id, v.carte_identite_url));
+        }
+
+        function libelleStatut(statut) {
+            if (statut === "approuve") return "Approuvée";
+            if (statut === "refuse") return "Refusée";
+            return "En attente";
+        }
+
+        async function afficherImage(userId, chemin) {
+            const carte = document.getElementById("carte-" + userId);
+            if (!carte) return;
+
+            if (!chemin) {
+                carte.querySelector(".chargement-image").textContent = "Aucun document.";
+                return;
+            }
+
+            const { data, error } = await supabaseClient.storage
+                .from("identite")
+                .createSignedUrl(chemin, 300);
+
+            const zoneImage = carte.querySelector(".chargement-image");
+
+            if (error || !data) {
+                zoneImage.textContent = "Impossible de charger le document.";
+                return;
+            }
+
+            const img = document.createElement("img");
+            img.src = data.signedUrl;
+            img.alt = "Pièce d'identité";
+            zoneImage.replaceWith(img);
+        }
+
+        async function changerStatut(userId, nouveauStatut) {
+            const { error } = await supabaseClient
+                .from("verifications_identite")
+                .update({ statut: nouveauStatut })
+                .eq("user_id", userId);
+
+            if (error) {
+                alert("Erreur : " + error.message);
+                return;
+            }
+
+            chargerVerifications();
+        }
+
+        document.getElementById("btn-logout").addEventListener("click", async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "../client/connexion.html";
+        });
+    </script>
+
+</body>
+
+</html>

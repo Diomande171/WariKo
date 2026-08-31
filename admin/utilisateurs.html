@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Utilisateurs</title>
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 90px;
+            color: var(--blanc);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--blanc);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .recherche {
+            width: 100%;
+            margin: 16px 0;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: var(--blanc);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .recherche::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .user-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .user-card .nom {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .user-card .detail {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-top: 4px;
+        }
+
+        .badges {
+            margin-top: 8px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+        }
+
+        .empty {
+            text-align: center;
+            opacity: 0.6;
+            padding: 40px 20px;
+            font-size: 13px;
+        }
+
+        .acces-refuse {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .bottom-nav a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app" id="app" style="display:none;">
+
+        <div class="header">
+            <h1>Utilisateurs</h1>
+            <button class="logout-btn" id="btn-logout">Déconnexion</button>
+        </div>
+
+        <input type="text" class="recherche" id="recherche" placeholder="Rechercher par nom, email ou téléphone">
+
+        <div id="liste-utilisateurs">
+            <p class="empty">Chargement...</p>
+        </div>
+
+    </div>
+
+    <div id="acces-refuse-zone" style="display:none;">
+        <div class="acces-refuse">
+            <p style="color:#fff;">Accès réservé à l'administration.</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="nav-admin" style="display:none;">
+        <a href="index.html">📊<br>Tableau de bord</a>
+        <a href="verifications.html">🪪<br>Vérifications</a>
+        <a href="utilisateurs.html" class="active">👥<br>Utilisateurs</a>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const ADMIN_UID = "895d437b-aa9b-4c68-9f82-11ed30953687";
+
+        const appEl = document.getElementById("app");
+        const accesRefuseEl = document.getElementById("acces-refuse-zone");
+        const navEl = document.getElementById("nav-admin");
+        const listeEl = document.getElementById("liste-utilisateurs");
+        const rechercheEl = document.getElementById("recherche");
+
+        let tousLesUtilisateurs = [];
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session || session.user.id !== ADMIN_UID) {
+                accesRefuseEl.style.display = "block";
+                setTimeout(() => {
+                    window.location.href = "../client/connexion.html";
+                }, 1500);
+                return;
+            }
+
+            appEl.style.display = "block";
+            navEl.style.display = "flex";
+            chargerUtilisateurs();
+        })();
+
+        async function chargerUtilisateurs() {
+            const { data, error } = await supabaseClient.rpc("admin_liste_utilisateurs");
+
+            if (error) {
+                listeEl.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            tousLesUtilisateurs = data || [];
+            afficherListe(tousLesUtilisateurs);
+        }
+
+        function afficherListe(liste) {
+            if (!liste || liste.length === 0) {
+                listeEl.innerHTML = '<p class="empty">Aucun utilisateur trouvé</p>';
+                return;
+            }
+
+            listeEl.innerHTML = liste.map(u => `
+                <div class="user-card">
+                    <div class="nom">${u.nom_complet || "Sans nom"}</div>
+                    <div class="detail">📧 ${u.email || "-"}</div>
+                    <div class="detail">📞 ${u.telephone || "-"}</div>
+                    <div class="badges">
+                        ${u.est_vendeur ? '<span class="badge">Vendeur</span>' : ""}
+                        ${u.est_prestataire ? '<span class="badge">Prestataire</span>' : ""}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        rechercheEl.addEventListener("input", () => {
+            const terme = rechercheEl.value.trim().toLowerCase();
+
+            if (!terme) {
+                afficherListe(tousLesUtilisateurs);
+                return;
+            }
+
+            const filtres = tousLesUtilisateurs.filter(u =>
+                (u.nom_complet || "").toLowerCase().includes(terme) ||
+                (u.email || "").toLowerCase().includes(terme) ||
+                (u.telephone || "").toLowerCase().includes(terme)
+            );
+
+            afficherListe(filtres);
+        });
+
+        document.getElementById("btn-logout").addEventListener("click", async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "../client/connexion.html";
+        });
+    </script>
+
+</body>
+
+</html>

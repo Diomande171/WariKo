@@ -26,6 +26,96 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <style>
+        body {
+            background:
+                linear-gradient(rgba(30, 2, 60, 0.55), rgba(30, 2, 60, 0.55)),
+                url('../assets/fond-auth.png') center top / cover no-repeat,
+                var(--violet-fonce);
+            background-attachment: fixed;
+        }
+
+        .auth-content {
+            background: rgba(20, 1, 45, 0.35);
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+        }
+
+        .mascotte-scene {
+            position: relative;
+            height: 130px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            margin: 8px 0 4px;
+            overflow: hidden;
+        }
+
+        .mascotte-img {
+            height: 120px;
+            width: auto;
+            transform: translateX(-140%);
+            animation: marcherEntree 1.6s ease-out forwards;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));
+        }
+
+        .mascotte-img.tape {
+            animation: marcherEntree 1.6s ease-out forwards, tapBaton 0.5s ease-in-out 1.6s;
+        }
+
+        @keyframes marcherEntree {
+            0%   { transform: translateX(-140%) translateY(0); }
+            15%  { transform: translateX(-105%) translateY(-6px); }
+            30%  { transform: translateX(-70%) translateY(0); }
+            45%  { transform: translateX(-40%) translateY(-6px); }
+            60%  { transform: translateX(-15%) translateY(0); }
+            75%  { transform: translateX(-4%) translateY(-4px); }
+            100% { transform: translateX(0) translateY(0); }
+        }
+
+        @keyframes tapBaton {
+            0%   { transform: translateX(0) rotate(0deg); }
+            30%  { transform: translateX(0) rotate(-6deg); }
+            55%  { transform: translateX(0) rotate(4deg); }
+            80%  { transform: translateX(0) rotate(-2deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+
+        .impact-sol {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--jaune);
+            opacity: 0;
+            transform: translateX(-50%) scale(0.3);
+        }
+
+        .impact-sol.jouer {
+            animation: ondeImpact 0.6s ease-out 1.75s;
+        }
+
+        @keyframes ondeImpact {
+            0%   { opacity: 0.9; transform: translateX(-50%) scale(0.3); }
+            100% { opacity: 0; transform: translateX(-50%) scale(6); }
+        }
+
+        .champs-formulaire {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .champs-formulaire.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    </style>
+
 </head>
 
 
@@ -40,11 +130,10 @@
             ← Retour
         </a>
 
-
-        <div class="auth-logo">
-            <img src="../assets/logo.svg" alt="WariKo" style="width: 110px; height: auto;">
+        <div class="mascotte-scene">
+            <img id="mascotteImg" class="mascotte-img" src="../assets/mascotte.png" alt="Mascotte WariKo">
+            <div id="impactSol" class="impact-sol"></div>
         </div>
-
 
         <section class="auth-content">
 
@@ -59,86 +148,94 @@
 
             <form id="signup-form">
 
-                <label for="fullname">
-                    Nom complet
-                </label>
+                <div id="champsFormulaire" class="champs-formulaire">
 
-                <input
-                    id="fullname"
-                    type="text"
-                    placeholder="Votre nom complet"
-                    required
-                >
+                    <label for="fullname">
+                        Nom complet
+                    </label>
 
-
-                <label for="phone">
-                    Téléphone
-                </label>
-
-                <input
-                    id="phone"
-                    type="tel"
-                    placeholder="Ex : 07 00 00 00 00"
-                    required
-                >
+                    <input
+                        id="fullname"
+                        type="text"
+                        placeholder="Votre nom complet"
+                        required
+                    >
 
 
-                <label for="email">
-                    E-mail
-                </label>
+                    <label for="phone">
+                        Téléphone
+                    </label>
 
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Votre e-mail"
-                    required
-                >
-
-
-                <label for="password">
-                    Mot de passe
-                </label>
-
-                <input
-                    id="password"
-                    type="password"
-                    placeholder="Choisissez un mot de passe"
-                    required
-                    minlength="6"
-                >
+                    <input
+                        id="phone"
+                        type="tel"
+                        placeholder="Ex : 07 00 00 00 00"
+                        required
+                    >
 
 
-                <p id="error-message" style="color: red; display: none;"></p>
+                    <label for="email">
+                        E-mail
+                    </label>
 
-                <p id="success-message" style="color: green; display: none;"></p>
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="Votre e-mail"
+                        required
+                    >
 
 
-                <button
-                    type="submit"
-                    class="primary-button"
-                >
-                    Créer mon compte
-                </button>
+                    <label for="password">
+                        Mot de passe
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Choisissez un mot de passe"
+                        required
+                        minlength="6"
+                    >
+
+
+                    <p id="error-message" style="color: red; display: none;"></p>
+
+                    <p id="success-message" style="color: green; display: none;"></p>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Créer mon compte
+                    </button>
+
+                </div>
 
             </form>
 
 
-            <div class="auth-divider">
-                <span>OU</span>
+            <div id="basDePage" class="champs-formulaire">
+
+                <div class="auth-divider">
+                    <span>OU</span>
+                </div>
+
+
+                <p class="create-text">
+                    Vous avez déjà un compte ?
+                </p>
+
+
+                <a
+                    href="connexion.html"
+                    class="secondary-button"
+                >
+                    Se connecter
+                </a>
+
             </div>
-
-
-            <p class="create-text">
-                Vous avez déjà un compte ?
-            </p>
-
-
-            <a
-                href="connexion.html"
-                class="secondary-button"
-            >
-                Se connecter
-            </a>
 
         </section>
 
@@ -151,6 +248,20 @@
 
 
     <script>
+        // Animation d'entrée de la mascotte : marche puis tape le bâton au sol
+        const mascotteImg = document.getElementById("mascotteImg");
+        const impactSol = document.getElementById("impactSol");
+        const champsFormulaire = document.getElementById("champsFormulaire");
+        const basDePage = document.getElementById("basDePage");
+
+        mascotteImg.classList.add("tape");
+        setTimeout(() => impactSol.classList.add("jouer"), 0);
+
+        setTimeout(() => {
+            champsFormulaire.classList.add("visible");
+            basDePage.classList.add("visible");
+        }, 2200);
+
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 

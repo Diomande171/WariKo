@@ -65,7 +65,7 @@
 
                 <input
                     id="identifier"
-                    type="email"
+                    type="text"
                     placeholder="Votre e-mail"
                     required
                 >
@@ -137,14 +137,21 @@
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        const ADMIN_UID = "895d437b-aa9b-4c68-9f82-11ed30953687";
+        const ADMIN_EMAIL = "admin@wariko.app";
+
         const form = document.getElementById("login-form");
         const errorMessage = document.getElementById("error-message");
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById("identifier").value;
+            const saisie = document.getElementById("identifier").value.trim();
             const password = document.getElementById("password").value;
+
+            // Si l'utilisateur tape "admin", on traduit en email caché côté Supabase
+            const estAdmin = saisie.toLowerCase() === "admin";
+            const email = estAdmin ? ADMIN_EMAIL : saisie;
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
@@ -154,6 +161,12 @@
             if (error) {
                 errorMessage.textContent = "Identifiants incorrects. Réessayez.";
                 errorMessage.style.display = "block";
+                return;
+            }
+
+            // Vérification supplémentaire : seul le compte admin va vers le panneau admin
+            if (data.user && data.user.id === ADMIN_UID) {
+                window.location.href = "../admin/index.html";
             } else {
                 window.location.href = "accueil.html";
             }

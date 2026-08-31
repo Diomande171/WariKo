@@ -1,15 +1,298 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WariKo - Administration</title>
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 90px;
+            color: var(--blanc);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--blanc);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-family: inherit;
+        }
+
+        .sous-titre {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .cartes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .carte {
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .carte .valeur {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .carte .label {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-top: 4px;
+        }
+
+        .section-titre {
+            font-size: 14px;
+            font-weight: 800;
+            margin: 24px 0 12px;
+        }
+
+        .graphique-zone {
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .produit-ligne {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 13px;
+        }
+
+        .produit-ligne .quantite {
+            color: var(--jaune);
+            font-weight: 800;
+        }
+
+        .empty {
+            text-align: center;
+            opacity: 0.6;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .bottom-nav a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
+        }
+
+        .acces-refuse {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--blanc);
+        }
+    </style>
+
 </head>
 
 <body>
 
-    <h1>WariKo</h1>
-    <p>Espace administration</p>
+    <div class="app" id="app" style="display:none;">
+
+        <div class="header">
+            <h1>WariKo Admin</h1>
+            <button class="logout-btn" id="btn-logout">Déconnexion</button>
+        </div>
+        <p class="sous-titre">Tableau de bord</p>
+
+        <div class="cartes" id="cartes-stats">
+            <div class="carte"><div class="valeur">-</div><div class="label">Utilisateurs</div></div>
+            <div class="carte"><div class="valeur">-</div><div class="label">Vendeurs</div></div>
+            <div class="carte"><div class="valeur">-</div><div class="label">Prestataires</div></div>
+            <div class="carte"><div class="valeur">-</div><div class="label">Commandes</div></div>
+        </div>
+
+        <div class="section-titre">Inscriptions (7 derniers jours)</div>
+        <div class="graphique-zone">
+            <canvas id="chartInscriptions" height="180"></canvas>
+        </div>
+
+        <div class="section-titre">Produits les plus vendus</div>
+        <div class="graphique-zone" id="produits-populaires">
+            <p class="empty">Chargement...</p>
+        </div>
+
+    </div>
+
+    <div id="acces-refuse-zone" style="display:none;">
+        <div class="acces-refuse">
+            <p>Accès réservé à l'administration.</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="nav-admin" style="display:none;">
+        <a href="index.html" class="active">📊<br>Tableau de bord</a>
+        <a href="verifications.html">🪪<br>Vérifications</a>
+        <a href="utilisateurs.html">👥<br>Utilisateurs</a>
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const ADMIN_UID = "895d437b-aa9b-4c68-9f82-11ed30953687";
+
+        const appEl = document.getElementById("app");
+        const accesRefuseEl = document.getElementById("acces-refuse-zone");
+        const navEl = document.getElementById("nav-admin");
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session || session.user.id !== ADMIN_UID) {
+                accesRefuseEl.style.display = "block";
+                setTimeout(() => {
+                    window.location.href = "../client/connexion.html";
+                }, 1500);
+                return;
+            }
+
+            appEl.style.display = "block";
+            navEl.style.display = "flex";
+            chargerStats();
+            chargerProduitsPopulaires();
+        })();
+
+        async function chargerStats() {
+            const { data, error } = await supabaseClient.rpc("admin_dashboard_stats");
+
+            if (error) {
+                document.getElementById("cartes-stats").innerHTML =
+                    `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            document.getElementById("cartes-stats").innerHTML = `
+                <div class="carte"><div class="valeur">${data.total_utilisateurs ?? 0}</div><div class="label">Utilisateurs</div></div>
+                <div class="carte"><div class="valeur">${data.total_vendeurs ?? 0}</div><div class="label">Vendeurs</div></div>
+                <div class="carte"><div class="valeur">${data.total_prestataires ?? 0}</div><div class="label">Prestataires</div></div>
+                <div class="carte"><div class="valeur">${data.total_commandes ?? 0}</div><div class="label">Commandes</div></div>
+            `;
+
+            const inscriptions = data.inscriptions_7j || [];
+            const labels = inscriptions.map(j => j.date.slice(5));
+            const valeurs = inscriptions.map(j => j.nombre);
+
+            new Chart(document.getElementById("chartInscriptions"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Inscriptions",
+                        data: valeurs,
+                        borderColor: "#FFD100",
+                        backgroundColor: "rgba(255,209,0,0.15)",
+                        tension: 0.35,
+                        fill: true,
+                        pointBackgroundColor: "#FFD100"
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: "#ffffffaa" }, grid: { color: "#ffffff15" } },
+                        y: { ticks: { color: "#ffffffaa" }, grid: { color: "#ffffff15" }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        async function chargerProduitsPopulaires() {
+            const zone = document.getElementById("produits-populaires");
+            const { data, error } = await supabaseClient.rpc("admin_produits_populaires");
+
+            if (error) {
+                zone.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                zone.innerHTML = '<p class="empty">Aucune vente pour le moment</p>';
+                return;
+            }
+
+            zone.innerHTML = data.map(p => `
+                <div class="produit-ligne">
+                    <span>${p.nom_produit}</span>
+                    <span class="quantite">${p.quantite_totale} vendus</span>
+                </div>
+            `).join("");
+        }
+
+        document.getElementById("btn-logout").addEventListener("click", async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "../client/connexion.html";
+        });
+    </script>
 
 </body>
+
 </html>

@@ -26,6 +26,102 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <style>
+        body {
+            background:
+                linear-gradient(rgba(30, 2, 60, 0.55), rgba(30, 2, 60, 0.55)),
+                url('../assets/fond-auth.png') center top / cover no-repeat,
+                var(--violet-fonce);
+            background-attachment: fixed;
+        }
+
+        .auth-content {
+            background: rgba(20, 1, 45, 0.35);
+            backdrop-filter: blur(4px);
+            border-radius: 20px;
+        }
+
+        .mascotte-scene {
+            position: relative;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 8px 0 4px;
+        }
+
+        .mascotte-img {
+            height: 120px;
+            width: auto;
+            opacity: 0;
+            transform: scale(0.85);
+            animation: apparition 0.6s ease-out forwards, tourDeMagie 1.8s ease-in-out 0.6s;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));
+        }
+
+        @keyframes apparition {
+            0%   { opacity: 0; transform: scale(0.85); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes tourDeMagie {
+            0%   { transform: scale(1) rotate(0deg); }
+            15%  { transform: scale(1.02) rotate(-4deg); }
+            30%  { transform: scale(1) rotate(3deg); }
+            45%  { transform: scale(1.02) rotate(-4deg); }
+            60%  { transform: scale(1) rotate(3deg); }
+            75%  { transform: scale(1.02) rotate(-2deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .etincelle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--jaune);
+            opacity: 0;
+            box-shadow: 0 0 6px 2px var(--jaune);
+        }
+
+        .etincelle.jouer {
+            animation: voleEtincelle 1.4s ease-out forwards;
+        }
+
+        .etincelle:nth-child(1) { animation-delay: 0.7s; }
+        .etincelle:nth-child(2) { animation-delay: 0.95s; }
+        .etincelle:nth-child(3) { animation-delay: 1.2s; }
+        .etincelle:nth-child(4) { animation-delay: 1.45s; }
+        .etincelle:nth-child(5) { animation-delay: 1.7s; }
+
+        @keyframes voleEtincelle {
+            0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) translateX(0) scale(0.4); }
+            15%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) translateX(60px) scale(1); }
+        }
+
+        .etincelle:nth-child(1) { --angle: 20deg; }
+        .etincelle:nth-child(2) { --angle: 90deg; }
+        .etincelle:nth-child(3) { --angle: 160deg; }
+        .etincelle:nth-child(4) { --angle: 230deg; }
+        .etincelle:nth-child(5) { --angle: 300deg; }
+
+        .champs-formulaire {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .champs-formulaire.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    </style>
+
 </head>
 
 
@@ -40,9 +136,13 @@
             ← Retour
         </a>
 
-
-        <div class="auth-logo">
-            <img src="../assets/logo.svg" alt="WariKo" style="width: 110px; height: auto;">
+        <div class="mascotte-scene">
+            <img id="mascotteImg" class="mascotte-img" src="../assets/mascotte.png" alt="Mascotte WariKo">
+            <span class="etincelle"></span>
+            <span class="etincelle"></span>
+            <span class="etincelle"></span>
+            <span class="etincelle"></span>
+            <span class="etincelle"></span>
         </div>
 
 
@@ -59,67 +159,75 @@
 
             <form id="login-form">
 
-                <label for="identifier">
-                    E-mail
-                </label>
+                <div id="champsFormulaire" class="champs-formulaire">
 
-                <input
-                    id="identifier"
-                    type="text"
-                    placeholder="Votre e-mail"
-                    required
-                >
+                    <label for="identifier">
+                        E-mail
+                    </label>
 
-
-                <label for="password">
-                    Mot de passe
-                </label>
-
-                <input
-                    id="password"
-                    type="password"
-                    placeholder="Votre mot de passe"
-                    required
-                >
+                    <input
+                        id="identifier"
+                        type="text"
+                        placeholder="Votre e-mail"
+                        required
+                    >
 
 
-                <a
-                    href="#"
-                    class="forgot-password"
-                >
-                    Mot de passe oublié ?
-                </a>
+                    <label for="password">
+                        Mot de passe
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Votre mot de passe"
+                        required
+                    >
 
 
-                <p id="error-message" style="color: red; display: none;"></p>
+                    <a
+                        href="#"
+                        class="forgot-password"
+                    >
+                        Mot de passe oublié ?
+                    </a>
 
 
-                <button
-                    type="submit"
-                    class="primary-button"
-                >
-                    Se connecter
-                </button>
+                    <p id="error-message" style="color: red; display: none;"></p>
+
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Se connecter
+                    </button>
+
+                </div>
 
             </form>
 
 
-            <div class="auth-divider">
-                <span>OU</span>
+            <div id="basDePage" class="champs-formulaire">
+
+                <div class="auth-divider">
+                    <span>OU</span>
+                </div>
+
+
+                <p class="create-text">
+                    Vous n'avez pas encore de compte ?
+                </p>
+
+
+                <a
+                    href="inscription.html"
+                    class="secondary-button"
+                >
+                    Créer un compte
+                </a>
+
             </div>
-
-
-            <p class="create-text">
-                Vous n'avez pas encore de compte ?
-            </p>
-
-
-            <a
-                href="inscription.html"
-                class="secondary-button"
-            >
-                Créer un compte
-            </a>
 
         </section>
 
@@ -132,6 +240,18 @@
 
 
     <script>
+        // Animation d'entrée de la mascotte : quelques tours de magie avec le bâton
+        const etincelles = document.querySelectorAll(".etincelle");
+        etincelles.forEach(e => e.classList.add("jouer"));
+
+        const champsFormulaire = document.getElementById("champsFormulaire");
+        const basDePage = document.getElementById("basDePage");
+
+        setTimeout(() => {
+            champsFormulaire.classList.add("visible");
+            basDePage.classList.add("visible");
+        }, 2400);
+
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 

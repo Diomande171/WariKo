@@ -40,6 +40,18 @@
             align-items: center;
         }
 
+        .top-bar .gauche {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .top-bar .retour {
+            font-size: 20px;
+            text-decoration: none;
+            color: var(--jaune);
+        }
+
         .header .logo {
             font-size: 20px;
             font-weight: 800;
@@ -190,7 +202,10 @@
 
         <header class="header">
             <div class="top-bar">
-                <div class="logo">WariKo Pro</div>
+                <div class="gauche">
+                    <a href="javascript:history.back()" class="retour">←</a>
+                    <div class="logo">WariKo Pro</div>
+                </div>
                 <a href="../notifications.html" class="notification">🔔</a>
             </div>
             <h1 id="titre-bienvenue">Mes demandes</h1>

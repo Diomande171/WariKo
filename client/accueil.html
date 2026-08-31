@@ -103,6 +103,55 @@
             opacity: 0.65;
         }
 
+        /* --- Bandeau de rappel géolocalisation --- */
+        #bandeauPosition {
+            display: none;
+            margin: 16px 20px 0;
+            background: var(--jaune);
+            border-radius: 14px;
+            padding: 14px 16px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #bandeauPosition .icone {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        #bandeauPosition .texte {
+            flex: 1;
+        }
+
+        #bandeauPosition .titre {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        #bandeauPosition .sous-titre {
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--violet-fonce);
+            opacity: 0.75;
+        }
+
+        #bandeauPosition button {
+            flex-shrink: 0;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            border: none;
+            border-radius: 10px;
+            padding: 9px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        #bandeauPosition button:disabled {
+            opacity: 0.6;
+        }
+
         .section {
             padding: 6px 20px 22px;
         }
@@ -310,6 +359,15 @@
 
         </header>
 
+        <div id="bandeauPosition">
+            <div class="icone">📍</div>
+            <div class="texte">
+                <div class="titre">Active ta position</div>
+                <div class="sous-titre">Nécessaire pour commander ou demander une prestation</div>
+            </div>
+            <button id="btnActiverPosition" onclick="activerPosition()">Activer</button>
+        </div>
+
 
         <section class="section">
 
@@ -491,11 +549,34 @@
     </div>
 
 
+    <script src="../assets/position.js"></script>
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const bandeauPosition = document.getElementById("bandeauPosition");
+        const btnActiverPosition = document.getElementById("btnActiverPosition");
+
+        async function verifierBandeauPosition() {
+            const dejaPartagee = await positionDejaPartagee();
+            bandeauPosition.style.display = dejaPartagee ? "none" : "flex";
+        }
+
+        async function activerPosition() {
+            btnActiverPosition.disabled = true;
+            btnActiverPosition.textContent = "...";
+
+            try {
+                await exigerPosition();
+                bandeauPosition.style.display = "none";
+            } catch (err) {
+                btnActiverPosition.disabled = false;
+                btnActiverPosition.textContent = "Activer";
+                alert(err.message);
+            }
+        }
 
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -510,6 +591,8 @@
                 const firstName = fullName.split(" ")[0];
                 document.getElementById("greeting").textContent = "Bonjour " + firstName + " 👋";
             }
+
+            verifierBandeauPosition();
         })();
     </script>
 

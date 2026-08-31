@@ -227,12 +227,12 @@
                 <span>Recherche</span>
             </a>
 
-            <a href="#">
+            <a href="messagerie.html">
                 💬
                 <span>Messages</span>
             </a>
 
-            <a href="#">
+            <a href="commandes.html">
                 📦
                 <span>Commandes</span>
             </a>
@@ -247,6 +247,7 @@
     </div>
 
 
+    <script src="../assets/position.js"></script>
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
@@ -307,6 +308,15 @@
                 return;
             }
 
+            let position;
+            try {
+                position = await exigerPosition();
+            } catch (err) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "⚠️ " + err.message;
+                return;
+            }
+
             submitBtn.disabled = true;
             submitBtn.textContent = "Envoi en cours...";
             statusMessage.textContent = "";
@@ -320,7 +330,9 @@
                     professionnel_nom: proNom,
                     categorie: proCategorie,
                     description: description,
-                    statut: "en_attente"
+                    statut: "en_attente",
+                    client_lat: position.lat,
+                    client_lng: position.lng
                 });
 
             submitBtn.disabled = false;

@@ -349,6 +349,10 @@
             font-family: inherit;
         }
 
+        .valider-btn:disabled {
+            opacity: 0.6;
+        }
+
         .fermer-panier {
             display: block;
             text-align: center;
@@ -359,6 +363,13 @@
             background: none;
             border: none;
             width: 100%;
+        }
+
+        #statutPanier {
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: center;
+            color: var(--blanc);
         }
     </style>
 
@@ -400,11 +411,13 @@
                 <span>Total</span>
                 <span id="totalFeuille">0 FCFA</span>
             </div>
-            <button class="valider-btn" onclick="validerCommande()">Envoyer la commande au vendeur</button>
+            <p id="statutPanier"></p>
+            <button class="valider-btn" id="btnValiderCommande" onclick="validerCommande()">Envoyer la commande au vendeur</button>
             <button class="fermer-panier" onclick="fermerPanier()">Fermer</button>
         </div>
     </div>
 
+    <script src="../assets/position.js"></script>
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
@@ -439,6 +452,8 @@
         const boutiqueHeader = document.getElementById("boutiqueHeader");
         const listeProduits = document.getElementById("listeProduits");
         const galerieBoutique = document.getElementById("galerieBoutique");
+        const statutPanier = document.getElementById("statutPanier");
+        const btnValiderCommande = document.getElementById("btnValiderCommande");
 
         let utilisateurActuel = null;
         let boutiqueActuelle = null;
@@ -515,6 +530,7 @@
 
             const total = panier.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
             document.getElementById("totalFeuille").textContent = formatPrix(total);
+            statutPanier.textContent = "";
             document.getElementById("overlayPanier").style.display = "block";
         }
 
@@ -536,6 +552,22 @@
                 return;
             }
 
+            // Position obligatoire avant tout envoi de commande
+            let position;
+            try {
+                statutPanier.style.color = "#FFFFFF";
+                statutPanier.textContent = "Localisation en cours...";
+                position = await exigerPosition();
+            } catch (err) {
+                statutPanier.style.color = "#FFD6D6";
+                statutPanier.textContent = "⚠️ " + err.message;
+                return;
+            }
+
+            btnValiderCommande.disabled = true;
+            btnValiderCommande.textContent = "Envoi en cours...";
+            statutPanier.textContent = "";
+
             const total = panier.reduce((s, l) => s + l.quantite * Number(l.prix), 0);
 
             const { data: commande, error } = await supabaseClient
@@ -546,13 +578,18 @@
                     vendeur_id: boutiqueActuelle.user_id,
                     statut: "en_attente",
                     total: total,
-                    client_nom: session.user.user_metadata?.full_name || "Client"
+                    client_nom: session.user.user_metadata?.full_name || "Client",
+                    client_lat: position.lat,
+                    client_lng: position.lng
                 })
                 .select()
                 .single();
 
             if (error) {
-                alert("Erreur lors de l'envoi : " + error.message);
+                btnValiderCommande.disabled = false;
+                btnValiderCommande.textContent = "Envoyer la commande au vendeur";
+                statutPanier.style.color = "#FFD6D6";
+                statutPanier.textContent = "Erreur : " + error.message;
                 return;
             }
 
@@ -566,15 +603,22 @@
 
             const { error: errLignes } = await supabaseClient.from("commande_produits").insert(lignes);
 
+            btnValiderCommande.disabled = false;
+            btnValiderCommande.textContent = "Envoyer la commande au vendeur";
+
             if (errLignes) {
-                alert("Erreur lors de l'envoi du détail : " + errLignes.message);
+                statutPanier.style.color = "#FFD6D6";
+                statutPanier.textContent = "Erreur lors de l'envoi du détail : " + errLignes.message;
                 return;
             }
 
             localStorage.removeItem(cleParnier);
-            fermerPanier();
+            statutPanier.style.color = "#D6FFD6";
+            statutPanier.textContent = "Commande envoyée ✓";
             mettreAJourAffichage();
-            alert("Commande envoyée au vendeur ! Il va l'accepter ou la refuser.");
+            setTimeout(() => {
+                fermerPanier();
+            }, 1200);
         }
 
         async function chargerGalerie() {

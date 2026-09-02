@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Vérification d'identité</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding: 22px 20px 60px;
+            color: var(--blanc);
+        }
+
+        .back-link {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.75;
+            text-decoration: none;
+        }
+
+        h1 {
+            font-size: 19px;
+            font-weight: 800;
+            margin-top: 12px;
+        }
+
+        .sous-titre {
+            font-size: 13px;
+            opacity: 0.75;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .statut-card {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .statut-en_attente {
+            background: rgba(255, 209, 0, 0.15);
+            color: var(--jaune);
+        }
+
+        .statut-approuve {
+            background: rgba(0, 200, 100, 0.15);
+            color: #00c864;
+        }
+
+        .statut-refuse {
+            background: rgba(255, 60, 60, 0.15);
+            color: #ff5c5c;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 22px;
+            margin-bottom: 8px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            background: var(--gris);
+            color: var(--texte);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+            border: none;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 800;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+        }
+
+        .info {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .btn-continuer {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <a href="../client/accueil.html" class="back-link">← Retour</a>
+        <h1>Vérification d'identité</h1>
+        <p class="sous-titre">Pour proposer vos services comme prestataire sur WariKo, vous devez d'abord confirmer votre identité avec une pièce officielle (carte d'identité, passeport ou permis).</p>
+
+        <div id="statutZone"></div>
+
+        <form id="formVerification">
+            <label for="fichier">Photo de votre pièce d'identité</label>
+            <input type="file" id="fichier" accept="image/*" capture="environment" required>
+            <p class="info">Assurez-vous que le document est bien lisible, sans reflet. Votre document reste confidentiel et n'est visible que par vous et l'équipe WariKo.</p>
+            <button type="submit" id="btnEnvoyer">Envoyer pour vérification</button>
+        </form>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const statutZone = document.getElementById("statutZone");
+        const formVerification = document.getElementById("formVerification");
+        const btnEnvoyer = document.getElementById("btnEnvoyer");
+
+        let userId = null;
+
+        const statutLabels = {
+            en_attente: "⏳ Votre document est en cours de vérification. Cela peut prendre jusqu'à 24h.",
+            approuve: "✅ Votre identité est vérifiée. Vous pouvez créer votre profil prestataire.",
+            refuse: "❌ Votre document a été refusé. Merci d'en soumettre un nouveau, bien lisible."
+        };
+
+        async function init() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            if (!user) {
+                window.location.href = "../client/connexion.html";
+                return;
+            }
+
+            userId = user.id;
+
+            const { data: verif } = await supabaseClient
+                .from("verifications_identite")
+                .select("*")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            if (verif) {
+                statutZone.innerHTML = `<div class="statut-card statut-${verif.statut}">${statutLabels[verif.statut]}</div>`;
+
+                if (verif.statut === "approuve") {
+                    formVerification.style.display = "none";
+                    statutZone.innerHTML += `<a href="inscription.html" class="btn-continuer" style="margin-top:16px;background:var(--jaune);color:var(--violet-fonce);border-radius:12px;padding:14px;font-weight:800;font-size:14px;">Continuer mon inscription</a>`;
+                    return;
+                }
+
+                if (verif.statut === "en_attente") {
+                    formVerification.style.display = "none";
+                    return;
+                }
+                // Si refusé, on laisse le formulaire visible pour réessayer
+            }
+        }
+
+        formVerification.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const fichier = document.getElementById("fichier").files[0];
+            if (!fichier) return;
+
+            btnEnvoyer.disabled = true;
+            btnEnvoyer.textContent = "Envoi en cours...";
+
+            try {
+                const cheminFichier = `${userId}/carte_${Date.now()}.${fichier.name.split('.').pop()}`;
+
+                const { error: uploadError } = await supabaseClient.storage
+                    .from("identite")
+                    .upload(cheminFichier, fichier);
+
+                if (uploadError) {
+                    alert("Erreur lors de l'envoi du fichier : " + uploadError.message);
+                    btnEnvoyer.disabled = false;
+                    btnEnvoyer.textContent = "Envoyer pour vérification";
+                    return;
+                }
+
+                const { error: dbError } = await supabaseClient
+                    .from("verifications_identite")
+                    .upsert({
+                        user_id: userId,
+                        carte_identite_url: cheminFichier,
+                        statut: "en_attente"
+                    }, { onConflict: "user_id" });
+
+                if (dbError) {
+                    alert("Erreur : " + dbError.message);
+                    btnEnvoyer.disabled = false;
+                    btnEnvoyer.textContent = "Envoyer pour vérification";
+                    return;
+                }
+
+                alert("Document envoyé ! Nous vous notifierons une fois la vérification terminée.");
+                window.location.reload();
+
+            } catch (err) {
+                alert("Erreur inattendue : " + err.message);
+                btnEnvoyer.disabled = false;
+                btnEnvoyer.textContent = "Envoyer pour vérification";
+            }
+        });
+
+        init();
+    </script>
+
+</body>
+
+</html>

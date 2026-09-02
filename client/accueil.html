@@ -37,8 +37,23 @@
         }
 
         .header {
-            padding: 22px 20px 26px;
+            padding: 18px 20px 22px;
             color: var(--blanc);
+        }
+
+        .location-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            opacity: 0.75;
+            margin-bottom: 14px;
+        }
+
+        .location-row svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
         }
 
         .top-bar {
@@ -48,25 +63,75 @@
         }
 
         .top-bar .logo {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             color: var(--jaune);
         }
 
-        .top-bar .notification {
-            font-size: 18px;
-            text-decoration: none;
-            color: inherit;
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .location {
-            margin-top: 14px;
-            font-size: 12px;
-            opacity: 0.75;
+        .icon-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--blanc);
+        }
+
+        .icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        .avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--jaune);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            font-size: 14px;
+            text-decoration: none;
+            overflow: hidden;
+        }
+
+        .avatar-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .header h1 {
-            margin-top: 10px;
+            margin-top: 18px;
             font-size: 22px;
         }
 
@@ -77,14 +142,21 @@
         }
 
         .search-box {
-            margin-top: 18px;
-            background: var(--jaune);
+            margin-top: 16px;
+            background: var(--blanc);
             border-radius: 14px;
             padding: 13px 16px;
             display: flex;
             align-items: center;
             gap: 10px;
             text-decoration: none;
+        }
+
+        .search-box svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--violet-fonce);
+            flex-shrink: 0;
         }
 
         .search-box input {
@@ -100,7 +172,7 @@
 
         .search-box input::placeholder {
             color: var(--violet-fonce);
-            opacity: 0.65;
+            opacity: 0.55;
         }
 
         /* --- Bandeau de rappel géolocalisation --- */
@@ -153,7 +225,7 @@
         }
 
         .section {
-            padding: 6px 20px 22px;
+            padding: 20px 20px 4px;
         }
 
         .section-header {
@@ -175,6 +247,75 @@
             text-decoration: none;
         }
 
+        /* --- Prestataires --- */
+        .presta-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .presta-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .presta-card {
+            flex: 0 0 150px;
+            background: var(--blanc);
+            border-radius: 16px;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .presta-avatar {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 800;
+            color: var(--blanc);
+        }
+
+        .presta-body {
+            padding: 10px 12px 12px;
+        }
+
+        .presta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--blanc);
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+        }
+
+        .presta-body h4 {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            line-height: 1.25;
+        }
+
+        .presta-body p {
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--gris-texte);
+            line-height: 1.3;
+        }
+
+        .empty-msg {
+            font-size: 12px;
+            color: var(--blanc);
+            opacity: 0.6;
+            padding: 6px 0 2px;
+        }
+
+        /* --- Catégories --- */
         .categories {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -186,14 +327,23 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            background: var(--jaune);
+            background: var(--blanc);
             border-radius: 16px;
             padding: 14px 6px;
             text-decoration: none;
         }
 
         .category .category-icon {
-            font-size: 22px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category .category-icon svg {
+            width: 26px;
+            height: 26px;
         }
 
         .category span {
@@ -201,6 +351,57 @@
             font-weight: 700;
             color: var(--violet-fonce);
             text-align: center;
+        }
+
+        /* --- Boutiques mises en avant --- */
+        .boutique-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .boutique-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .boutique-card {
+            flex: 0 0 160px;
+            background: var(--blanc);
+            border-radius: 16px;
+            padding: 14px;
+            text-decoration: none;
+        }
+
+        .boutique-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--violet-fonce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .boutique-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--jaune);
+        }
+
+        .boutique-card h4 {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+            line-height: 1.25;
+        }
+
+        .boutique-card .boutique-cat {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--gris-texte);
         }
 
         .service-card {
@@ -211,10 +412,22 @@
             border-radius: 18px;
             padding: 18px;
             text-decoration: none;
+            margin-top: 6px;
         }
 
         .service-card .service-icon {
-            font-size: 30px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .service-card .service-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--violet-fonce);
         }
 
         .service-card h3 {
@@ -234,53 +447,6 @@
             display: block;
             margin-top: 8px;
             font-size: 12px;
-            font-weight: 800;
-            color: var(--violet-fonce);
-        }
-
-        /* --- Marketplace --- */
-        .marketplace-scroll {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-
-        .marketplace-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        .product-card {
-            flex: 0 0 132px;
-            background: var(--jaune);
-            border-radius: 16px;
-            padding: 12px;
-            text-decoration: none;
-        }
-
-        .product-card .product-image {
-            width: 100%;
-            height: 72px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            margin-bottom: 10px;
-        }
-
-        .product-card h4 {
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--violet-fonce);
-            line-height: 1.3;
-        }
-
-        .product-card .product-price {
-            margin-top: 6px;
-            font-size: 13px;
             font-weight: 800;
             color: var(--violet-fonce);
         }
@@ -322,10 +488,33 @@
 
         .bottom-nav {
             background: var(--violet-fonce);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 6px;
         }
 
         .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
             font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+        }
+
+        .bottom-nav a svg {
+            width: 22px;
+            height: 22px;
+            stroke: rgba(255, 255, 255, 0.6);
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
+        }
+
+        .bottom-nav a.active svg {
+            stroke: var(--jaune);
         }
     </style>
 
@@ -338,18 +527,46 @@
 
         <header class="header">
 
-            <div class="top-bar">
-                <div class="logo">WariKo</div>
-                <a href="../notifications.html" class="notification">🔔</a>
+            <div class="location-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/>
+                    <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+                Abidjan, Côte d'Ivoire
             </div>
 
-            <div class="location">📍 Abidjan, Côte d'Ivoire</div>
+            <div class="top-bar">
+                <div class="logo">WariKo</div>
+
+                <div class="top-actions">
+
+                    <a href="messagerie.html" class="icon-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                    </a>
+
+                    <a href="../notifications.html" class="icon-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="badge" id="badgeNotifs" style="display:none;">0</span>
+                    </a>
+
+                    <a href="profil.html" class="avatar-btn" id="avatarLink">?</a>
+
+                </div>
+            </div>
 
             <h1 id="greeting">Bonjour 👋</h1>
             <p>Quel service cherches-tu aujourd'hui ?</p>
 
             <a href="recherche.html" class="search-box">
-                🔍
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
                 <input
                     type="text"
                     placeholder="Rechercher un service ou un professionnel"
@@ -370,6 +587,17 @@
 
 
         <section class="section">
+            <div class="section-header">
+                <h2>Prestataires près de chez vous</h2>
+                <a href="recherche.html">Voir tout</a>
+            </div>
+            <div class="presta-scroll" id="prestaScroll">
+                <div class="empty-msg">Chargement...</div>
+            </div>
+        </section>
+
+
+        <section class="section">
 
             <div class="section-header">
                 <h2>Catégories</h2>
@@ -379,42 +607,86 @@
             <div class="categories">
 
                 <a href="recherche.html?categorie=plomberie" class="category">
-                    <div class="category-icon">🔧</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#6C5CE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 3v5a2 2 0 0 0 2 2h2v6a3 3 0 0 0 3 3h2"/>
+                            <path d="M14 21l3-3-3-3"/>
+                        </svg>
+                    </div>
                     <span>Plomberie</span>
                 </a>
 
                 <a href="recherche.html?categorie=electricite" class="category">
-                    <div class="category-icon">💡</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="#F5C518" stroke="#F5C518" stroke-width="1.5">
+                            <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.45 1 1.2 1 2.2h5.2c0-1 .4-1.75 1-2.2A6 6 0 0 0 12 3z"/>
+                        </svg>
+                    </div>
                     <span>Électricité</span>
                 </a>
 
                 <a href="recherche.html?categorie=menage" class="category">
-                    <div class="category-icon">🧹</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 3l7 7-7.5 7.5a3 3 0 0 1-4.24-4.24L11.5 6"/>
+                            <path d="M16 3l5 5"/>
+                        </svg>
+                    </div>
                     <span>Ménage</span>
                 </a>
 
                 <a href="recherche.html?categorie=coiffure" class="category">
-                    <div class="category-icon">💇</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#E84393" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="6" cy="6" r="3"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+                        </svg>
+                    </div>
                     <span>Coiffure</span>
                 </a>
 
                 <a href="recherche.html?categorie=peinture" class="category">
-                    <div class="category-icon">🎨</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#8E44AD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="3" width="10" height="6" rx="1"/>
+                            <path d="M9 9v4a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v4"/>
+                        </svg>
+                    </div>
                     <span>Peinture</span>
                 </a>
 
                 <a href="recherche.html?categorie=demenagement" class="category">
-                    <div class="category-icon">🚚</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#E67E22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="7" width="14" height="9" rx="1"/>
+                            <path d="M15 10h4l3 3v3h-7z"/>
+                            <circle cx="5.5" cy="19" r="1.8"/>
+                            <circle cx="17.5" cy="19" r="1.8"/>
+                        </svg>
+                    </div>
                     <span>Déménagement</span>
                 </a>
 
                 <a href="recherche.html?categorie=electromenager" class="category">
-                    <div class="category-icon">🔌</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2"/>
+                            <circle cx="12" cy="14" r="5"/>
+                            <path d="M8 6h.01M12 6h.01"/>
+                        </svg>
+                    </div>
                     <span>Électroménager</span>
                 </a>
 
                 <a href="recherche.html?categorie=jardinage" class="category">
-                    <div class="category-icon">🌿</div>
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22V12"/>
+                            <path d="M12 12C7 12 5 9 5 5c4 0 7 2 7 7z"/>
+                            <path d="M12 12c5 0 7-3 7-7-4 0-7 2-7 7z"/>
+                        </svg>
+                    </div>
                     <span>Jardinage</span>
                 </a>
 
@@ -427,7 +699,11 @@
 
             <a href="recherche.html" class="service-card">
 
-                <div class="service-icon">🛠️</div>
+                <div class="service-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </div>
 
                 <div>
                     <h3>Besoin d'un prestataire ?</h3>
@@ -441,46 +717,13 @@
 
 
         <section class="section">
-
             <div class="section-header">
-                <h2>Produits populaires</h2>
+                <h2>Boutiques mises en avant</h2>
                 <a href="marketplace.html">Voir tout</a>
             </div>
-
-            <div class="marketplace-scroll">
-
-                <a href="marketplace.html" class="product-card">
-                    <div class="product-image">📱</div>
-                    <h4>iPhone 11 reconditionné</h4>
-                    <div class="product-price">180 000 FCFA</div>
-                </a>
-
-                <a href="marketplace.html" class="product-card">
-                    <div class="product-image">👟</div>
-                    <h4>Baskets sneakers</h4>
-                    <div class="product-price">15 000 FCFA</div>
-                </a>
-
-                <a href="marketplace.html" class="product-card">
-                    <div class="product-image">💻</div>
-                    <h4>Ordinateur portable</h4>
-                    <div class="product-price">220 000 FCFA</div>
-                </a>
-
-                <a href="marketplace.html" class="product-card">
-                    <div class="product-image">🛋️</div>
-                    <h4>Canapé 3 places</h4>
-                    <div class="product-price">95 000 FCFA</div>
-                </a>
-
-                <a href="marketplace.html" class="product-card">
-                    <div class="product-image">👗</div>
-                    <h4>Robe soirée</h4>
-                    <div class="product-price">12 000 FCFA</div>
-                </a>
-
+            <div class="boutique-scroll" id="boutiqueScroll">
+                <div class="empty-msg">Chargement...</div>
             </div>
-
         </section>
 
 
@@ -515,32 +758,51 @@
         <nav class="bottom-nav">
 
             <a href="accueil.html" class="active">
-                🏠
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <path d="M9 22V12h6v10"/>
+                </svg>
                 <span>Accueil</span>
             </a>
 
             <a href="recherche.html">
-                🔍
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
                 <span>Recherche</span>
             </a>
 
             <a href="messagerie.html">
-                💬
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
                 <span>Messages</span>
             </a>
 
             <a href="marketplace.html">
-                🛍️
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2l1.5 4h9L18 2"/>
+                    <path d="M4 6h16l-1.5 14a2 2 0 0 1-2 1.8H7.5a2 2 0 0 1-2-1.8L4 6z"/>
+                    <path d="M9 10a3 3 0 0 0 6 0"/>
+                </svg>
                 <span>Marketplace</span>
             </a>
 
             <a href="commandes.html">
-                📦
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+                    <path d="M3 8v8l9 5 9-5V8"/>
+                    <path d="M12 13v8"/>
+                </svg>
                 <span>Commandes</span>
             </a>
 
             <a href="profil.html">
-                👤
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+                </svg>
                 <span>Profil</span>
             </a>
 
@@ -558,6 +820,21 @@
 
         const bandeauPosition = document.getElementById("bandeauPosition");
         const btnActiverPosition = document.getElementById("btnActiverPosition");
+
+        const couleursMetier = {
+            plomberie: "#6C5CE7",
+            electricite: "#F5C518",
+            menage: "#2ECC71",
+            coiffure: "#E84393",
+            peinture: "#8E44AD",
+            demenagement: "#E67E22",
+            electromenager: "#3498DB",
+            jardinage: "#27AE60"
+        };
+
+        function couleurPour(metier) {
+            return couleursMetier[(metier || "").toLowerCase()] || "#6C5CE7";
+        }
 
         async function verifierBandeauPosition() {
             const dejaPartagee = await positionDejaPartagee();
@@ -578,6 +855,78 @@
             }
         }
 
+        async function chargerPrestataires() {
+            const conteneur = document.getElementById("prestaScroll");
+
+            const { data, error } = await supabaseClient
+                .from("prestataires_publics")
+                .select("id, nom, metier, description")
+                .limit(10);
+
+            if (error || !data || data.length === 0) {
+                conteneur.innerHTML = '<div class="empty-msg">Aucun prestataire disponible pour le moment.</div>';
+                return;
+            }
+
+            conteneur.innerHTML = data.map(p => {
+                const couleur = couleurPour(p.metier);
+                const initiale = (p.nom || "?").charAt(0).toUpperCase();
+                return `
+                    <a href="recherche.html?prestataire=${p.id}" class="presta-card">
+                        <div class="presta-avatar" style="background:${couleur};">${initiale}</div>
+                        <div class="presta-body">
+                            <span class="presta-badge" style="background:${couleur};">${p.metier || ""}</span>
+                            <h4>${p.nom || "Prestataire"}</h4>
+                            <p>${p.description || ""}</p>
+                        </div>
+                    </a>
+                `;
+            }).join("");
+        }
+
+        async function chargerBoutiques() {
+            const conteneur = document.getElementById("boutiqueScroll");
+
+            const { data, error } = await supabaseClient
+                .from("boutiques_publiques")
+                .select("id, nom_boutique, categorie, mise_en_avant")
+                .order("mise_en_avant", { ascending: false })
+                .limit(10);
+
+            if (error || !data || data.length === 0) {
+                conteneur.innerHTML = '<div class="empty-msg">Aucune boutique disponible pour le moment.</div>';
+                return;
+            }
+
+            conteneur.innerHTML = data.map(b => `
+                <a href="boutique.html?id=${b.id}" class="boutique-card">
+                    <div class="boutique-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l1-5h16l1 5"/>
+                            <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>
+                            <path d="M9 20v-6h6v6"/>
+                        </svg>
+                    </div>
+                    <h4>${b.nom_boutique || "Boutique"}</h4>
+                    <div class="boutique-cat">${b.categorie || ""}</div>
+                </a>
+            `).join("");
+        }
+
+        async function chargerNotifications(userId) {
+            const badge = document.getElementById("badgeNotifs");
+            const { count } = await supabaseClient
+                .from("notifications")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", userId)
+                .eq("lu", false);
+
+            if (count && count > 0) {
+                badge.textContent = count > 9 ? "9+" : count;
+                badge.style.display = "flex";
+            }
+        }
+
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -590,9 +939,18 @@
             if (fullName) {
                 const firstName = fullName.split(" ")[0];
                 document.getElementById("greeting").textContent = "Bonjour " + firstName + " 👋";
+                document.getElementById("avatarLink").textContent = firstName.charAt(0).toUpperCase();
+            }
+
+            const avatarUrl = session.user.user_metadata.avatar_url;
+            if (avatarUrl) {
+                document.getElementById("avatarLink").innerHTML = `<img src="${avatarUrl}" alt="Profil">`;
             }
 
             verifierBandeauPosition();
+            chargerPrestataires();
+            chargerBoutiques();
+            chargerNotifications(session.user.id);
         })();
     </script>
 

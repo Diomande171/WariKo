@@ -87,6 +87,13 @@
             outline: none;
         }
 
+        input[type="file"] {
+            background: var(--gris);
+            color: var(--texte);
+            font-weight: 400;
+            font-size: 13px;
+        }
+
         textarea {
             min-height: 100px;
             resize: vertical;
@@ -188,6 +195,15 @@
                     required
                 >
 
+                <label for="carte_identite">Photo de ta pièce d'identité</label>
+                <input
+                    type="file"
+                    id="carte_identite"
+                    accept="image/*"
+                    capture="environment"
+                    required
+                >
+
                 <button type="submit" class="submit-btn" id="btn-submit">Créer ma boutique</button>
 
                 <p id="message" class="message"></p>
@@ -196,6 +212,8 @@
 
             <div class="info-box">
                 🔒 Ton numéro de téléphone reste privé. Les clients verront ta boutique et tes articles, mais devront échanger avec toi via la messagerie WariKo — pas de contact direct.
+                <br><br>
+                🪪 Ta pièce d'identité reste confidentielle (visible uniquement par l'équipe WariKo). Ta boutique sera créée immédiatement mais restera invisible du public jusqu'à validation de ton identité (sous 24h). Tu recevras une notification dès qu'elle sera active.
             </div>
 
         </section>
@@ -226,9 +244,10 @@
             const categorie = document.getElementById("categorie").value;
             const description = document.getElementById("description").value.trim();
             const telephone = document.getElementById("telephone").value.trim();
+            const carteIdentite = document.getElementById("carte_identite").files[0];
 
-            if (!nom_boutique || !categorie || !telephone) {
-                messageEl.textContent = "Merci de remplir tous les champs obligatoires.";
+            if (!nom_boutique || !categorie || !telephone || !carteIdentite) {
+                messageEl.textContent = "Merci de remplir tous les champs obligatoires, y compris la pièce d'identité.";
                 messageEl.className = "message error";
                 return;
             }
@@ -238,15 +257,50 @@
             messageEl.textContent = "";
 
             const { data: { session } } = await supabaseClient.auth.getSession();
+            const userId = session.user.id;
 
+            // 1. Upload de la pièce d'identité dans le bucket privé
+            const cheminFichier = `${userId}/carte_${Date.now()}.${carteIdentite.name.split('.').pop()}`;
+
+            const { error: uploadError } = await supabaseClient.storage
+                .from("identite")
+                .upload(cheminFichier, carteIdentite);
+
+            if (uploadError) {
+                messageEl.textContent = "Erreur lors de l'envoi de la pièce d'identité : " + uploadError.message;
+                messageEl.className = "message error";
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Créer ma boutique";
+                return;
+            }
+
+            // 2. Enregistrement/mise à jour de la vérification (statut en_attente)
+            const { error: verifError } = await supabaseClient
+                .from("verifications_identite")
+                .upsert({
+                    user_id: userId,
+                    carte_identite_url: cheminFichier,
+                    statut: "en_attente"
+                }, { onConflict: "user_id" });
+
+            if (verifError) {
+                messageEl.textContent = "Erreur : " + verifError.message;
+                messageEl.className = "message error";
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Créer ma boutique";
+                return;
+            }
+
+            // 3. Création de la boutique, désactivée jusqu'à validation de l'identité
             const { error } = await supabaseClient
                 .from("boutiques")
                 .insert({
-                    user_id: session.user.id,
+                    user_id: userId,
                     nom_boutique: nom_boutique,
                     categorie: categorie,
                     description: description,
-                    telephone: telephone
+                    telephone: telephone,
+                    identite_verifiee: false
                 });
 
             if (error) {
@@ -257,12 +311,12 @@
                 return;
             }
 
-            messageEl.textContent = "Boutique créée avec succès !";
+            messageEl.textContent = "Boutique créée ! Elle sera visible dès que ton identité sera vérifiée (sous 24h).";
             messageEl.className = "message success";
 
             setTimeout(() => {
                 window.location.href = "index.html";
-            }, 1200);
+            }, 2000);
         });
     </script>
 

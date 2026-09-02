@@ -148,6 +148,14 @@
 
             <form id="form-prestataire">
 
+                <label for="nom">Ton nom</label>
+                <input
+                    type="text"
+                    id="nom"
+                    placeholder="Ex : Moussa Koné"
+                    required
+                >
+
                 <label for="metier">Ton métier</label>
                 <select id="metier" required>
                     <option value="">Choisir un métier</option>
@@ -220,11 +228,12 @@
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const nom = document.getElementById("nom").value.trim();
             const metier = document.getElementById("metier").value;
             const description = document.getElementById("description").value.trim();
             const telephone = document.getElementById("telephone").value.trim();
 
-            if (!metier || !telephone) {
+            if (!nom || !metier || !telephone) {
                 messageEl.textContent = "Merci de remplir tous les champs obligatoires.";
                 messageEl.className = "message error";
                 return;
@@ -240,6 +249,7 @@
                 .from("prestataires")
                 .insert({
                     user_id: session.user.id,
+                    nom: nom,
                     metier: metier,
                     description: description,
                     telephone: telephone

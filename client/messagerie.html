@@ -121,6 +121,10 @@ async function chargerConversation(user, boutiqueId) {
         filter: `boutique_id=eq.${boutiqueId}` }, () => {
       afficherMessages(vendeurId, clientId, boutiqueId, user.id);
     })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `boutique_id=eq.${boutiqueId}` }, () => {
+      afficherMessages(vendeurId, clientId, boutiqueId, user.id);
+    })
     .subscribe();
 }
 
@@ -141,7 +145,7 @@ async function afficherMessages(vendeurId, clientId, boutiqueId, currentUserId) 
 
   zone.innerHTML = messages.map(m => {
     const moi = m.expediteur_id === currentUserId;
-    const heure = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    const heureEnvoi = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
     let media = '';
     if (m.media_url && m.media_type === 'image') {
       media = `<img src="${m.media_url}" alt="photo">`;
@@ -149,10 +153,28 @@ async function afficherMessages(vendeurId, clientId, boutiqueId, currentUserId) 
       media = `<video src="${m.media_url}" controls></video>`;
     }
     const texte = m.contenu ? escapeHTML(m.contenu) : '';
-    return `<div class="bulle ${moi ? 'moi' : 'autre'}">${media}${texte}<span class="heure">${heure}</span></div>`;
+
+    let pied = `Envoyé à ${heureEnvoi}`;
+    if (moi && m.lu && m.lu_le) {
+      const heureLecture = new Date(m.lu_le).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      pied += ` · Lu à ${heureLecture}`;
+    }
+
+    return `<div class="bulle ${moi ? 'moi' : 'autre'}">${media}${texte}<span class="heure">${pied}</span></div>`;
   }).join('');
 
   window.scrollTo(0, document.body.scrollHeight);
+
+  const idsNonLus = messages
+    .filter(m => m.expediteur_id !== currentUserId && !m.lu)
+    .map(m => m.id);
+
+  if (idsNonLus.length > 0) {
+    await supabase
+      .from('messages')
+      .update({ lu: true, lu_le: new Date().toISOString() })
+      .in('id', idsNonLus);
+  }
 }
 
 function escapeHTML(str) {

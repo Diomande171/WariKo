@@ -24,6 +24,8 @@
     <meta name="apple-mobile-web-app-title" content="WariKo">
     <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         body {
             background: var(--violet-fonce);
@@ -176,13 +178,6 @@
             color: var(--violet-fonce);
         }
 
-        .pro-info .pro-rating {
-            font-size: 12px;
-            color: var(--violet-fonce);
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
         .pro-info .pro-category {
             margin-top: 2px;
             font-size: 12px;
@@ -191,24 +186,16 @@
             font-weight: 600;
         }
 
-        .pro-info .pro-meta {
+        .pro-info .pro-description {
             margin-top: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .pro-info .pro-location {
             font-size: 12px;
             color: var(--violet-fonce);
-            opacity: 0.75;
-            font-weight: 600;
-        }
-
-        .pro-info .pro-price {
-            font-size: 13px;
-            font-weight: 800;
-            color: var(--violet-fonce);
+            opacity: 0.85;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .empty-state {
@@ -236,7 +223,7 @@
             <a href="accueil.html" class="back-button">← Retour</a>
 
             <h1>Trouver un professionnel</h1>
-            <p>Choisis une catégorie et découvre les prestataires près de toi</p>
+            <p>Choisis une catégorie et découvre les prestataires disponibles</p>
 
             <div class="search-box">
                 🔍
@@ -257,7 +244,9 @@
 
         <h2 class="section-title" id="results-title">Professionnels disponibles</h2>
 
-        <div class="pro-list" id="pro-list"></div>
+        <div class="pro-list" id="pro-list">
+            <p class="empty-state">Chargement...</p>
+        </div>
 
 
         <nav class="bottom-nav">
@@ -282,7 +271,7 @@
                 <span>Marketplace</span>
             </a>
 
-            <a href="#">
+            <a href="commandes.html">
                 📦
                 <span>Commandes</span>
             </a>
@@ -298,33 +287,34 @@
 
 
     <script>
-        // Données de démonstration (mock).
-        // À remplacer plus tard par un fetch Supabase sur une table "professionnels".
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Doit rester synchronisée avec la liste de métiers de prestataire/inscription.html
         const CATEGORIES = [
-            { id: "plomberie", label: "Plomberie", icon: "🔧" },
-            { id: "electricite", label: "Électricité", icon: "💡" },
+            { id: "plombier", label: "Plomberie", icon: "🔧" },
+            { id: "electricien", label: "Électricité", icon: "💡" },
+            { id: "menuisier", label: "Menuiserie", icon: "🪚" },
+            { id: "peintre", label: "Peinture", icon: "🎨" },
+            { id: "macon", label: "Maçonnerie", icon: "🧱" },
+            { id: "mecanicien", label: "Mécanique", icon: "🔩" },
+            { id: "coiffeur", label: "Coiffure", icon: "💇" },
+            { id: "couturier", label: "Couture", icon: "🧵" },
+            { id: "cordonnier", label: "Cordonnerie", icon: "👞" },
+            { id: "reparation_informatique", label: "Informatique / Tél.", icon: "💻" },
+            { id: "photographe", label: "Photographie", icon: "📷" },
+            { id: "traiteur", label: "Traiteur", icon: "🍽️" },
             { id: "menage", label: "Ménage", icon: "🧹" },
-            { id: "coiffure", label: "Coiffure", icon: "💇" },
-            { id: "peinture", label: "Peinture", icon: "🎨" },
             { id: "demenagement", label: "Déménagement", icon: "🚚" },
-            { id: "electromenager", label: "Électroménager", icon: "🔌" },
-            { id: "jardinage", label: "Jardinage", icon: "🌿" },
+            { id: "jardinier", label: "Jardinage", icon: "🌿" },
+            { id: "climatisation", label: "Climatisation", icon: "❄️" },
+            { id: "soudeur", label: "Soudure", icon: "🔥" },
+            { id: "vitrier", label: "Vitrerie", icon: "🪟" },
+            { id: "autre", label: "Autre", icon: "🛠️" },
         ];
 
-        const PROFESSIONNELS = [
-            { nom: "Koffi Aya", categorie: "plomberie", ville: "Cocody", tarif: "5 000 F / interv.", note: 4.8 },
-            { nom: "Bamba Souleymane", categorie: "plomberie", ville: "Yopougon", tarif: "4 500 F / interv.", note: 4.6 },
-            { nom: "Traoré Fatou", categorie: "electricite", ville: "Marcory", tarif: "6 000 F / interv.", note: 4.9 },
-            { nom: "Diaby Ibrahim", categorie: "electricite", ville: "Abobo", tarif: "5 500 F / interv.", note: 4.5 },
-            { nom: "Coulibaly Awa", categorie: "menage", ville: "Cocody", tarif: "3 000 F / heure", note: 4.7 },
-            { nom: "N'Guessan Marie", categorie: "menage", ville: "Plateau", tarif: "3 500 F / heure", note: 4.9 },
-            { nom: "Ouattara Aïcha", categorie: "coiffure", ville: "Yopougon", tarif: "2 000 F / prest.", note: 4.6 },
-            { nom: "Kouadio Jean", categorie: "peinture", ville: "Bingerville", tarif: "8 000 F / pièce", note: 4.4 },
-            { nom: "Sanogo Moussa", categorie: "demenagement", ville: "Abobo", tarif: "15 000 F / trajet", note: 4.7 },
-            { nom: "Yao Grace", categorie: "electromenager", ville: "Marcory", tarif: "4 000 F / interv.", note: 4.8 },
-            { nom: "Kone Salif", categorie: "jardinage", ville: "Cocody", tarif: "3 500 F / heure", note: 4.5 },
-        ];
-
+        let TOUS_LES_PRESTATAIRES = [];
         let activeCategory = null;
         let searchTerm = "";
 
@@ -333,7 +323,12 @@
         const resultsTitle = document.getElementById("results-title");
         const searchInput = document.getElementById("search-input");
 
+        function labelPourMetier(metier) {
+            return CATEGORIES.find(c => c.id === metier)?.label || metier;
+        }
+
         function initials(name) {
+            if (!name) return "?";
             return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
         }
 
@@ -356,17 +351,17 @@
         function renderProList() {
             const term = searchTerm.trim().toLowerCase();
 
-            const filtered = PROFESSIONNELS.filter(pro => {
-                const matchCategory = !activeCategory || pro.categorie === activeCategory;
+            const filtered = TOUS_LES_PRESTATAIRES.filter(pro => {
+                const matchCategory = !activeCategory || pro.metier === activeCategory;
                 const matchTerm = !term
-                    || pro.nom.toLowerCase().includes(term)
-                    || pro.categorie.toLowerCase().includes(term)
-                    || pro.ville.toLowerCase().includes(term);
+                    || (pro.nom || "").toLowerCase().includes(term)
+                    || (pro.metier || "").toLowerCase().includes(term)
+                    || (pro.description || "").toLowerCase().includes(term);
                 return matchCategory && matchTerm;
             });
 
             resultsTitle.textContent = activeCategory
-                ? `${CATEGORIES.find(c => c.id === activeCategory).label} près de toi`
+                ? `${labelPourMetier(activeCategory)} près de toi`
                 : "Professionnels disponibles";
 
             proList.innerHTML = "";
@@ -377,28 +372,38 @@
             }
 
             filtered.forEach(pro => {
-                const catLabel = CATEGORIES.find(c => c.id === pro.categorie)?.label || pro.categorie;
+                const catLabel = labelPourMetier(pro.metier);
 
-                const catLabelForLink = catLabel;
                 const card = document.createElement("a");
-                card.href = `demande.html?nom=${encodeURIComponent(pro.nom)}&categorie=${encodeURIComponent(catLabelForLink)}`;
+                card.href = `demande.html?prestataire_id=${encodeURIComponent(pro.user_id)}&nom=${encodeURIComponent(pro.nom || "")}&categorie=${encodeURIComponent(catLabel)}`;
                 card.className = "pro-card";
                 card.innerHTML = `
                     <div class="pro-avatar">${initials(pro.nom)}</div>
                     <div class="pro-info">
                         <div class="name-row">
-                            <span class="pro-name">${pro.nom}</span>
-                            <span class="pro-rating">⭐ ${pro.note}</span>
+                            <span class="pro-name">${pro.nom || "Prestataire"}</span>
                         </div>
                         <div class="pro-category">${catLabel}</div>
-                        <div class="pro-meta">
-                            <span class="pro-location">📍 ${pro.ville}</span>
-                            <span class="pro-price">${pro.tarif}</span>
-                        </div>
+                        <div class="pro-description">${pro.description || ""}</div>
                     </div>
                 `;
                 proList.appendChild(card);
             });
+        }
+
+        async function chargerPrestataires() {
+            const { data, error } = await supabaseClient
+                .from("prestataires_publics")
+                .select("*")
+                .order("id", { ascending: false });
+
+            if (error) {
+                proList.innerHTML = '<p class="empty-state">Erreur : ' + error.message + '</p>';
+                return;
+            }
+
+            TOUS_LES_PRESTATAIRES = data || [];
+            renderProList();
         }
 
         searchInput.addEventListener("input", (e) => {
@@ -407,7 +412,7 @@
         });
 
         renderCategories();
-        renderProList();
+        chargerPrestataires();
     </script>
 
 </body>

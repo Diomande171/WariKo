@@ -116,6 +116,25 @@
             line-height: 1.4;
         }
 
+        .rating-line {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+        }
+
+        .rating-line .note-badge {
+            background: #1E7B3E;
+            color: var(--blanc);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+
         .contact-btn {
             margin-top: 16px;
             display: block;
@@ -257,6 +276,156 @@
             text-align: center;
             padding: 30px 20px;
             font-size: 13px;
+        }
+
+        /* --- Avis --- */
+        .avis-resume {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .avis-resume .note-badge {
+            background: #1E7B3E;
+            color: var(--blanc);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 11px;
+            border-radius: 20px;
+        }
+
+        .avis-item {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }
+
+        .avis-etoiles {
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .avis-commentaire {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .avis-date {
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--blanc);
+            opacity: 0.5;
+        }
+
+        .avis-cta {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .avis-cta p {
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+
+        .avis-cta button {
+            width: 100%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .avis-form {
+            display: none;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .avis-form label {
+            display: block;
+            font-size: 12px;
+            color: var(--blanc);
+            opacity: 0.75;
+            margin-bottom: 6px;
+        }
+
+        .avis-etoiles-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .avis-etoiles-select button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            opacity: 0.35;
+            padding: 0;
+        }
+
+        .avis-etoiles-select button.actif {
+            opacity: 1;
+        }
+
+        .avis-form textarea {
+            width: 100%;
+            min-height: 70px;
+            border-radius: 10px;
+            border: none;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            background: var(--blanc);
+            color: var(--violet-fonce);
+        }
+
+        .avis-form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .avis-form-actions button {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .avis-envoyer {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+        }
+
+        .avis-annuler {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            color: var(--blanc);
+        }
+
+        #statutAvis {
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: center;
         }
 
         #barrePanier {
@@ -435,6 +604,42 @@
             </div>
         </section>
 
+        <section class="section">
+            <div class="section-title">Avis clients</div>
+
+            <div class="avis-resume" id="avisResume" style="display:none;">
+                <span id="avisResumeTexte">Pas encore d'avis</span>
+                <span class="note-badge" id="avisNoteBadge" style="display:none;">—</span>
+            </div>
+
+            <div class="avis-cta" id="avisCta" style="display:none;">
+                <p>Tu as déjà commandé ici ? Partage ton avis.</p>
+                <button onclick="ouvrirFormulaireAvis()">Laisser un avis</button>
+            </div>
+
+            <div class="avis-form" id="avisForm">
+                <label>Ta note</label>
+                <div class="avis-etoiles-select" id="avisEtoilesSelect">
+                    <button type="button" data-note="1">⭐</button>
+                    <button type="button" data-note="2">⭐</button>
+                    <button type="button" data-note="3">⭐</button>
+                    <button type="button" data-note="4">⭐</button>
+                    <button type="button" data-note="5">⭐</button>
+                </div>
+                <label for="avisCommentaire">Ton commentaire (facultatif)</label>
+                <textarea id="avisCommentaire" placeholder="Qu'as-tu pensé de cette boutique ?"></textarea>
+                <p id="statutAvis"></p>
+                <div class="avis-form-actions">
+                    <button class="avis-annuler" type="button" onclick="fermerFormulaireAvis()">Annuler</button>
+                    <button class="avis-envoyer" type="button" onclick="envoyerAvis()">Envoyer</button>
+                </div>
+            </div>
+
+            <div id="listeAvis">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
     </div>
 
     <div id="barrePanier" onclick="ouvrirPanier()">
@@ -535,6 +740,10 @@
 
         function estVideo(url) {
             return /\.(mp4|mov|webm)(\?.*)?$/i.test(url || "");
+        }
+
+        function formaterNote(valeur) {
+            return valeur.toFixed(1).replace(".", ",");
         }
 
         const params = new URLSearchParams(window.location.search);
@@ -782,11 +991,13 @@
                         <span class="badge">Ouverte</span>
                     </div>
                     ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
+                    <div class="rating-line" id="ratingLigneHeader"></div>
                     ${boutonsAction}
                 `;
 
                 chargerGalerie();
                 chargerProduits(boutique.id);
+                initialiserAvis();
             } catch (e) {
                 boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Exception : ${e.message}</p>`;
                 listeProduits.innerHTML = "";
@@ -844,6 +1055,178 @@
             }).join("");
 
             mettreAJourAffichage();
+        }
+
+        /* ================= AVIS ================= */
+
+        let noteSelectionnee = 0;
+        let dejaLaisseAvis = false;
+
+        function afficherEtoiles(note, taille) {
+            const pleines = Math.round(note);
+            let html = "";
+            for (let i = 1; i <= 5; i++) {
+                html += i <= pleines ? "⭐" : "☆";
+            }
+            return html;
+        }
+
+        async function chargerAvis() {
+            const listeAvis = document.getElementById("listeAvis");
+            const avisResume = document.getElementById("avisResume");
+            const avisResumeTexte = document.getElementById("avisResumeTexte");
+            const avisNoteBadge = document.getElementById("avisNoteBadge");
+            const ratingLigneHeader = document.getElementById("ratingLigneHeader");
+
+            const { data, error } = await supabaseClient
+                .from("avis")
+                .select("note, commentaire, created_at")
+                .eq("cible_type", "boutique")
+                .eq("cible_id", String(boutiqueId))
+                .order("created_at", { ascending: false });
+
+            if (error || !data) {
+                listeAvis.innerHTML = '<p class="empty">Impossible de charger les avis</p>';
+                return;
+            }
+
+            avisResume.style.display = "flex";
+
+            if (data.length === 0) {
+                avisResumeTexte.textContent = "Pas encore d'avis";
+                avisNoteBadge.style.display = "none";
+                if (ratingLigneHeader) ratingLigneHeader.innerHTML = "";
+                listeAvis.innerHTML = '<p class="empty">Aucun avis pour l\'instant</p>';
+                return;
+            }
+
+            const moyenne = data.reduce((s, a) => s + a.note, 0) / data.length;
+
+            avisResumeTexte.textContent = `${data.length} avis`;
+            avisNoteBadge.textContent = formaterNote(moyenne);
+            avisNoteBadge.style.display = "inline-block";
+
+            if (ratingLigneHeader) {
+                ratingLigneHeader.innerHTML = `
+                    <span>${afficherEtoiles(moyenne)}</span>
+                    <span class="note-badge">${formaterNote(moyenne)} (${data.length} avis)</span>
+                `;
+            }
+
+            listeAvis.innerHTML = data.map(a => `
+                <div class="avis-item">
+                    <span class="avis-etoiles">${afficherEtoiles(a.note)}</span>
+                    ${a.commentaire ? `<div class="avis-commentaire">${a.commentaire}</div>` : ""}
+                    <div class="avis-date">${new Date(a.created_at).toLocaleDateString("fr-FR")}</div>
+                </div>
+            `).join("");
+        }
+
+        async function initialiserAvis() {
+            chargerAvis();
+
+            const avisCta = document.getElementById("avisCta");
+
+            if (!utilisateurActuel || estProprietaire) {
+                avisCta.style.display = "none";
+                return;
+            }
+
+            // Le client a-t-il déjà une commande livrée pour cette boutique ?
+            const { data: commandeLivree } = await supabaseClient
+                .from("commandes")
+                .select("id")
+                .eq("client_id", utilisateurActuel.id)
+                .eq("boutique_id", boutiqueId)
+                .eq("statut", "livree")
+                .limit(1)
+                .maybeSingle();
+
+            if (!commandeLivree) {
+                avisCta.style.display = "none";
+                return;
+            }
+
+            // A-t-il déjà laissé un avis ?
+            const { data: avisExistant } = await supabaseClient
+                .from("avis")
+                .select("id")
+                .eq("cible_type", "boutique")
+                .eq("cible_id", String(boutiqueId))
+                .eq("auteur_id", utilisateurActuel.id)
+                .limit(1)
+                .maybeSingle();
+
+            if (avisExistant) {
+                dejaLaisseAvis = true;
+                avisCta.style.display = "block";
+                avisCta.innerHTML = '<p>Merci, tu as déjà laissé un avis sur cette boutique ✓</p>';
+                return;
+            }
+
+            avisCta.style.display = "block";
+        }
+
+        function ouvrirFormulaireAvis() {
+            document.getElementById("avisCta").style.display = "none";
+            document.getElementById("avisForm").style.display = "block";
+        }
+
+        function fermerFormulaireAvis() {
+            document.getElementById("avisForm").style.display = "none";
+            document.getElementById("avisCta").style.display = "block";
+            document.getElementById("avisCommentaire").value = "";
+            document.getElementById("statutAvis").textContent = "";
+            noteSelectionnee = 0;
+            document.querySelectorAll("#avisEtoilesSelect button").forEach(b => b.classList.remove("actif"));
+        }
+
+        document.getElementById("avisEtoilesSelect").addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-note]");
+            if (!btn) return;
+            noteSelectionnee = Number(btn.dataset.note);
+            document.querySelectorAll("#avisEtoilesSelect button").forEach(b => {
+                b.classList.toggle("actif", Number(b.dataset.note) <= noteSelectionnee);
+            });
+        });
+
+        async function envoyerAvis() {
+            const statutAvis = document.getElementById("statutAvis");
+
+            if (noteSelectionnee === 0) {
+                statutAvis.style.color = "#FFD6D6";
+                statutAvis.textContent = "Choisis une note avant d'envoyer";
+                return;
+            }
+
+            const commentaire = document.getElementById("avisCommentaire").value.trim();
+
+            const { error } = await supabaseClient
+                .from("avis")
+                .insert({
+                    auteur_id: utilisateurActuel.id,
+                    cible_type: "boutique",
+                    cible_id: String(boutiqueId),
+                    note: noteSelectionnee,
+                    commentaire: commentaire || null
+                });
+
+            if (error) {
+                statutAvis.style.color = "#FFD6D6";
+                statutAvis.textContent = "Erreur : " + error.message;
+                return;
+            }
+
+            statutAvis.style.color = "#D6FFD6";
+            statutAvis.textContent = "Avis envoyé, merci ✓";
+            dejaLaisseAvis = true;
+
+            setTimeout(() => {
+                document.getElementById("avisForm").style.display = "none";
+                document.getElementById("avisCta").style.display = "block";
+                document.getElementById("avisCta").innerHTML = '<p>Merci, tu as déjà laissé un avis sur cette boutique ✓</p>';
+                chargerAvis();
+            }, 900);
         }
 
         chargerBoutique();

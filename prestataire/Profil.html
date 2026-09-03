@@ -5,7 +5,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WariKo - Mon profil</title>
+    <title>WariKo - Profil prestataire</title>
 
     <link rel="stylesheet" href="../style.css">
 
@@ -19,22 +19,23 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        .profile-header {
+        .fiche-header {
             background: var(--violet-fonce);
             color: var(--blanc);
-            padding: 22px 20px 34px;
+            padding: 22px 20px 28px;
             border-radius: 0 0 30px 30px;
             text-align: center;
+            position: relative;
         }
 
-        .profile-header .back-button {
+        .fiche-header .back-button {
             display: block;
             text-align: left;
             color: var(--blanc);
             text-decoration: none;
-            font-size: 14px;
-            opacity: 0.85;
-            margin-bottom: 10px;
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 6px;
         }
 
         .avatar-wrapper {
@@ -83,15 +84,174 @@
             display: none;
         }
 
-        .profile-header h1 {
+        .fiche-header h1 {
             margin-top: 14px;
             font-size: 20px;
         }
 
-        .profile-header p {
+        .badge-verifie {
+            color: #4EA8FF;
+            font-size: 16px;
+        }
+
+        .fiche-header .profile-metier {
             margin-top: 4px;
             font-size: 13px;
-            opacity: 0.75;
+            opacity: 0.8;
+        }
+
+        .rating-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            font-size: 13px;
+        }
+
+        .dispo-badge {
+            background: #1E7B3E;
+            color: var(--blanc);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .actions-row {
+            display: flex;
+            justify-content: space-around;
+            background: var(--blanc);
+            margin: -16px 14px 0;
+            border-radius: 20px;
+            padding: 14px 6px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 2;
+        }
+
+        .action-btn {
+            border: none;
+            background: none;
+            color: var(--texte);
+            font-size: 11px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .action-btn span.icone {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--gris);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .apropos {
+            padding: 22px 20px 4px;
+        }
+
+        .apropos h2 {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .apropos p {
+            font-size: 13px;
+            color: var(--gris-texte);
+            line-height: 1.6;
+        }
+
+        .liste-infos {
+            padding: 10px 20px 0;
+        }
+
+        .ligne-info {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #EFEFEF;
+            padding: 14px 4px;
+            font-size: 14px;
+            color: var(--texte);
+        }
+
+        .ligne-info span:last-child {
+            color: var(--gris-texte);
+        }
+
+        .note-badge {
+            background: #1E7B3E;
+            color: var(--blanc);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        .fiche-actions-bas {
+            padding: 20px;
+        }
+
+        .save-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border-radius: 14px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: 800;
+            font-size: 15px;
+            text-align: center;
+            border: none;
+        }
+
+        .modifier-button {
+            width: 100%;
+            margin-top: 12px;
+            padding: 15px;
+            border-radius: 14px;
+            border: 1px solid var(--violet-fonce);
+            background: transparent;
+            color: var(--violet-fonce);
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        /* --- Mode édition (repris de l'ancienne page) --- */
+
+        .profile-header {
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            padding: 22px 20px 34px;
+            border-radius: 0 0 30px 30px;
+            text-align: center;
+        }
+
+        .profile-header .back-button {
+            display: block;
+            text-align: left;
+            color: var(--blanc);
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 10px;
+        }
+
+        .profile-header h1 {
+            margin-top: 14px;
+            font-size: 20px;
         }
 
         .metier-badge {
@@ -139,19 +299,6 @@
         .profile-form input:disabled {
             color: var(--gris-texte);
             background: #EFEFEF;
-        }
-
-        .save-button {
-            width: 100%;
-            margin-top: 26px;
-            padding: 15px;
-            border-radius: 14px;
-            background: var(--jaune);
-            color: var(--violet-fonce);
-            font-weight: 800;
-            font-size: 15px;
-            text-align: center;
-            border: none;
         }
 
         .logout-button {
@@ -210,86 +357,150 @@
 
     <div class="app">
 
-        <header class="profile-header">
+        <!-- ===== VUE FICHE (affichage) ===== -->
+        <div id="vue-fiche">
 
-            <a href="index.html" class="back-button">← Retour</a>
+            <header class="fiche-header">
 
-            <div class="avatar-wrapper">
-                <div class="avatar" id="avatar-display">
-                    <span id="avatar-initials">?</span>
+                <a href="javascript:history.back()" class="back-button">←</a>
+
+                <div class="avatar-wrapper">
+                    <div class="avatar" id="avatar-display">
+                        <span id="avatar-initials">?</span>
+                    </div>
                 </div>
-                <label class="avatar-edit">
-                    📷
-                    <input type="file" id="avatar-input" accept="image/*">
-                </label>
+
+                <h1 id="profile-name">Chargement...</h1>
+                <p class="profile-metier" id="profile-metier"></p>
+
+                <div class="rating-row">
+                    <span id="rating-text">—</span>
+                    <span class="dispo-badge">Disponible</span>
+                </div>
+
+            </header>
+
+            <div class="actions-row">
+                <button class="action-btn" data-action="appeler"><span class="icone">📞</span>Appeler</button>
+                <button class="action-btn" data-action="message"><span class="icone">💬</span>Message</button>
+                <button class="action-btn" data-action="itineraire"><span class="icone">📍</span>Itinéraire</button>
+                <button class="action-btn" data-action="partager"><span class="icone">🔗</span>Partager</button>
             </div>
 
-            <h1 id="profile-name">Chargement...</h1>
-            <p id="profile-email"></p>
+            <section class="apropos">
+                <h2>À propos</h2>
+                <p id="description-text">—</p>
+            </section>
 
-            <span class="metier-badge" id="metier-badge" style="display:none;"></span>
+            <section class="liste-infos">
+                <button class="ligne-info" data-action="services">
+                    <span>📋 Services proposés</span><span>›</span>
+                </button>
+                <button class="ligne-info" data-action="zone">
+                    <span>📍 Zone d'intervention</span><span>›</span>
+                </button>
+                <button class="ligne-info" data-action="tarifs">
+                    <span>🏷️ Tarifs</span><span>›</span>
+                </button>
+                <button class="ligne-info" data-action="galerie">
+                    <span>🖼️ Galerie</span><span>›</span>
+                </button>
+                <button class="ligne-info" data-action="avis">
+                    <span>⭐ Avis des clients</span><span class="note-badge" id="note-badge">—</span>
+                </button>
+            </section>
 
-        </header>
+            <div class="fiche-actions-bas">
+                <a id="btn-demander" href="#" class="save-button" style="display:none;">Demander une intervention</a>
+                <button id="btn-modifier" class="modifier-button" style="display:none;">Modifier mon profil</button>
+            </div>
+
+        </div>
 
 
-        <section class="profile-form">
+        <!-- ===== VUE ÉDITION ===== -->
+        <div id="vue-edition" style="display:none;">
 
-            <form id="profile-form">
+            <header class="profile-header">
 
-                <label for="fullname">Nom complet</label>
-                <input id="fullname" type="text" required>
+                <a href="javascript:void(0)" id="btn-annuler-edition" class="back-button">← Retour à la fiche</a>
 
-                <label for="phone">Téléphone</label>
-                <input id="phone" type="tel" required>
+                <div class="avatar-wrapper">
+                    <div class="avatar" id="avatar-display-edition">
+                        <span>?</span>
+                    </div>
+                    <label class="avatar-edit">
+                        📷
+                        <input type="file" id="avatar-input" accept="image/*">
+                    </label>
+                </div>
 
-                <label for="email">E-mail</label>
-                <input id="email" type="email" disabled>
+                <h1>Modifier mon profil</h1>
 
-                <label for="metier">Métier</label>
-                <select id="metier" required>
-                    <option value="">Choisir un métier</option>
-                    <option value="plombier">Plombier</option>
-                    <option value="electricien">Électricien</option>
-                    <option value="menuisier">Menuisier</option>
-                    <option value="peintre">Peintre</option>
-                    <option value="macon">Maçon</option>
-                    <option value="mecanicien">Mécanicien</option>
-                    <option value="coiffeur">Coiffeur / Coiffeuse</option>
-                    <option value="couturier">Couturier / Couturière</option>
-                    <option value="cordonnier">Cordonnier</option>
-                    <option value="reparation_informatique">Réparateur informatique / téléphone</option>
-                    <option value="photographe">Photographe</option>
-                    <option value="traiteur">Traiteur</option>
-                    <option value="menage">Ménage / Nettoyage</option>
-                    <option value="demenagement">Déménagement</option>
-                    <option value="jardinier">Jardinier</option>
-                    <option value="climatisation">Climatisation / Frigoriste</option>
-                    <option value="soudeur">Soudeur</option>
-                    <option value="vitrier">Vitrier</option>
-                    <option value="autre">Autre</option>
-                </select>
+                <span class="metier-badge" id="metier-badge" style="display:none;"></span>
 
-                <label for="description">Description</label>
-                <textarea id="description" placeholder="Présente ton expérience et tes services"></textarea>
+            </header>
 
-                <p id="status-message"></p>
+            <section class="profile-form">
 
-                <button type="submit" class="save-button">
-                    Enregistrer les modifications
+                <form id="profile-form">
+
+                    <label for="fullname">Nom complet</label>
+                    <input id="fullname" type="text" required>
+
+                    <label for="phone">Téléphone</label>
+                    <input id="phone" type="tel" required>
+
+                    <label for="email">E-mail</label>
+                    <input id="email" type="email" disabled>
+
+                    <label for="metier">Métier</label>
+                    <select id="metier" required>
+                        <option value="">Choisir un métier</option>
+                        <option value="plombier">Plombier</option>
+                        <option value="electricien">Électricien</option>
+                        <option value="menuisier">Menuisier</option>
+                        <option value="peintre">Peintre</option>
+                        <option value="macon">Maçon</option>
+                        <option value="mecanicien">Mécanicien</option>
+                        <option value="coiffeur">Coiffeur / Coiffeuse</option>
+                        <option value="couturier">Couturier / Couturière</option>
+                        <option value="cordonnier">Cordonnier</option>
+                        <option value="reparation_informatique">Réparateur informatique / téléphone</option>
+                        <option value="photographe">Photographe</option>
+                        <option value="traiteur">Traiteur</option>
+                        <option value="menage">Ménage / Nettoyage</option>
+                        <option value="demenagement">Déménagement</option>
+                        <option value="jardinier">Jardinier</option>
+                        <option value="climatisation">Climatisation / Frigoriste</option>
+                        <option value="soudeur">Soudeur</option>
+                        <option value="vitrier">Vitrier</option>
+                        <option value="autre">Autre</option>
+                    </select>
+
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Présente ton expérience et tes services"></textarea>
+
+                    <p id="status-message"></p>
+
+                    <button type="submit" class="save-button">
+                        Enregistrer les modifications
+                    </button>
+
+                </form>
+
+                <button id="logout-btn" class="logout-button">
+                    Se déconnecter
                 </button>
 
-            </form>
+            </section>
 
-            <button id="logout-btn" class="logout-button">
-                Se déconnecter
-            </button>
-
-        </section>
+        </div>
 
     </div>
 
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottom-nav" style="display:none;">
         <a href="index.html">🏠<br>Accueil</a>
         <a href="position.html">📍<br>Position</a>
         <a href="profil.html" class="active">👤<br>Profil</a>
@@ -302,14 +513,12 @@
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const form = document.getElementById("profile-form");
-        const statusMessage = document.getElementById("status-message");
-        const avatarDisplay = document.getElementById("avatar-display");
-        const avatarInput = document.getElementById("avatar-input");
-        const metierBadge = document.getElementById("metier-badge");
+        const params = new URLSearchParams(window.location.search);
+        const idParam = params.get("id");
 
-        let userId = null;
-        let prestataireId = null;
+        let sessionUserId = null;
+        let estProprietaire = false;
+        let prestataireViewe = null;
 
         const labelsMetier = {
             plombier: "Plombier", electricien: "Électricien", menuisier: "Menuisier",
@@ -321,15 +530,66 @@
             soudeur: "Soudeur", vitrier: "Vitrier", autre: "Autre"
         };
 
-        function afficherAvatar(url, fullName) {
+        function pasEncoreDisponible() {
+            alert("PAS ENCORE DISPONIBLE");
+        }
+
+        function formaterNote(valeur) {
+            return valeur.toFixed(1).replace(".", ",");
+        }
+
+        function afficherAvatarDans(elementId, url, fullName) {
+            const el = document.getElementById(elementId);
             if (url) {
-                avatarDisplay.innerHTML = `<img src="${url}" alt="Photo de profil">`;
+                el.innerHTML = `<img src="${url}" alt="Photo de profil">`;
             } else {
                 const initials = fullName
                     ? fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
                     : "?";
-                avatarDisplay.innerHTML = `<span id="avatar-initials">${initials}</span>`;
+                el.innerHTML = `<span>${initials}</span>`;
             }
+        }
+
+        async function chargerAvis(prestataireId) {
+            const { data } = await supabaseClient
+                .from("avis")
+                .select("note")
+                .eq("cible_type", "prestataire")
+                .eq("cible_id", String(prestataireId));
+
+            const notes = data || [];
+            const count = notes.length;
+
+            if (count === 0) {
+                document.getElementById("rating-text").textContent = "Pas encore d'avis";
+                document.getElementById("note-badge").textContent = "—";
+                return;
+            }
+
+            const moyenne = notes.reduce((s, a) => s + a.note, 0) / count;
+            document.getElementById("rating-text").textContent = `⭐ ${formaterNote(moyenne)} (${count} avis)`;
+            document.getElementById("note-badge").textContent = formaterNote(moyenne);
+        }
+
+        function afficherFiche(p, nomAffiche, avatarUrl) {
+            document.getElementById("profile-name").innerHTML =
+                nomAffiche + (p.identite_verifiee ? ' <span class="badge-verifie">✔</span>' : "");
+            document.getElementById("profile-metier").textContent = labelsMetier[p.metier] || p.metier || "";
+            document.getElementById("description-text").textContent =
+                p.description || "Ce prestataire n'a pas encore ajouté de description.";
+            afficherAvatarDans("avatar-display", avatarUrl, nomAffiche);
+
+            const btnDemander = document.getElementById("btn-demander");
+            if (!estProprietaire) {
+                btnDemander.style.display = "block";
+                btnDemander.href = `../client/demande.html?prestataire_id=${p.id}`;
+            } else {
+                btnDemander.style.display = "none";
+            }
+
+            document.getElementById("btn-modifier").style.display = estProprietaire ? "block" : "none";
+
+            chargerAvis(p.id);
         }
 
         (async () => {
@@ -340,49 +600,98 @@
                 return;
             }
 
-            const user = session.user;
-            userId = user.id;
+            sessionUserId = session.user.id;
 
-            const fullName = user.user_metadata.full_name || "";
-            const phone = user.user_metadata.phone || "";
-            const email = user.email;
-            const avatarUrl = user.user_metadata.avatar_url || "";
-
-            document.getElementById("fullname").value = fullName;
-            document.getElementById("phone").value = phone;
-            document.getElementById("email").value = email;
-
-            document.getElementById("profile-name").textContent = fullName || "Prestataire WariKo";
-            document.getElementById("profile-email").textContent = email;
-
-            afficherAvatar(avatarUrl, fullName);
-
-            const { data: prestataire } = await supabaseClient
+            const { data: monPrestataire } = await supabaseClient
                 .from("prestataires")
                 .select("*")
-                .eq("user_id", userId)
+                .eq("user_id", sessionUserId)
                 .maybeSingle();
 
-            if (prestataire) {
-                prestataireId = prestataire.id;
-                document.getElementById("metier").value = prestataire.metier || "";
-                document.getElementById("description").value = prestataire.description || "";
+            if (monPrestataire) {
+                document.getElementById("bottom-nav").style.display = "flex";
+            }
 
-                if (prestataire.metier) {
-                    metierBadge.textContent = labelsMetier[prestataire.metier] || prestataire.metier;
-                    metierBadge.style.display = "inline-block";
+            if (idParam) {
+
+                const { data: prestataire } = await supabaseClient
+                    .from("prestataires_publics")
+                    .select("*")
+                    .eq("id", idParam)
+                    .maybeSingle();
+
+                if (!prestataire) {
+                    document.getElementById("profile-name").textContent = "Prestataire introuvable";
+                    return;
                 }
+
+                estProprietaire = !!(monPrestataire && monPrestataire.id === prestataire.id);
+
+                let avatarUrl = "";
+                let nomAffiche = prestataire.nom || "Prestataire";
+
+                if (estProprietaire) {
+                    avatarUrl = session.user.user_metadata.avatar_url || "";
+                    nomAffiche = session.user.user_metadata.full_name || nomAffiche;
+                    prestataireViewe = monPrestataire;
+                } else {
+                    prestataireViewe = prestataire;
+                }
+
+                afficherFiche(prestataire, nomAffiche, avatarUrl);
+
+            } else if (monPrestataire) {
+
+                estProprietaire = true;
+                prestataireViewe = monPrestataire;
+
+                const nomAffiche = session.user.user_metadata.full_name || monPrestataire.nom || "Prestataire WariKo";
+                const avatarUrl = session.user.user_metadata.avatar_url || "";
+
+                afficherFiche(monPrestataire, nomAffiche, avatarUrl);
+
+                document.getElementById("fullname").value = nomAffiche;
+                document.getElementById("phone").value = session.user.user_metadata.phone || "";
+                document.getElementById("email").value = session.user.email;
+                document.getElementById("metier").value = monPrestataire.metier || "";
+                document.getElementById("description").value = monPrestataire.description || "";
+                afficherAvatarDans("avatar-display-edition", avatarUrl, nomAffiche);
+
+                if (monPrestataire.metier) {
+                    const badge = document.getElementById("metier-badge");
+                    badge.textContent = labelsMetier[monPrestataire.metier] || monPrestataire.metier;
+                    badge.style.display = "inline-block";
+                }
+
+            } else {
+                document.getElementById("profile-name").textContent = "Aucun profil à afficher";
             }
         })();
 
+        document.querySelectorAll("[data-action]").forEach(btn => {
+            btn.addEventListener("click", pasEncoreDisponible);
+        });
+
+        document.getElementById("btn-modifier").addEventListener("click", () => {
+            document.getElementById("vue-fiche").style.display = "none";
+            document.getElementById("vue-edition").style.display = "block";
+        });
+
+        document.getElementById("btn-annuler-edition").addEventListener("click", () => {
+            document.getElementById("vue-edition").style.display = "none";
+            document.getElementById("vue-fiche").style.display = "block";
+        });
+
+        const form = document.getElementById("profile-form");
+        const statusMessage = document.getElementById("status-message");
+        const avatarInput = document.getElementById("avatar-input");
+
         avatarInput.addEventListener("change", async () => {
             const fichier = avatarInput.files[0];
-            if (!fichier || !userId) return;
-
-            avatarDisplay.style.opacity = "0.5";
+            if (!fichier || !sessionUserId) return;
 
             try {
-                const chemin = `${userId}/avatar_${Date.now()}.${fichier.name.split('.').pop()}`;
+                const chemin = `${sessionUserId}/avatar_${Date.now()}.${fichier.name.split('.').pop()}`;
 
                 const { error: uploadError } = await supabaseClient.storage
                     .from("avatars")
@@ -390,7 +699,6 @@
 
                 if (uploadError) {
                     alert("Erreur upload : " + uploadError.message);
-                    avatarDisplay.style.opacity = "1";
                     return;
                 }
 
@@ -404,23 +712,20 @@
 
                 if (updateError) {
                     alert("Erreur : " + updateError.message);
-                    avatarDisplay.style.opacity = "1";
                     return;
                 }
 
-                const fullName = document.getElementById("fullname").value;
-                afficherAvatar(urlData.publicUrl, fullName);
-                avatarDisplay.style.opacity = "1";
+                const nom = document.getElementById("fullname").value;
+                afficherAvatarDans("avatar-display-edition", urlData.publicUrl, nom);
+                afficherAvatarDans("avatar-display", urlData.publicUrl, nom);
 
             } catch (err) {
                 alert("Erreur inattendue : " + err.message);
-                avatarDisplay.style.opacity = "1";
             }
         });
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-
             statusMessage.textContent = "";
 
             const fullname = document.getElementById("fullname").value;
@@ -429,19 +734,16 @@
             const description = document.getElementById("description").value;
 
             const { error: authError } = await supabaseClient.auth.updateUser({
-                data: {
-                    full_name: fullname,
-                    phone: phone
-                }
+                data: { full_name: fullname, phone: phone }
             });
 
             let prestataireError = null;
 
-            if (prestataireId) {
+            if (prestataireViewe && prestataireViewe.id) {
                 const { error } = await supabaseClient
                     .from("prestataires")
                     .update({ metier, description, telephone: phone })
-                    .eq("id", prestataireId);
+                    .eq("id", prestataireViewe.id);
                 prestataireError = error;
             }
 
@@ -452,13 +754,17 @@
                 statusMessage.style.color = "green";
                 statusMessage.textContent = "Profil mis à jour ✓";
 
-                document.getElementById("profile-name").textContent = fullname;
-                metierBadge.textContent = labelsMetier[metier] || metier;
-                metierBadge.style.display = "inline-block";
+                if (prestataireViewe) {
+                    prestataireViewe.metier = metier;
+                    prestataireViewe.description = description;
+                }
 
-                const avatarImg = avatarDisplay.querySelector("img");
-                if (!avatarImg) {
-                    afficherAvatar(null, fullname);
+                const badge = document.getElementById("metier-badge");
+                badge.textContent = labelsMetier[metier] || metier;
+                badge.style.display = "inline-block";
+
+                if (prestataireViewe) {
+                    afficherFiche(prestataireViewe, fullname, document.getElementById("avatar-display-edition").querySelector("img")?.src || "");
                 }
             }
         });

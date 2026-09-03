@@ -317,9 +317,10 @@
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Récupère le nom et la catégorie du professionnel depuis l'URL
-        // (ex: demande.html?nom=Koffi%20Aya&categorie=Plomberie)
+        // Récupère l'id, le nom et la catégorie du professionnel depuis l'URL
+        // (ex: demande.html?prestataire_id=xxx&nom=Koffi%20Aya&categorie=Plomberie)
         const params = new URLSearchParams(window.location.search);
+        const prestataireId = params.get("prestataire_id");
         const proNom = params.get("nom") || "Professionnel WariKo";
         const proCategorie = params.get("categorie") || "Service";
 
@@ -362,6 +363,12 @@
                 return;
             }
 
+            if (!prestataireId) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "Erreur : prestataire introuvable. Reviens depuis la recherche.";
+                return;
+            }
+
             const description = document.getElementById("description").value.trim();
             const telephone = document.getElementById("telephone").value.trim();
 
@@ -390,6 +397,7 @@
                     client_id: currentUser.id,
                     client_nom: currentUser.user_metadata.full_name || "",
                     client_telephone: telephone,
+                    prestataire_id: prestataireId,
                     professionnel_nom: proNom,
                     categorie: proCategorie,
                     description: description,

@@ -159,6 +159,11 @@
             color: var(--violet-fonce);
         }
 
+        .btn-terminer {
+            background: var(--violet-fonce);
+            color: var(--jaune);
+        }
+
         .empty {
             color: var(--blanc);
             opacity: 0.6;
@@ -234,10 +239,11 @@
 
         const container = document.getElementById("liste-demandes");
 
-        let monNomComplet = "";
+        let monPrestataireId = null;
 
         function badgeLabel(statut) {
             if (statut === "acceptee") return "Acceptée";
+            if (statut === "terminee") return "Terminée";
             if (statut === "refusee") return "Refusée";
             return "En attente";
         }
@@ -250,9 +256,21 @@
                 return;
             }
 
-            monNomComplet = session.user.user_metadata.full_name || "";
-            document.getElementById("titre-bienvenue").textContent = "Bonjour, " + (monNomComplet.split(" ")[0] || "Prestataire");
+            const fullName = session.user.user_metadata.full_name || "";
+            document.getElementById("titre-bienvenue").textContent = "Bonjour, " + (fullName.split(" ")[0] || "Prestataire");
 
+            const { data: prestataire, error: errPrestataire } = await supabaseClient
+                .from("prestataires")
+                .select("id")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+
+            if (errPrestataire || !prestataire) {
+                container.innerHTML = '<p class="empty">Profil prestataire introuvable.</p>';
+                return;
+            }
+
+            monPrestataireId = prestataire.id;
             chargerDemandes();
         })();
 
@@ -260,7 +278,7 @@
             const { data, error } = await supabaseClient
                 .from("demandes")
                 .select("*")
-                .eq("professionnel_nom", monNomComplet)
+                .eq("prestataire_id", monPrestataireId)
                 .order("created_at", { ascending: false });
 
             if (error) {
@@ -275,6 +293,7 @@
 
             container.innerHTML = data.map(function (d) {
                 const enAttente = !d.statut || d.statut === "en_attente";
+                const acceptee = d.statut === "acceptee";
                 return `
                     <div class="demande-card">
                         <div class="top-row">
@@ -288,6 +307,10 @@
                         <div class="actions">
                             <button class="btn-accepter" onclick="mettreAJourStatut('${d.id}', 'acceptee')">Accepter</button>
                             <button class="btn-refuser" onclick="mettreAJourStatut('${d.id}', 'refusee')">Refuser</button>
+                        </div>` : ""}
+                        ${acceptee ? `
+                        <div class="actions">
+                            <button class="btn-terminer" onclick="mettreAJourStatut('${d.id}', 'terminee')">Marquer terminée</button>
                         </div>` : ""}
                     </div>
                 `;

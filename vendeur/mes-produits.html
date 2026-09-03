@@ -109,12 +109,14 @@
 
         .produit-actions {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-top: 12px;
         }
 
         .statut-select {
             flex: 1;
+            min-width: 110px;
             border: none;
             border-radius: 10px;
             padding: 10px;
@@ -125,13 +127,23 @@
             color: var(--jaune);
         }
 
-        .produit-actions button {
+        .produit-actions button,
+        .produit-actions a.btn-galerie {
             border: none;
             border-radius: 10px;
             padding: 10px 14px;
             font-size: 12px;
             font-weight: 800;
             font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .btn-galerie {
+            background: var(--violet-fonce);
+            color: var(--jaune);
         }
 
         .btn-supprimer {
@@ -205,13 +217,14 @@
                         <div class="produit-nom">${p.nom}</div>
                         <div class="produit-prix">${formatPrix(p.prix)}</div>
                     </div>
-                    {p.description ? `<div class="produit-desc">{p.description}</div>` : ""}
+                    ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
                     <div class="produit-actions">
                         <select class="statut-select" data-id="${p.id}" data-action="statut">
                             <option value="disponible" ${statut === "disponible" ? "selected" : ""}>Disponible</option>
                             <option value="epuise" ${statut === "epuise" ? "selected" : ""}>Épuisé</option>
                             <option value="vendu" ${statut === "vendu" ? "selected" : ""}>Vendu</option>
                         </select>
+                        <a href="galerie-produit.html?produit=${p.id}" class="btn-galerie">📷 Photos & vidéos</a>
                         <button class="btn-supprimer" data-id="${p.id}" data-action="delete">
                             Supprimer
                         </button>

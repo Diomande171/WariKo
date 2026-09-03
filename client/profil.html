@@ -4,18 +4,10 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WariKo - Mon profil</title>
 
-    <link
-        rel="stylesheet"
-        href="../style.css"
-    >
+    <link rel="stylesheet" href="../style.css">
 
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#3D037A">
@@ -27,43 +19,91 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        body {
+            background: #F4F2F8;
+        }
+
+        .app {
+            min-height: 100vh;
+            padding-bottom: 90px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* ---------- En-tête ---------- */
         .profile-header {
             background: var(--violet-fonce);
             color: var(--blanc);
-            padding: 22px 20px 34px;
-            border-radius: 0 0 30px 30px;
-            text-align: center;
+            padding: 18px 20px 26px;
+            border-radius: 0 0 26px 26px;
         }
 
-        .profile-header .back-button {
-            display: block;
-            text-align: left;
-            color: var(--blanc);
+        .header-top {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon-btn {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            font-size: 14px;
-            opacity: 0.85;
-            margin-bottom: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .header-icon-btn svg {
+            width: 19px;
+            height: 19px;
+            stroke: var(--blanc);
+        }
+
+        .header-icon-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-size: 10px;
+            font-weight: 800;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+        }
+
+        .profile-top-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 14px;
         }
 
         .avatar-wrapper {
             position: relative;
-            width: 84px;
-            margin: 10px auto 0;
+            width: 76px;
+            flex-shrink: 0;
         }
 
         .avatar {
-            width: 84px;
-            height: 84px;
-
+            width: 76px;
+            height: 76px;
             display: flex;
             align-items: center;
             justify-content: center;
-
             border-radius: 50%;
             background: var(--jaune);
             color: var(--violet-fonce);
-
-            font-size: 30px;
+            font-size: 26px;
             font-weight: 800;
             overflow: hidden;
         }
@@ -76,17 +116,17 @@
 
         .avatar-edit {
             position: absolute;
-            bottom: -4px;
-            right: -4px;
-            width: 28px;
-            height: 28px;
+            bottom: -2px;
+            right: -2px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             background: var(--violet-fonce);
             border: 2px solid var(--blanc);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
         }
 
@@ -94,118 +134,376 @@
             display: none;
         }
 
-        .profile-header h1 {
-            margin-top: 14px;
-            font-size: 20px;
+        .profile-identity h1 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .profile-header p {
-            margin-top: 4px;
-            font-size: 13px;
-            opacity: 0.75;
-        }
-
-        .verif-badge {
-            display: inline-block;
-            margin-top: 10px;
+        .verif-check {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
             font-size: 11px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-identity p {
+            margin-top: 3px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .modifier-btn {
+            margin-top: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 9px 16px;
+            font-size: 12px;
             font-weight: 700;
-            padding: 5px 12px;
-            border-radius: 20px;
+            color: var(--blanc);
+            background: transparent;
         }
 
-        .verif-badge.approuve {
-            background: rgba(0, 200, 100, 0.2);
-            color: #00c864;
+        /* ---------- Sections génériques ---------- */
+        .section {
+            padding: 18px 20px 0;
         }
 
-        .verif-badge.en_attente {
-            background: rgba(255, 209, 0, 0.2);
-            color: var(--jaune);
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
-        .verif-badge.refuse {
-            background: rgba(255, 60, 60, 0.2);
-            color: #ff5c5c;
+        .section-head h2 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--texte);
         }
 
-        .verif-badge.aucune {
-            background: rgba(255, 255, 255, 0.12);
+        .section-head .lien {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--violet-fonce);
+        }
+
+        /* ---------- Mon activité ---------- */
+        .activite-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .activite-card {
+            background: var(--blanc);
+            border-radius: 16px;
+            padding: 14px 10px;
+            text-align: center;
+            text-decoration: none;
+            border: 2px solid transparent;
+        }
+
+        .activite-card.actif {
+            border-color: var(--jaune);
+        }
+
+        .activite-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
             color: var(--blanc);
         }
 
-        .profile-form {
-            padding: 24px 20px 90px;
+        .activite-icon.violet { background: var(--violet-fonce); }
+        .activite-icon.jaune { background: var(--jaune); color: var(--violet-fonce); }
+        .activite-icon.gris { background: #D9D5E3; color: #8B84A0; }
+
+        .activite-card .nom {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--texte);
         }
 
-        .profile-form label {
+        .activite-card .statut {
+            margin-top: 2px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .activite-card .statut.on { color: #2ECC71; }
+        .activite-card .statut.off { color: #A39EB0; }
+
+        /* ---------- Panneau d'édition ---------- */
+        #panneauEdition {
+            display: none;
+            background: var(--blanc);
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 4px;
+        }
+
+        #panneauEdition label {
             display: block;
-            margin-top: 18px;
-            font-size: 13px;
+            margin-top: 14px;
+            font-size: 12px;
             color: var(--gris-texte);
         }
 
-        .profile-form input {
+        #panneauEdition input {
             width: 100%;
-            margin-top: 8px;
-            padding: 14px 16px;
-            border-radius: 12px;
+            margin-top: 6px;
+            padding: 12px 14px;
+            border-radius: 10px;
             border: 1px solid #EEEEEE;
             background: var(--gris);
             color: var(--texte);
             outline: none;
+            box-sizing: border-box;
         }
 
-        .profile-form input:disabled {
+        #panneauEdition input:disabled {
             color: var(--gris-texte);
             background: #EFEFEF;
         }
 
         .save-button {
             width: 100%;
-            margin-top: 26px;
-            padding: 15px;
-            border-radius: 14px;
+            margin-top: 18px;
+            padding: 13px;
+            border-radius: 12px;
+            border: none;
             background: var(--violet-fonce);
             color: var(--blanc);
             font-weight: 700;
-            font-size: 15px;
-            text-align: center;
-        }
-
-        .verif-link-button {
-            display: block;
-            width: 100%;
-            margin-top: 14px;
-            padding: 15px;
-            border-radius: 14px;
-            background: var(--jaune);
-            color: var(--violet-fonce);
-            font-weight: 800;
             font-size: 14px;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .logout-button {
-            width: 100%;
-            margin-top: 14px;
-            padding: 15px;
-            border-radius: 14px;
-            border: 1px solid #E23744;
-            background: transparent;
-            color: #E23744;
-            font-weight: 700;
-            font-size: 15px;
-            text-align: center;
+            font-family: inherit;
         }
 
         #status-message {
-            margin-top: 14px;
-            font-size: 13px;
+            margin-top: 10px;
+            font-size: 12px;
             text-align: center;
         }
 
+        /* ---------- Mon compte (grille) ---------- */
+        .compte-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .compte-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--blanc);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--texte);
+            border: none;
+            font-family: inherit;
+            text-align: left;
+            width: 100%;
+        }
+
+        .compte-item.desactive {
+            opacity: 0.5;
+        }
+
+        .compte-item svg {
+            width: 19px;
+            height: 19px;
+            stroke: var(--violet-fonce);
+            flex-shrink: 0;
+        }
+
+        .compte-item span {
+            flex: 1;
+        }
+
+        .compte-item .chevron {
+            font-size: 14px;
+            color: #B7B2C4;
+        }
+
+        /* ---------- Mes activités (icônes) ---------- */
+        .mesactivites-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            background: var(--blanc);
+            border-radius: 16px;
+            padding: 16px 6px;
+        }
+
+        .mesactivites-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        .mesactivites-item.desactive {
+            opacity: 0.4;
+        }
+
+        .mesactivites-item svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--violet-fonce);
+        }
+
+        .mesactivites-item span {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--texte);
+            line-height: 1.3;
+        }
+
+        /* ---------- Bannière promo ---------- */
+        .promo-banniere {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--jaune);
+            border-radius: 16px;
+            padding: 16px;
+            text-decoration: none;
+        }
+
+        .promo-icone {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .promo-texte {
+            flex: 1;
+        }
+
+        .promo-texte h3 {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--violet-fonce);
+        }
+
+        .promo-texte p {
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--violet-fonce);
+            opacity: 0.8;
+        }
+
+        .promo-cta {
+            flex-shrink: 0;
+            background: var(--violet-fonce);
+            color: var(--jaune);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 9px 14px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        /* ---------- Assistance ---------- */
+        .assistance-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: var(--blanc);
+            border-radius: 16px;
+            padding: 16px 6px;
+        }
+
+        .assistance-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+            border: none;
+            background: none;
+            font-family: inherit;
+            opacity: 0.45;
+        }
+
+        .assistance-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--violet-fonce);
+        }
+
+        .assistance-item span {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--texte);
+            line-height: 1.25;
+        }
+
+        /* ---------- Déconnexion ---------- */
+        .logout-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--blanc);
+            border-radius: 14px;
+            padding: 15px 16px;
+            margin-top: 18px;
+            border: none;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .logout-row .gauche {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #E23744;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .logout-row svg {
+            width: 19px;
+            height: 19px;
+            stroke: #E23744;
+        }
+
+        .logout-row .chevron {
+            color: #E23744;
+            font-size: 14px;
+        }
+
+        /* ---------- Bottom nav ---------- */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -247,62 +545,235 @@
 
 </head>
 
-
 <body>
 
     <div class="app">
 
         <header class="profile-header">
 
-            <a href="accueil.html" class="back-button">← Retour</a>
-
-            <div class="avatar-wrapper">
-                <div class="avatar" id="avatar-display">
-                    <span id="avatar-initials">?</span>
-                </div>
-                <label class="avatar-edit">
-                    📷
-                    <input type="file" id="avatar-input" accept="image/*">
-                </label>
+            <div class="header-top">
+                <a href="../notifications.html" class="header-icon-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="badge" id="badgeNotifs" style="display:none;">0</span>
+                </a>
+                <button class="header-icon-btn" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
             </div>
 
-            <h1 id="profile-name">Chargement...</h1>
-            <p id="profile-email"></p>
+            <div class="profile-top-row">
+                <div class="avatar-wrapper">
+                    <div class="avatar" id="avatar-display">
+                        <span id="avatar-initials">?</span>
+                    </div>
+                    <label class="avatar-edit">
+                        📷
+                        <input type="file" id="avatar-input" accept="image/*">
+                    </label>
+                </div>
+                <div class="profile-identity">
+                    <h1 id="profile-name">Chargement...<span class="verif-check" id="verifCheck" style="display:none;">✓</span></h1>
+                    <p id="profile-since"></p>
+                </div>
+            </div>
 
-            <span class="verif-badge" id="verifBadge" style="display:none;"></span>
+            <button class="modifier-btn" onclick="toggleEdition()">✎ Modifier le profil</button>
 
         </header>
 
 
-        <section class="profile-form">
+        <!-- Mon activité -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Mon activité</h2>
+            </div>
+            <div class="activite-grid">
 
-            <form id="profile-form">
+                <div class="activite-card actif">
+                    <div class="activite-icon violet">🛍️</div>
+                    <div class="nom">Client</div>
+                    <div class="statut on">Actif</div>
+                </div>
 
-                <label for="fullname">Nom complet</label>
-                <input id="fullname" type="text" required>
+                <a href="#" id="carteVendeur" class="activite-card">
+                    <div class="activite-icon gris" id="iconVendeur">🏪</div>
+                    <div class="nom">Vendeur</div>
+                    <div class="statut off" id="statutVendeur">Non activé</div>
+                </a>
 
-                <label for="phone">Téléphone</label>
-                <input id="phone" type="tel" required>
+                <a href="#" id="cartePrestataire" class="activite-card">
+                    <div class="activite-icon gris" id="iconPrestataire">🔧</div>
+                    <div class="nom">Prestataire</div>
+                    <div class="statut off" id="statutPrestataire">Non activé</div>
+                </a>
 
-                <label for="email">E-mail</label>
-                <input id="email" type="email" disabled>
+            </div>
+        </section>
 
-                <p id="status-message"></p>
 
-                <button type="submit" class="save-button">
-                    Enregistrer les modifications
+        <!-- Panneau d'édition (masqué par défaut) -->
+        <section class="section">
+            <div id="panneauEdition">
+                <form id="profile-form">
+                    <label for="fullname">Nom complet</label>
+                    <input id="fullname" type="text" required>
+
+                    <label for="phone">Téléphone</label>
+                    <input id="phone" type="tel" required>
+
+                    <label for="email">E-mail</label>
+                    <input id="email" type="email" disabled>
+
+                    <p id="status-message"></p>
+
+                    <button type="submit" class="save-button">Enregistrer les modifications</button>
+                </form>
+            </div>
+        </section>
+
+
+        <!-- Mon compte -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Mon compte</h2>
+            </div>
+            <div class="compte-grid">
+
+                <button class="compte-item" onclick="toggleEdition()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                    <span>Informations personnelles</span>
+                    <span class="chevron">›</span>
                 </button>
 
-            </form>
+                <button class="compte-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+                    <span>Moyens de paiement</span>
+                    <span class="chevron">›</span>
+                </button>
 
-            <a href="verification.html" class="verif-link-button" id="verifLinkButton">
-                🪪 Vérifier mon identité
+                <button class="compte-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                    <span>Adresses</span>
+                    <span class="chevron">›</span>
+                </button>
+
+                <a href="../notifications.html" class="compte-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span>Notifications</span>
+                    <span class="chevron">›</span>
+                </a>
+
+                <button class="compte-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Sécurité</span>
+                    <span class="chevron">›</span>
+                </button>
+
+                <button class="compte-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Paramètres</span>
+                    <span class="chevron">›</span>
+                </button>
+
+            </div>
+        </section>
+
+
+        <!-- Mes activités -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Mes activités</h2>
+            </div>
+            <div class="mesactivites-row">
+
+                <a href="commandes.html" class="mesactivites-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+                    <span>Mes commandes</span>
+                </a>
+
+                <button class="mesactivites-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                    <span>Mes favoris</span>
+                </button>
+
+                <button class="mesactivites-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+                    <span>Avis et notes</span>
+                </button>
+
+                <button class="mesactivites-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/></svg>
+                    <span>Boutiques suivies</span>
+                </button>
+
+                <button class="mesactivites-item desactive" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                    <span>Prestataires contactés</span>
+                </button>
+
+            </div>
+        </section>
+
+
+        <!-- Bannière promo -->
+        <section class="section" id="sectionPromo" style="display:none;">
+            <a href="#" id="promoLien" class="promo-banniere">
+                <div class="promo-icone">%</div>
+                <div class="promo-texte">
+                    <h3>Devenez vendeur ou prestataire</h3>
+                    <p>Développez votre activité et gagnez plus</p>
+                </div>
+                <span class="promo-cta">Commencer ›</span>
             </a>
+        </section>
 
-            <button id="logout-btn" class="logout-button">
-                Se déconnecter
+
+        <!-- Assistance -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Assistance</h2>
+            </div>
+            <div class="assistance-row">
+
+                <button class="assistance-item" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+                    <span>Centre d'aide</span>
+                </button>
+
+                <button class="assistance-item" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>Nous contacter</span>
+                </button>
+
+                <button class="assistance-item" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>Signaler un problème</span>
+                </button>
+
+                <button class="assistance-item" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>À propos</span>
+                </button>
+
+            </div>
+        </section>
+
+
+        <!-- Déconnexion -->
+        <section class="section">
+            <button class="logout-row" id="logout-btn">
+                <span class="gauche">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Se déconnecter
+                </span>
+                <span class="chevron">›</span>
             </button>
-
         </section>
 
 
@@ -372,10 +843,23 @@
         const statusMessage = document.getElementById("status-message");
         const avatarDisplay = document.getElementById("avatar-display");
         const avatarInput = document.getElementById("avatar-input");
-        const verifBadge = document.getElementById("verifBadge");
-        const verifLinkButton = document.getElementById("verifLinkButton");
+        const verifCheck = document.getElementById("verifCheck");
 
         let userId = null;
+
+        const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+        function bientotDisponible() {
+            alert("Bientôt disponible ✨");
+        }
+
+        function toggleEdition() {
+            const panneau = document.getElementById("panneauEdition");
+            panneau.style.display = panneau.style.display === "block" ? "none" : "block";
+            if (panneau.style.display === "block") {
+                panneau.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        }
 
         function afficherAvatar(url, fullName) {
             if (url) {
@@ -408,34 +892,96 @@
             document.getElementById("phone").value = phone;
             document.getElementById("email").value = email;
 
-            document.getElementById("profile-name").textContent = fullName || "Utilisateur WariKo";
-            document.getElementById("profile-email").textContent = email;
+            document.getElementById("profile-name").innerHTML =
+                (fullName || "Utilisateur WariKo") + '<span class="verif-check" id="verifCheck" style="display:none;">✓</span>';
+
+            const dateInscription = new Date(user.created_at);
+            document.getElementById("profile-since").textContent =
+                "Client depuis " + MOIS[dateInscription.getMonth()] + " " + dateInscription.getFullYear();
 
             afficherAvatar(avatarUrl, fullName);
 
-            // Statut de vérification d'identité
+            // Badge vérifié (si une pièce d'identité a été approuvée, boutique ou prestataire)
             const { data: verif } = await supabaseClient
                 .from("verifications_identite")
                 .select("statut")
                 .eq("user_id", userId)
                 .maybeSingle();
 
-            const labels = {
-                approuve: "✅ Identité vérifiée",
-                en_attente: "⏳ Vérification en cours",
-                refuse: "❌ Document refusé"
-            };
+            if (verif && verif.statut === "approuve") {
+                const check = document.getElementById("verifCheck");
+                if (check) check.style.display = "inline-flex";
+            }
 
-            if (verif) {
-                verifBadge.textContent = labels[verif.statut];
-                verifBadge.className = "verif-badge " + verif.statut;
-                verifBadge.style.display = "inline-block";
+            // Vendeur actif ?
+            const { data: boutique } = await supabaseClient
+                .from("boutiques")
+                .select("id")
+                .eq("user_id", userId)
+                .maybeSingle();
 
-                if (verif.statut === "approuve") {
-                    verifLinkButton.style.display = "none";
-                } else if (verif.statut === "en_attente") {
-                    verifLinkButton.style.display = "none";
-                }
+            const carteVendeur = document.getElementById("carteVendeur");
+            const iconVendeur = document.getElementById("iconVendeur");
+            const statutVendeur = document.getElementById("statutVendeur");
+            let vendeurActif = false;
+
+            if (boutique) {
+                vendeurActif = true;
+                carteVendeur.href = "../vendeur/index.html";
+                carteVendeur.classList.add("actif");
+                iconVendeur.classList.remove("gris");
+                iconVendeur.classList.add("jaune");
+                statutVendeur.textContent = "Actif";
+                statutVendeur.classList.remove("off");
+                statutVendeur.classList.add("on");
+            } else {
+                carteVendeur.href = "../vendeur/inscription.html";
+            }
+
+            // Prestataire actif ?
+            const { data: prestataire } = await supabaseClient
+                .from("prestataires")
+                .select("id")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            const cartePrestataire = document.getElementById("cartePrestataire");
+            const iconPrestataire = document.getElementById("iconPrestataire");
+            const statutPrestataire = document.getElementById("statutPrestataire");
+            let prestataireActif = false;
+
+            if (prestataire) {
+                prestataireActif = true;
+                cartePrestataire.href = "../prestataire/index.html";
+                cartePrestataire.classList.add("actif");
+                iconPrestataire.classList.remove("gris");
+                iconPrestataire.classList.add("violet");
+                statutPrestataire.textContent = "Actif";
+                statutPrestataire.classList.remove("off");
+                statutPrestataire.classList.add("on");
+            } else {
+                cartePrestataire.href = "../prestataire/inscription.html";
+            }
+
+            // Bannière promo (affichée seulement s'il manque au moins un rôle)
+            if (!vendeurActif || !prestataireActif) {
+                document.getElementById("sectionPromo").style.display = "block";
+                document.getElementById("promoLien").href = !vendeurActif
+                    ? "../vendeur/inscription.html"
+                    : "../prestataire/inscription.html";
+            }
+
+            // Badge notifications
+            const badge = document.getElementById("badgeNotifs");
+            const { count } = await supabaseClient
+                .from("notifications")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", userId)
+                .eq("lu", false);
+
+            if (count && count > 0) {
+                badge.textContent = count > 9 ? "9+" : count;
+                badge.style.display = "flex";
             }
         })();
 
@@ -505,7 +1051,11 @@
                 statusMessage.style.color = "green";
                 statusMessage.textContent = "Profil mis à jour ✓";
 
-                document.getElementById("profile-name").textContent = fullname;
+                const nameEl = document.getElementById("profile-name");
+                const wasVerified = nameEl.querySelector("#verifCheck") &&
+                    nameEl.querySelector("#verifCheck").style.display !== "none";
+                nameEl.innerHTML = fullname + '<span class="verif-check" id="verifCheck" style="display:' + (wasVerified ? "inline-flex" : "none") + ';">✓</span>';
+
                 const avatarImg = avatarDisplay.querySelector("img");
                 if (!avatarImg) {
                     afficherAvatar(null, fullname);

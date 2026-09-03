@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo Pro - Galerie du produit</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            font-family: 'Poppins', sans-serif;
+            padding: 16px 16px 40px;
+        }
+
+        .back-link {
+            display: block;
+            font-size: 13px;
+            color: var(--blanc);
+            opacity: 0.75;
+            text-decoration: none;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--jaune);
+            margin: 0 0 4px;
+        }
+
+        p.produit-nom {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        p.info {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-bottom: 16px;
+        }
+
+        .compteur {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .btns-ajout {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-ajouter {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .btn-ajouter.secondaire {
+            background: transparent;
+            border: 2px solid var(--jaune);
+            color: var(--jaune);
+        }
+
+        .btn-ajouter:disabled {
+            opacity: 0.5;
+        }
+
+        .grille {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .carte-media {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .carte-media img, .carte-media video {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .carte-media button {
+            width: 100%;
+            background: rgba(255, 80, 80, 0.15);
+            color: #ff8080;
+            border: none;
+            border-radius: 0;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .vide {
+            text-align: center;
+            opacity: 0.6;
+            padding: 20px;
+            font-size: 13px;
+            grid-column: span 2;
+        }
+
+        .erreur {
+            background: rgba(255, 80, 80, 0.15);
+            color: #ff8080;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <a href="mes-produits.html" class="back-link">← Mes produits</a>
+
+    <h1>Galerie du produit</h1>
+    <p class="produit-nom" id="nomProduit">Chargement...</p>
+    <p class="info">Ajoute autant de photos ou vidéos que tu veux pour ce produit.</p>
+
+    <div id="contenu">
+        <div class="compteur" id="compteur">Chargement...</div>
+
+        <div class="btns-ajout">
+            <button class="btn-ajouter" id="btnPhoto" onclick="document.getElementById('fichierPhoto').click()">📷 Photo</button>
+            <button class="btn-ajouter secondaire" id="btnVideo" onclick="document.getElementById('fichierVideo').click()">🎥 Vidéo</button>
+        </div>
+        <input type="file" id="fichierPhoto" accept="image/*" style="display:none;" onchange="ajouterMedia(this, 'photo')">
+        <input type="file" id="fichierVideo" accept="video/*" style="display:none;" onchange="ajouterMedia(this, 'video')">
+
+        <div class="grille" id="grille">Chargement...</div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+        const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const params = new URLSearchParams(window.location.search);
+        const produitId = params.get('produit');
+
+        let mesMedias = [];
+
+        async function init() {
+            if (!produitId) {
+                document.getElementById('contenu').innerHTML = '<p class="erreur">Aucun produit indiqué dans le lien.</p>';
+                return;
+            }
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { window.location.href = '../client/connexion.html'; return; }
+
+            const { data: produit, error } = await supabase
+                .from('produits')
+                .select('id, nom, boutique_id, boutiques!inner(user_id)')
+                .eq('id', produitId)
+                .maybeSingle();
+
+            if (error || !produit || produit.boutiques.user_id !== user.id) {
+                document.getElementById('contenu').innerHTML = '<p class="erreur">Produit introuvable ou tu n\'es pas autorisé à le modifier.</p>';
+                return;
+            }
+
+            document.getElementById('nomProduit').textContent = produit.nom;
+
+            await chargerGalerie();
+        }
+
+        async function chargerGalerie() {
+            const { data: medias } = await supabase
+                .from('produit_medias')
+                .select('*')
+                .eq('produit_id', produitId)
+                .order('created_at', { ascending: false });
+
+            mesMedias = medias || [];
+
+            afficherCompteur();
+            afficherGrille();
+        }
+
+        function afficherCompteur() {
+            const n = mesMedias.length;
+            document.getElementById('compteur').textContent =
+                n === 0 ? 'Aucun média pour l\'instant' : `${n} média${n > 1 ? 's' : ''}`;
+        }
+
+        function afficherGrille() {
+            const grille = document.getElementById('grille');
+            if (mesMedias.length === 0) {
+                grille.innerHTML = '<p class="vide">Aucune photo ou vidéo pour l\'instant.</p>';
+                return;
+            }
+
+            grille.innerHTML = mesMedias.map(m => `
+                <div class="carte-media">
+                    ${m.type === 'video'
+                        ? `<video src="${m.url}" muted playsinline controls></video>`
+                        : `<img src="${m.url}" alt="média produit">`}
+                    <button onclick="supprimerMedia('${m.id}')">Supprimer</button>
+                </div>
+            `).join('');
+        }
+
+        async function ajouterMedia(input, type) {
+            const fichier = input.files[0];
+            if (!fichier) return;
+
+            const chemin = `${produitId}/${Date.now()}_${fichier.name}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('produit-medias')
+                .upload(chemin, fichier);
+
+            if (uploadError) {
+                alert('Erreur upload : ' + uploadError.message);
+                input.value = '';
+                return;
+            }
+
+            const { data: urlData } = supabase.storage.from('produit-medias').getPublicUrl(chemin);
+
+            const { error } = await supabase.from('produit_medias').insert({
+                produit_id: produitId,
+                type: type,
+                url: urlData.publicUrl
+            });
+
+            input.value = '';
+
+            if (error) {
+                alert('Erreur : ' + error.message);
+                return;
+            }
+
+            await chargerGalerie();
+        }
+
+        async function supprimerMedia(mediaId) {
+            if (!confirm('Supprimer ce média ?')) return;
+
+            const { error } = await supabase.from('produit_medias').delete().eq('id', mediaId);
+            if (error) {
+                alert('Erreur : ' + error.message);
+                return;
+            }
+
+            await chargerGalerie();
+        }
+
+        init();
+    </script>
+
+</body>
+
+</html>

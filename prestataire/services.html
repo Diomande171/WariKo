@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mes services - WariKo</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --violet-fonce:#3D037A;
+    --jaune:#FFD400;
+    --blanc:#FFFFFF;
+    --gris:#F2F2F2;
+    --gris-texte:#8A8A8A;
+    --texte:#1A1A1A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Poppins',sans-serif;
+    background:var(--gris);
+    color:var(--texte);
+    max-width:430px;
+    margin:0 auto;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  header{
+    background:var(--violet-fonce);
+    color:var(--blanc);
+    padding:20px 20px 30px;
+  }
+  .retour{
+    color:var(--blanc);
+    text-decoration:none;
+    font-size:15px;
+    display:inline-block;
+    margin-bottom:16px;
+  }
+  header h1{
+    font-family:'Playfair Display',serif;
+    font-size:26px;
+  }
+  header p{
+    font-size:14px;
+    opacity:0.85;
+    margin-top:4px;
+  }
+  .contenu{padding:20px;}
+  .bouton-ajouter{
+    width:100%;
+    background:var(--jaune);
+    color:var(--violet-fonce);
+    border:none;
+    border-radius:14px;
+    padding:16px;
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:20px;
+  }
+  .carte-service{
+    background:var(--blanc);
+    border-radius:16px;
+    overflow:hidden;
+    margin-bottom:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  }
+  .carte-service img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    background:var(--gris);
+  }
+  .carte-service .infos{padding:14px;}
+  .carte-service h3{font-size:16px;margin-bottom:4px;}
+  .carte-service .prix{
+    color:var(--violet-fonce);
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .carte-service .desc{
+    font-size:13px;
+    color:var(--gris-texte);
+    margin-bottom:10px;
+  }
+  .actions-service{
+    display:flex;
+    gap:10px;
+  }
+  .actions-service button{
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    font-size:13px;
+    font-weight:600;
+  }
+  .btn-modifier{background:var(--gris);color:var(--texte);}
+  .btn-supprimer{background:#FFE5E5;color:#D32F2F;}
+  .vide{
+    text-align:center;
+    color:var(--gris-texte);
+    padding:60px 20px;
+    font-size:14px;
+  }
+
+  /* Formulaire modal */
+  .overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:100;
+    align-items:flex-end;
+  }
+  .overlay.actif{display:flex;}
+  .formulaire{
+    background:var(--blanc);
+    width:100%;
+    max-width:430px;
+    margin:0 auto;
+    border-radius:20px 20px 0 0;
+    padding:24px 20px 30px;
+    max-height:85vh;
+    overflow-y:auto;
+  }
+  .formulaire h2{font-size:18px;margin-bottom:16px;}
+  .formulaire label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+    margin-top:14px;
+  }
+  .formulaire input, .formulaire textarea{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .formulaire textarea{resize:vertical;min-height:70px;}
+  .apercu-photo{
+    width:100%;
+    height:140px;
+    border-radius:10px;
+    object-fit:cover;
+    margin-top:10px;
+    background:var(--gris);
+    display:none;
+  }
+  .boutons-form{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+  }
+  .boutons-form button{
+    flex:1;
+    padding:14px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    font-size:14px;
+  }
+  .btn-annuler{background:var(--gris);color:var(--texte);}
+  .btn-valider{background:var(--jaune);color:var(--violet-fonce);}
+  .chargement{
+    text-align:center;
+    padding:40px;
+    color:var(--gris-texte);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="javascript:history.back()" class="retour">← Retour</a>
+  <h1 id="titre-page">Services proposés</h1>
+  <p id="sous-titre">Chargement...</p>
+</header>
+
+<div class="contenu">
+  <button class="bouton-ajouter" id="btn-ajouter" style="display:none;" onclick="ouvrirFormulaire()">+ Ajouter un service</button>
+  <div id="liste-services"></div>
+</div>
+
+<!-- Formulaire ajout/modification -->
+<div class="overlay" id="overlay">
+  <div class="formulaire">
+    <h2 id="titre-formulaire">Ajouter un service</h2>
+
+    <label>Nom du service</label>
+    <input type="text" id="champ-nom" placeholder="Ex: Réparation fuite d'eau">
+
+    <label>Prix (à partir de X FCFA)</label>
+    <input type="number" id="champ-prix" placeholder="Ex: 5000">
+
+    <label>Description</label>
+    <textarea id="champ-description" placeholder="Décris le service..."></textarea>
+
+    <label>Photo</label>
+    <input type="file" id="champ-photo" accept="image/*">
+    <img id="apercu" class="apercu-photo">
+
+    <div class="boutons-form">
+      <button class="btn-annuler" onclick="fermerFormulaire()">Annuler</button>
+      <button class="btn-valider" onclick="enregistrerService()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let modeProprietaire = false;
+let prestataireId = null;
+let servicePhotoFile = null;
+let serviceEnEdition = null; // id du service en cours de modification, null si ajout
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const idUrl = params.get('id');
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if(idUrl){
+    // Mode visite : on regarde la fiche d'un prestataire précis
+    prestataireId = idUrl;
+
+    if(session){
+      const { data: monPresta } = await supabase
+        .from('prestataires')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single();
+      if(monPresta && monPresta.id === idUrl){
+        modeProprietaire = true;
+      }
+    }
+  } else {
+    // Pas de paramètre : c'est forcément son propre profil
+    if(!session){
+      window.location.href = "../client/connexion.html";
+      return;
+    }
+    const { data: monPresta, error } = await supabase
+      .from('prestataires')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if(error || !monPresta){
+      document.getElementById('sous-titre').textContent = "Profil prestataire introuvable";
+      return;
+    }
+    prestataireId = monPresta.id;
+    modeProprietaire = true;
+  }
+
+  document.getElementById('titre-page').textContent = modeProprietaire ? "Mes services" : "Services proposés";
+  document.getElementById('sous-titre').textContent = modeProprietaire ? "Gère les prestations que tu proposes" : "Découvre les prestations disponibles";
+  if(modeProprietaire){
+    document.getElementById('btn-ajouter').style.display = "block";
+  }
+
+  chargerServices();
+}
+
+async function chargerServices(){
+  const conteneur = document.getElementById('liste-services');
+  conteneur.innerHTML = '<div class="chargement">Chargement des services...</div>';
+
+  const { data: services, error } = await supabase
+    .from('prestataire_services')
+    .select('*')
+    .eq('prestataire_id', prestataireId)
+    .order('created_at', { ascending: false });
+
+  if(error){
+    conteneur.innerHTML = '<div class="vide">Erreur de chargement</div>';
+    return;
+  }
+
+  if(!services || services.length === 0){
+    conteneur.innerHTML = modeProprietaire
+      ? '<div class="vide">Tu n\'as encore ajouté aucun service.<br>Appuie sur "+ Ajouter un service" pour commencer.</div>'
+      : '<div class="vide">Ce prestataire n\'a pas encore ajouté de service.</div>';
+    return;
+  }
+
+  conteneur.innerHTML = services.map(s => `
+    <div class="carte-service">
+      ${s.photo_url ? `<img src="${s.photo_url}" alt="${s.nom}">` : ''}
+      <div class="infos">
+        <h3>${s.nom}</h3>
+        <div class="prix">à partir de ${Number(s.prix).toLocaleString('fr-FR')} FCFA</div>
+        ${s.description ? `<div class="desc">${s.description}</div>` : ''}
+        ${modeProprietaire ? `
+          <div class="actions-service">
+            <button class="btn-modifier" onclick='ouvrirFormulaire(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Modifier</button>
+            <button class="btn-supprimer" onclick="supprimerService('${s.id}')">Supprimer</button>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function ouvrirFormulaire(service){
+  serviceEnEdition = null;
+  servicePhotoFile = null;
+  document.getElementById('champ-nom').value = '';
+  document.getElementById('champ-prix').value = '';
+  document.getElementById('champ-description').value = '';
+  document.getElementById('apercu').style.display = 'none';
+  document.getElementById('titre-formulaire').textContent = "Ajouter un service";
+
+  if(service && service.id){
+    serviceEnEdition = service.id;
+    document.getElementById('titre-formulaire').textContent = "Modifier le service";
+    document.getElementById('champ-nom').value = service.nom || '';
+    document.getElementById('champ-prix').value = service.prix || '';
+    document.getElementById('champ-description').value = service.description || '';
+    if(service.photo_url){
+      document.getElementById('apercu').src = service.photo_url;
+      document.getElementById('apercu').style.display = 'block';
+    }
+  }
+
+  document.getElementById('overlay').classList.add('actif');
+}
+
+function fermerFormulaire(){
+  document.getElementById('overlay').classList.remove('actif');
+}
+
+document.getElementById('champ-photo').addEventListener('change', function(e){
+  const fichier = e.target.files[0];
+  if(fichier){
+    servicePhotoFile = fichier;
+    const apercu = document.getElementById('apercu');
+    apercu.src = URL.createObjectURL(fichier);
+    apercu.style.display = 'block';
+  }
+});
+
+async function enregistrerService(){
+  const nom = document.getElementById('champ-nom').value.trim();
+  const prix = document.getElementById('champ-prix').value;
+  const description = document.getElementById('champ-description').value.trim();
+
+  if(!nom || !prix){
+    alert("Le nom et le prix sont obligatoires.");
+    return;
+  }
+
+  let photoUrl = null;
+  if(serviceEnEdition){
+    const { data: ancien } = await supabase
+      .from('prestataire_services')
+      .select('photo_url')
+      .eq('id', serviceEnEdition)
+      .single();
+    if(ancien) photoUrl = ancien.photo_url;
+  }
+
+  if(servicePhotoFile){
+    const nomFichier = `${prestataireId}/${Date.now()}_${servicePhotoFile.name}`;
+    const { error: erreurUpload } = await supabase.storage
+      .from('services-prestataire')
+      .upload(nomFichier, servicePhotoFile);
+
+    if(erreurUpload){
+      alert("Erreur lors de l'upload de la photo.");
+      return;
+    }
+
+    const { data: urlPublique } = supabase.storage
+      .from('services-prestataire')
+      .getPublicUrl(nomFichier);
+    photoUrl = urlPublique.publicUrl;
+  }
+
+  if(serviceEnEdition){
+    const { error } = await supabase
+      .from('prestataire_services')
+      .update({ nom, prix, description, photo_url: photoUrl })
+      .eq('id', serviceEnEdition);
+    if(error){
+      alert("Erreur lors de la modification.");
+      return;
+    }
+  } else {
+    const { error } = await supabase
+      .from('prestataire_services')
+      .insert({ prestataire_id: prestataireId, nom, prix, description, photo_url: photoUrl });
+    if(error){
+      alert("Erreur lors de l'ajout.");
+      return;
+    }
+  }
+
+  fermerFormulaire();
+  chargerServices();
+}
+
+async function supprimerService(id){
+  if(!confirm("Supprimer ce service ?")) return;
+  const { error } = await supabase
+    .from('prestataire_services')
+    .delete()
+    .eq('id', id);
+  if(error){
+    alert("Erreur lors de la suppression.");
+    return;
+  }
+  chargerServices();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -114,6 +114,10 @@
             transform: translateY(0);
             pointer-events: auto;
         }
+
+        .primary-button:disabled {
+            opacity: 0.6;
+        }
     </style>
 
 </head>
@@ -206,6 +210,7 @@
 
                     <button
                         type="submit"
+                        id="submit-button"
                         class="primary-button"
                     >
                         Créer mon compte
@@ -265,11 +270,17 @@
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabaseClient = null;
+        try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (erreurInit) {
+            console.error("Erreur d'initialisation Supabase :", erreurInit);
+        }
 
         const form = document.getElementById("signup-form");
         const errorMessage = document.getElementById("error-message");
         const successMessage = document.getElementById("success-message");
+        const submitButton = document.getElementById("submit-button");
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -277,29 +288,48 @@
             errorMessage.style.display = "none";
             successMessage.style.display = "none";
 
+            if (!supabaseClient) {
+                errorMessage.textContent = "Erreur technique : la connexion au serveur n'a pas pu s'initialiser. Réessaie de recharger la page.";
+                errorMessage.style.display = "block";
+                return;
+            }
+
             const fullname = document.getElementById("fullname").value;
             const phone = document.getElementById("phone").value;
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
 
-            const { data, error } = await supabaseClient.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        full_name: fullname,
-                        phone: phone
-                    }
-                }
-            });
+            submitButton.disabled = true;
+            submitButton.textContent = "Création en cours...";
 
-            if (error) {
-                errorMessage.textContent = "Erreur : " + error.message;
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullname,
+                            phone: phone
+                        }
+                    }
+                });
+
+                if (error) {
+                    errorMessage.textContent = "Erreur : " + error.message;
+                    errorMessage.style.display = "block";
+                } else {
+                    successMessage.textContent = "Compte créé ! Vous pouvez vous connecter.";
+                    successMessage.style.display = "block";
+                    form.reset();
+                }
+
+            } catch (erreurReseau) {
+                errorMessage.textContent = "Erreur de connexion au serveur. Vérifie ta connexion internet et réessaie. (" + erreurReseau.message + ")";
                 errorMessage.style.display = "block";
-            } else {
-                successMessage.textContent = "Compte créé ! Vous pouvez vous connecter.";
-                successMessage.style.display = "block";
-                form.reset();
+
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Créer mon compte";
             }
         });
     </script>

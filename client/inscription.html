@@ -317,17 +317,34 @@
                 if (error) {
                     errorMessage.textContent = "Erreur : " + error.message;
                     errorMessage.style.display = "block";
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Créer mon compte";
+                    return;
+                }
+
+                if (data.session) {
+                    // Session active tout de suite (confirmation email désactivée) : direction l'accueil
+                    successMessage.textContent = "Compte créé ! Bienvenue sur WariKo 🎉";
+                    successMessage.style.display = "block";
+                    submitButton.textContent = "Redirection...";
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 1000);
                 } else {
-                    successMessage.textContent = "Compte créé ! Vous pouvez vous connecter.";
+                    // Pas de session : confirmation email requise
+                    successMessage.textContent = "Compte créé ! Vérifie ta boîte mail pour confirmer ton compte, puis connecte-toi.";
                     successMessage.style.display = "block";
                     form.reset();
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Créer mon compte";
+                    setTimeout(() => {
+                        window.location.href = "connexion.html";
+                    }, 2500);
                 }
 
             } catch (erreurReseau) {
                 errorMessage.textContent = "Erreur de connexion au serveur. Vérifie ta connexion internet et réessaie. (" + erreurReseau.message + ")";
                 errorMessage.style.display = "block";
-
-            } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = "Créer mon compte";
             }

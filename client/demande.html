@@ -27,6 +27,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        * { box-sizing: border-box; }
+
         body {
             background: var(--violet-fonce);
         }
@@ -94,6 +96,91 @@
             font-weight: 600;
         }
 
+        .section-titre {
+            padding: 0 20px 10px;
+            color: var(--blanc);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .liste-services {
+            padding: 0 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .carte-service-choix {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 10px;
+            border: 2px solid transparent;
+        }
+
+        .carte-service-choix.selectionnee {
+            border-color: var(--jaune);
+            background: rgba(255,212,0,0.12);
+        }
+
+        .carte-service-choix img {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+
+        .carte-service-choix .vignette-vide {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .infos-service-choix { flex: 1; min-width: 0; }
+        .infos-service-choix h4 {
+            color: var(--blanc);
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        .infos-service-choix .prix-service {
+            color: var(--jaune);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .radio-service {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--jaune);
+            flex-shrink: 0;
+            position: relative;
+        }
+        .carte-service-choix.selectionnee .radio-service::after {
+            content: "";
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: var(--jaune);
+        }
+
+        .message-aucun-service {
+            color: var(--blanc);
+            opacity: 0.7;
+            font-size: 13px;
+            padding: 0 20px 16px;
+        }
+
         .demande-form {
             padding: 0 20px 24px;
         }
@@ -129,7 +216,7 @@
         }
 
         .demande-form textarea {
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
 
@@ -209,7 +296,7 @@
 
         <header class="demande-header">
             <a href="recherche.html" class="back-button">← Retour</a>
-            <h1>Décris ton besoin</h1>
+            <h1>Fais ta demande</h1>
         </header>
 
         <div class="pro-summary">
@@ -220,16 +307,20 @@
             </div>
         </div>
 
+        <div class="section-titre">Choisis un service</div>
+        <div class="liste-services" id="liste-services">
+            <p class="message-aucun-service">Chargement des services...</p>
+        </div>
+
         <section class="demande-form">
 
             <form id="demande-form">
 
                 <div class="field-group">
-                    <label for="description">Décris ta demande</label>
+                    <label for="description">Précise ta demande (optionnel)</label>
                     <textarea
                         id="description"
-                        placeholder="Ex : J'ai une fuite d'eau sous l'évier de ma cuisine, disponible ce soir après 18h..."
-                        required
+                        placeholder="Ex : disponible ce soir après 18h, l'adresse exacte est..."
                     ></textarea>
                 </div>
 
@@ -328,6 +419,10 @@
             return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
         }
 
+        function formatPrix(prix) {
+            return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
+        }
+
         document.getElementById("pro-name").textContent = proNom;
         document.getElementById("pro-category").textContent = proCategorie;
         document.getElementById("pro-avatar").textContent = initials(proNom);
@@ -335,8 +430,58 @@
         const form = document.getElementById("demande-form");
         const statusMessage = document.getElementById("status-message");
         const submitBtn = document.getElementById("submit-btn");
+        const listeServicesEl = document.getElementById("liste-services");
 
         let currentUser = null;
+        let serviceSelectionneId = null;
+        let serviceSelectionneNom = null;
+
+        function afficherServices(services) {
+            if (!services || services.length === 0) {
+                listeServicesEl.innerHTML = '<p class="message-aucun-service">Ce professionnel n\'a pas encore ajouté de service. Tu peux quand même envoyer une demande générale ci-dessous.</p>';
+                return;
+            }
+
+            listeServicesEl.innerHTML = services.map(s => `
+                <div class="carte-service-choix" data-id="${s.id}" data-nom="${s.nom.replace(/"/g, '&quot;')}" onclick="selectionnerService(${s.id})">
+                    ${s.photo_url ? `<img src="${s.photo_url}" alt="${s.nom}">` : `<div class="vignette-vide">🔧</div>`}
+                    <div class="infos-service-choix">
+                        <h4>${s.nom}</h4>
+                        <div class="prix-service">à partir de ${formatPrix(s.prix)}</div>
+                    </div>
+                    <div class="radio-service"></div>
+                </div>
+            `).join("");
+        }
+
+        function selectionnerService(id) {
+            serviceSelectionneId = id;
+            document.querySelectorAll(".carte-service-choix").forEach(el => {
+                const estCelleCi = Number(el.dataset.id) === id;
+                el.classList.toggle("selectionnee", estCelleCi);
+                if (estCelleCi) serviceSelectionneNom = el.dataset.nom;
+            });
+        }
+
+        async function chargerServicesDuPrestataire() {
+            if (!prestataireId) {
+                listeServicesEl.innerHTML = "";
+                return;
+            }
+
+            const { data: services, error } = await supabaseClient
+                .from("prestataire_services")
+                .select("*")
+                .eq("prestataire_id", prestataireId)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                listeServicesEl.innerHTML = '<p class="message-aucun-service">Erreur de chargement des services.</p>';
+                return;
+            }
+
+            afficherServices(services);
+        }
 
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -352,6 +497,8 @@
             if (savedPhone) {
                 document.getElementById("telephone").value = savedPhone;
             }
+
+            chargerServicesDuPrestataire();
         })();
 
         form.addEventListener("submit", async (e) => {
@@ -372,9 +519,16 @@
             const description = document.getElementById("description").value.trim();
             const telephone = document.getElementById("telephone").value.trim();
 
-            if (!description || !telephone) {
+            if (!telephone) {
                 statusMessage.style.color = "#FFD6D6";
-                statusMessage.textContent = "Merci de remplir tous les champs.";
+                statusMessage.textContent = "Merci d'indiquer ton numéro de téléphone.";
+                return;
+            }
+
+            const aDesServices = document.querySelectorAll(".carte-service-choix").length > 0;
+            if (aDesServices && !serviceSelectionneId) {
+                statusMessage.style.color = "#FFD6D6";
+                statusMessage.textContent = "Merci de choisir un service.";
                 return;
             }
 
@@ -399,9 +553,10 @@
                     client_telephone: telephone,
                     prestataire_id: prestataireId,
                     professionnel_nom: proNom,
-                    categorie: proCategorie,
+                    categorie: serviceSelectionneNom || proCategorie,
                     description: description,
                     statut: "en_attente",
+                    service_id: serviceSelectionneId,
                     client_lat: position.lat,
                     client_lng: position.lng
                 });

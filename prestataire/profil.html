@@ -669,7 +669,17 @@
         })();
 
         document.querySelectorAll("[data-action]").forEach(btn => {
-            btn.addEventListener("click", pasEncoreDisponible);
+            if (btn.dataset.action === "services") {
+                btn.addEventListener("click", () => {
+                    if (!prestataireViewe || !prestataireViewe.id) {
+                        alert("PAS ENCORE DISPONIBLE");
+                        return;
+                    }
+                    window.location.href = `services.html?id=${prestataireViewe.id}`;
+                });
+            } else {
+                btn.addEventListener("click", pasEncoreDisponible);
+            }
         });
 
         document.getElementById("btn-modifier").addEventListener("click", () => {

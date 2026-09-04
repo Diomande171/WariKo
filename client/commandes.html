@@ -19,37 +19,194 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body { background: var(--violet-fonce); }
-.app { min-height: 100vh; padding: 0 0 90px; color: var(--blanc); font-family: 'Poppins', sans-serif; }
-.header { padding: 22px 20px 18px; }
-.back-link { font-size: 13px; color: var(--blanc); opacity: 0.75; text-decoration: none; }
-.header h1 { margin-top: 12px; font-size: 20px; font-family: 'Playfair Display', serif; color: var(--jaune); }
+  * { box-sizing: border-box; }
 
-.onglets { display: flex; gap: 8px; padding: 0 20px 16px; }
-.onglet { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(255,255,255,0.06); font-size: 12px; font-weight: 700; color: var(--blanc); opacity: 0.6; }
-.onglet.actif { background: var(--jaune); color: var(--violet-fonce); opacity: 1; }
+  body { background: var(--gris); }
 
-.section { padding: 0 20px 24px; }
-.section-title { font-size: 14px; font-weight: 800; color: var(--jaune); margin-bottom: 12px; }
+  .app { min-height: 100vh; padding-bottom: 90px; font-family: 'Poppins', sans-serif; color: var(--texte); }
 
-.carte { background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-.carte h3 { font-size: 14px; color: var(--blanc); margin-bottom: 4px; }
-.carte p { font-size: 12px; opacity: 0.75; margin: 2px 0; }
-.badge { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-top: 8px; }
-.badge.en_attente { background: rgba(255,193,7,0.2); color: var(--jaune); }
-.badge.acceptee { background: rgba(76,175,80,0.2); color: #8fd98f; }
-.badge.livree { background: rgba(76,175,80,0.3); color: #8fd98f; }
-.badge.refusee { background: rgba(255,100,100,0.2); color: #ff9b9b; }
-.total { margin-top: 8px; font-weight: 800; color: var(--jaune); font-size: 13px; }
-.lien-boutique { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 800; color: var(--jaune); text-decoration: none; }
+  .header {
+    background: var(--violet-fonce);
+    color: var(--blanc);
+    padding: 20px 20px 34px;
+    border-radius: 0 0 26px 26px;
+  }
+  .back-link { font-size: 14px; color: var(--blanc); opacity: 0.8; text-decoration: none; }
+  .header h1 { margin-top: 12px; font-size: 24px; font-family: 'Playfair Display', serif; }
+  .header h1 span { color: var(--jaune); }
+  .header p { margin-top: 4px; font-size: 13px; opacity: 0.75; }
 
-.empty { text-align: center; opacity: 0.5; font-size: 13px; padding: 24px; }
+  .tabs-principaux {
+    display: flex;
+    background: var(--blanc);
+    margin: -18px 16px 0;
+    border-radius: 16px;
+    padding: 5px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    position: relative;
+    z-index: 2;
+  }
+  .tab-principal {
+    flex: 1;
+    text-align: center;
+    padding: 12px 6px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gris-texte);
+  }
+  .tab-principal.actif { background: var(--jaune); color: var(--violet-fonce); }
 
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: var(--violet-fonce); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 10px 6px; }
-.bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: rgba(255, 255, 255, 0.6); text-decoration: none; }
-.bottom-nav a svg { width: 22px; height: 22px; stroke: rgba(255, 255, 255, 0.6); }
-.bottom-nav a.active { color: var(--jaune); }
-.bottom-nav a.active svg { stroke: var(--jaune); }
+  .filtres {
+    display: flex;
+    gap: 8px;
+    padding: 18px 16px 4px;
+    overflow-x: auto;
+  }
+  .filtre {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 9px 14px;
+    border-radius: 20px;
+    background: var(--blanc);
+    color: var(--texte);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #eee;
+  }
+  .filtre.actif { background: var(--violet-fonce); color: var(--blanc); border-color: var(--violet-fonce); }
+  .filtre .compteur {
+    background: var(--jaune);
+    color: var(--violet-fonce);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .filtre.actif .compteur { background: rgba(255,255,255,0.25); color: var(--blanc); }
+
+  .contenu { padding: 16px; }
+
+  .titre-jour { font-size: 15px; font-weight: 800; margin: 14px 0 10px; }
+
+  .carte-commande {
+    display: flex;
+    gap: 12px;
+    background: var(--blanc);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .icone-vignette {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: var(--gris);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .infos-commande { flex: 1; min-width: 0; }
+  .badge-type {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: #EFE3FA;
+    color: var(--violet-fonce);
+    margin-bottom: 5px;
+  }
+  .infos-commande h3 {
+    font-size: 14px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .par-ligne {
+    font-size: 12px;
+    color: var(--gris-texte);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .badge-verifie-inline { color: #4EA8FF; font-size: 12px; }
+  .date-ligne {
+    font-size: 11px;
+    color: var(--gris-texte);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .colonne-droite {
+    text-align: right;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .prix-commande { font-weight: 800; font-size: 14px; color: var(--texte); }
+  .commission-ligne { font-size: 10px; color: var(--gris-texte); margin-top: 1px; }
+  .badge-statut {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+  }
+  .badge-statut.attente { background: #E3EEFF; color: #2E6BE0; }
+  .badge-statut.cours { background: #FFF3D6; color: #B8860B; }
+  .badge-statut.terminee { background: #DFF5E4; color: #1E7B3E; }
+  .badge-statut.annulee { background: #FDE4E1; color: #D0453A; }
+
+  .carte-panier {
+    background: var(--blanc);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .carte-panier h3 { font-size: 14px; margin-bottom: 6px; }
+  .carte-panier p { font-size: 12px; color: var(--gris-texte); margin: 2px 0; }
+  .total-panier { font-weight: 800; color: var(--violet-fonce); margin-top: 8px; font-size: 14px; }
+  .lien-boutique {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--violet-fonce);
+    text-decoration: none;
+  }
+
+  .empty { text-align: center; color: var(--gris-texte); font-size: 13px; padding: 40px 20px; }
+
+  .bandeau-securite {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #FFF6E0;
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 10px;
+  }
+  .bandeau-securite .icone { font-size: 22px; }
+  .bandeau-securite h4 { font-size: 13px; margin-bottom: 2px; }
+  .bandeau-securite p { font-size: 11px; color: var(--gris-texte); }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: var(--violet-fonce); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 10px 6px; }
+  .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: rgba(255, 255, 255, 0.6); text-decoration: none; }
+  .bottom-nav a svg { width: 22px; height: 22px; stroke: rgba(255, 255, 255, 0.6); }
+  .bottom-nav a.active { color: var(--jaune); }
+  .bottom-nav a.active svg { stroke: var(--jaune); }
 </style>
 
 </head>
@@ -58,31 +215,44 @@ body { background: var(--violet-fonce); }
 
 <div class="app">
 
-<header class="header">
-<a href="accueil.html" class="back-link">← Retour</a>
-<h1>Mes commandes</h1>
-</header>
+  <header class="header">
+    <a href="accueil.html" class="back-link">← Retour</a>
+    <h1>Mes <span>commandes</span></h1>
+    <p>Gérez toutes vos commandes et missions</p>
+  </header>
 
-<div class="onglets">
-<div class="onglet actif" data-onglet="panier" onclick="changerOnglet('panier')">Panier</div>
-<div class="onglet" data-onglet="encours" onclick="changerOnglet('encours')">En cours</div>
-<div class="onglet" data-onglet="historique" onclick="changerOnglet('historique')">Historique</div>
-</div>
+  <div class="tabs-principaux">
+    <div class="tab-principal actif" data-tab="panier" onclick="changerTabPrincipal('panier')">Panier</div>
+    <div class="tab-principal" data-tab="commandes" onclick="changerTabPrincipal('commandes')">Commandes</div>
+  </div>
 
-<section class="section" id="vue-panier">
-<div class="section-title">Mon panier</div>
-<div id="listePanier"><p class="empty">Chargement...</p></div>
-</section>
+  <!-- ===== VUE PANIER ===== -->
+  <div id="vue-panier" class="contenu">
+    <div id="listePanier"><p class="empty">Chargement...</p></div>
+  </div>
 
-<section class="section" id="vue-encours" style="display:none;">
-<div class="section-title">Commandes en cours</div>
-<div id="listeEnCours"><p class="empty">Chargement...</p></div>
-</section>
+  <!-- ===== VUE COMMANDES ===== -->
+  <div id="vue-commandes" class="contenu" style="display:none;">
 
-<section class="section" id="vue-historique" style="display:none;">
-<div class="section-title">Historique d'achats</div>
-<div id="listeHistorique"><p class="empty">Chargement...</p></div>
-</section>
+    <div class="filtres">
+      <div class="filtre actif" data-filtre="toutes" onclick="changerFiltre('toutes')">Toutes</div>
+      <div class="filtre" data-filtre="attente" onclick="changerFiltre('attente')">En attente <span class="compteur" id="compteur-attente">0</span></div>
+      <div class="filtre" data-filtre="cours" onclick="changerFiltre('cours')">En cours <span class="compteur" id="compteur-cours">0</span></div>
+      <div class="filtre" data-filtre="terminee" onclick="changerFiltre('terminee')">Terminées</div>
+      <div class="filtre" data-filtre="annulee" onclick="changerFiltre('annulee')">Annulées</div>
+    </div>
+
+    <div id="listeCommandes"><p class="empty">Chargement...</p></div>
+
+    <div class="bandeau-securite">
+      <span class="icone">🛡️</span>
+      <div>
+        <h4>Paiement sécurisé</h4>
+        <p>Tous les paiements sont protégés sur WariKo.</p>
+      </div>
+    </div>
+
+  </div>
 
 </div>
 
@@ -148,11 +318,66 @@ function formatPrix(prix) {
   return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
 }
 
-function changerOnglet(nom) {
-  document.querySelectorAll(".onglet").forEach(o => o.classList.toggle("actif", o.dataset.onglet === nom));
+function formatHeure(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDateLigne(dateStr) {
+  const d = new Date(dateStr);
+  const jour = String(d.getDate()).padStart(2, "0");
+  const mois = d.toLocaleDateString("fr-FR", { month: "short" });
+  const annee = d.getFullYear();
+  return `${jour} ${mois}. ${annee} • ${formatHeure(dateStr)}`;
+}
+
+function cleJour(dateStr) {
+  const d = new Date(dateStr);
+  return d.toISOString().slice(0, 10);
+}
+
+function libelleJour(dateStr) {
+  const aujourdhui = cleJour(new Date().toISOString());
+  const hier = new Date();
+  hier.setDate(hier.getDate() - 1);
+  const cleHier = cleJour(hier.toISOString());
+  const cle = cleJour(dateStr);
+
+  if (cle === aujourdhui) return "Aujourd'hui";
+  if (cle === cleHier) return "Hier";
+
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function normaliserEtat(statut) {
+  const table = {
+    en_attente: "attente",
+    acceptee: "cours",
+    livree: "terminee",
+    terminee: "terminee",
+    refusee: "annulee",
+    annulee: "annulee",
+    rejetee: "annulee"
+  };
+  return table[statut] || "cours";
+}
+
+const labelsEtat = { attente: "En attente", cours: "En cours", terminee: "Terminée", annulee: "Annulée" };
+
+function changerTabPrincipal(nom) {
+  document.querySelectorAll(".tab-principal").forEach(t => t.classList.toggle("actif", t.dataset.tab === nom));
   document.getElementById("vue-panier").style.display = nom === "panier" ? "block" : "none";
-  document.getElementById("vue-encours").style.display = nom === "encours" ? "block" : "none";
-  document.getElementById("vue-historique").style.display = nom === "historique" ? "block" : "none";
+  document.getElementById("vue-commandes").style.display = nom === "commandes" ? "block" : "none";
+}
+
+let filtreActuel = "toutes";
+let tousLesElements = [];
+
+function changerFiltre(nom) {
+  filtreActuel = nom;
+  document.querySelectorAll(".filtre").forEach(f => f.classList.toggle("actif", f.dataset.filtre === nom));
+  afficherElements();
 }
 
 // ---------- Panier (localStorage, par boutique) ----------
@@ -180,85 +405,135 @@ function chargerPaniersLocaux() {
   }
 
   conteneur.innerHTML = paniers.map(p => `
-    <div class="carte">
+    <div class="carte-panier">
       <h3>Boutique</h3>
       ${p.lignes.map(l => `<p>${l.nom} × ${l.quantite}</p>`).join("")}
-      <div class="total">${formatPrix(p.total)}</div>
+      <div class="total-panier">${formatPrix(p.total)}</div>
       <a class="lien-boutique" href="boutique.html?id=${p.boutiqueId}">Voir la boutique et valider →</a>
     </div>
   `).join("");
 }
 
-// ---------- Commandes en cours / historique ----------
-const statutsEnCours = ["en_attente", "acceptee"];
-const statutsHistorique = ["livree", "refusee"];
-const badgeLabels = { en_attente: "En attente", acceptee: "Acceptée", livree: "Livrée", refusee: "Refusée" };
-
-let toutesCommandeProduits = {};
-
-async function chargerCommandes() {
+// ---------- Commandes + Demandes unifiées ----------
+async function chargerToutesLesCommandes() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     window.location.href = "connexion.html";
     return;
   }
 
-  const { data: commandes, error } = await supabaseClient
-    .from("commandes")
-    .select("*, boutiques(nom_boutique)")
-    .eq("client_id", session.user.id)
-    .order("id", { ascending: false });
+  const [{ data: commandes, error: erreurCommandes }, { data: demandes, error: erreurDemandes }] = await Promise.all([
+    supabaseClient
+      .from("commandes")
+      .select("*, boutiques(nom_boutique, identite_verifiee)")
+      .eq("client_id", session.user.id),
+    supabaseClient
+      .from("demandes")
+      .select("*, prestataires(nom, identite_verifiee)")
+      .eq("client_id", session.user.id)
+  ]);
 
-  if (error) {
-    document.getElementById("listeEnCours").innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
-    document.getElementById("listeHistorique").innerHTML = "";
+  if (erreurCommandes || erreurDemandes) {
+    document.getElementById("listeCommandes").innerHTML = `<p class="empty">Erreur de chargement.</p>`;
     return;
   }
 
-  const ids = (commandes || []).map(c => c.id);
-  if (ids.length > 0) {
+  let produitsParCommande = {};
+  const idsCommandes = (commandes || []).map(c => c.id);
+  if (idsCommandes.length > 0) {
     const { data: lignes } = await supabaseClient
       .from("commande_produits")
       .select("*")
-      .in("commande_id", ids);
+      .in("commande_id", idsCommandes);
 
     (lignes || []).forEach(l => {
-      if (!toutesCommandeProduits[l.commande_id]) toutesCommandeProduits[l.commande_id] = [];
-      toutesCommandeProduits[l.commande_id].push(l);
+      if (!produitsParCommande[l.commande_id]) produitsParCommande[l.commande_id] = [];
+      produitsParCommande[l.commande_id].push(l);
     });
   }
 
-  const enCours = (commandes || []).filter(c => statutsEnCours.includes(c.statut));
-  const historique = (commandes || []).filter(c => statutsHistorique.includes(c.statut));
+  const elementsProduits = (commandes || []).map(c => {
+    const lignes = produitsParCommande[c.id] || [];
+    const titre = lignes.length > 0
+      ? (lignes.length === 1 ? lignes[0].nom_produit : `${lignes.length} produits`)
+      : "Commande";
+    return {
+      type: "produit",
+      id: c.id,
+      titre: titre,
+      nomVendeur: c.boutiques ? c.boutiques.nom_boutique : "Boutique",
+      verifie: c.boutiques ? c.boutiques.identite_verifiee : false,
+      date: c.created_at,
+      etat: normaliserEtat(c.statut),
+      prix: c.total,
+      commission: c.total ? Math.round(c.total * 0.05) : null
+    };
+  });
 
-  afficherListe("listeEnCours", enCours, "Aucune commande en cours.");
-  afficherListe("listeHistorique", historique, "Aucun achat pour l'instant.");
+  const elementsPrestations = (demandes || []).map(d => {
+    return {
+      type: "prestation",
+      id: d.id,
+      titre: d.categorie || d.description || "Demande de prestation",
+      nomVendeur: d.prestataires ? d.prestataires.nom : (d.professionnel_nom || "Prestataire"),
+      verifie: d.prestataires ? d.prestataires.identite_verifiee : false,
+      date: d.created_at,
+      etat: normaliserEtat(d.statut),
+      prix: null,
+      commission: null
+    };
+  });
+
+  tousLesElements = [...elementsProduits, ...elementsPrestations].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  document.getElementById("compteur-attente").textContent = tousLesElements.filter(e => e.etat === "attente").length;
+  document.getElementById("compteur-cours").textContent = tousLesElements.filter(e => e.etat === "cours").length;
+
+  afficherElements();
 }
 
-function afficherListe(idConteneur, commandes, texteVide) {
-  const conteneur = document.getElementById(idConteneur);
+function afficherElements() {
+  const conteneur = document.getElementById("listeCommandes");
 
-  if (commandes.length === 0) {
-    conteneur.innerHTML = `<p class="empty">${texteVide}</p>`;
+  const filtres = filtreActuel === "toutes" ? tousLesElements : tousLesElements.filter(e => e.etat === filtreActuel);
+
+  if (filtres.length === 0) {
+    conteneur.innerHTML = '<p class="empty">Aucune commande ici pour le moment.</p>';
     return;
   }
 
-  conteneur.innerHTML = commandes.map(c => {
-    const lignes = toutesCommandeProduits[c.id] || [];
-    const nomBoutique = c.boutiques ? c.boutiques.nom_boutique : "Boutique";
-    return `
-      <div class="carte">
-        <h3>${nomBoutique}</h3>
-        ${lignes.map(l => `<p>${l.nom_produit} × ${l.quantite}</p>`).join("")}
-        <span class="badge ${c.statut}">${badgeLabels[c.statut] || c.statut}</span>
-        <div class="total">${formatPrix(c.total)}</div>
+  const groupes = {};
+  filtres.forEach(e => {
+    const libelle = libelleJour(e.date);
+    if (!groupes[libelle]) groupes[libelle] = [];
+    groupes[libelle].push(e);
+  });
+
+  conteneur.innerHTML = Object.keys(groupes).map(libelle => `
+    <div class="titre-jour">${libelle}</div>
+    ${groupes[libelle].map(e => `
+      <div class="carte-commande">
+        <div class="icone-vignette">${e.type === "produit" ? "🛍️" : "🔧"}</div>
+        <div class="infos-commande">
+          <span class="badge-type">${e.type === "produit" ? "Produit" : "Prestation"}</span>
+          <h3>${e.titre}</h3>
+          <div class="par-ligne">Par ${e.nomVendeur} ${e.verifie ? '<span class="badge-verifie-inline">✔</span>' : ""}</div>
+          <div class="date-ligne">📅 ${formatDateLigne(e.date)}</div>
+        </div>
+        <div class="colonne-droite">
+          <div>
+            <div class="prix-commande">${e.prix !== null ? formatPrix(e.prix) : "Prix à convenir"}</div>
+            ${e.commission !== null ? `<div class="commission-ligne">Commission ${formatPrix(e.commission)}</div>` : ""}
+          </div>
+          <span class="badge-statut ${e.etat}">${labelsEtat[e.etat]}</span>
+        </div>
       </div>
-    `;
-  }).join("");
+    `).join("")}
+  `).join("");
 }
 
 chargerPaniersLocaux();
-chargerCommandes();
+chargerToutesLesCommandes();
 </script>
 
 </body>

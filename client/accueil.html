@@ -27,6 +27,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        html, body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             background: var(--violet-fonce);
         }
@@ -34,6 +40,8 @@
         .app {
             background: var(--violet-fonce);
             min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
         }
 
         .header {
@@ -487,13 +495,21 @@
         }
 
         .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
             background: var(--violet-fonce);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            justify-content: space-around;
-            padding: 10px 6px;
+            overflow: hidden;
         }
 
         .bottom-nav a {
+            flex: 1 1 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -501,6 +517,7 @@
             font-size: 10px;
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
+            padding: 10px 2px;
         }
 
         .bottom-nav a svg {
@@ -523,7 +540,7 @@
 
 <body>
 
-    <div class="app">
+    <div class="app" style="padding-bottom: 90px;">
 
         <header class="header">
 
@@ -563,7 +580,7 @@
             <h1 id="greeting">Bonjour 👋</h1>
             <p>Quel service cherches-tu aujourd'hui ?</p>
 
-            <a href="recherche.html" class="search-box">
+            <a href="prestataires.html" class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="M21 21l-4.35-4.35"/>
@@ -590,7 +607,7 @@
         <section class="section">
             <div class="section-header">
                 <h2>Prestataires près de chez vous</h2>
-                <a href="recherche.html">Voir tout</a>
+                <a href="prestataires.html">Voir tout</a>
             </div>
             <div class="presta-scroll" id="prestaScroll">
                 <div class="empty-msg">Chargement...</div>
@@ -602,12 +619,12 @@
 
             <div class="section-header">
                 <h2>Catégories</h2>
-                <a href="recherche.html">Voir tout</a>
+                <a href="prestataires.html">Voir tout</a>
             </div>
 
             <div class="categories">
 
-                <a href="recherche.html?categorie=plomberie" class="category">
+                <a href="prestataires.html?categorie=plomberie" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#6C5CE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 3v5a2 2 0 0 0 2 2h2v6a3 3 0 0 0 3 3h2"/>
@@ -617,7 +634,7 @@
                     <span>Plomberie</span>
                 </a>
 
-                <a href="recherche.html?categorie=electricite" class="category">
+                <a href="prestataires.html?categorie=electricite" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="#F5C518" stroke="#F5C518" stroke-width="1.5">
                             <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.45 1 1.2 1 2.2h5.2c0-1 .4-1.75 1-2.2A6 6 0 0 0 12 3z"/>
@@ -626,7 +643,7 @@
                     <span>Électricité</span>
                 </a>
 
-                <a href="recherche.html?categorie=menage" class="category">
+                <a href="prestataires.html?categorie=menage" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 3l7 7-7.5 7.5a3 3 0 0 1-4.24-4.24L11.5 6"/>
@@ -636,7 +653,7 @@
                     <span>Ménage</span>
                 </a>
 
-                <a href="recherche.html?categorie=coiffure" class="category">
+                <a href="prestataires.html?categorie=coiffure" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#E84393" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="6" cy="6" r="3"/>
@@ -647,7 +664,7 @@
                     <span>Coiffure</span>
                 </a>
 
-                <a href="recherche.html?categorie=peinture" class="category">
+                <a href="prestataires.html?categorie=peinture" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#8E44AD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="4" y="3" width="10" height="6" rx="1"/>
@@ -657,7 +674,7 @@
                     <span>Peinture</span>
                 </a>
 
-                <a href="recherche.html?categorie=demenagement" class="category">
+                <a href="prestataires.html?categorie=demenagement" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#E67E22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="7" width="14" height="9" rx="1"/>
@@ -669,7 +686,7 @@
                     <span>Déménagement</span>
                 </a>
 
-                <a href="recherche.html?categorie=electromenager" class="category">
+                <a href="prestataires.html?categorie=electromenager" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -680,7 +697,7 @@
                     <span>Électroménager</span>
                 </a>
 
-                <a href="recherche.html?categorie=jardinage" class="category">
+                <a href="prestataires.html?categorie=jardinage" class="category">
                     <div class="category-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22V12"/>
@@ -698,7 +715,7 @@
 
         <section class="section">
 
-            <a href="recherche.html" class="service-card">
+            <a href="prestataires.html" class="service-card">
 
                 <div class="service-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -766,12 +783,13 @@
                 <span>Accueil</span>
             </a>
 
-            <a href="recherche.html">
+            <a href="prestataires.html">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    <path d="M2 13h20"/>
                 </svg>
-                <span>Recherche</span>
+                <span>Prestataires</span>
             </a>
 
             <a href="messagerie.html">
@@ -814,6 +832,9 @@
 
     <script src="../assets/position.js"></script>
     <script>
+        history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 
@@ -873,7 +894,7 @@
                 const couleur = couleurPour(p.metier);
                 const initiale = (p.nom || "?").charAt(0).toUpperCase();
                 return `
-                    <a href="recherche.html?prestataire=${p.id}" class="presta-card">
+                    <a href="prestataires.html?prestataire=${p.id}" class="presta-card">
                         <div class="presta-avatar" style="background:${couleur};">${initiale}</div>
                         <div class="presta-body">
                             <span class="presta-badge" style="background:${couleur};">${p.metier || ""}</span>

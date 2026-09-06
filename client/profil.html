@@ -19,6 +19,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        html, body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             background: #F4F2F8;
         }
@@ -27,6 +33,8 @@
             min-height: 100vh;
             padding-bottom: 90px;
             font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
         }
 
         /* ---------- En-tête ---------- */
@@ -514,11 +522,12 @@
             background: var(--violet-fonce);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            justify-content: space-around;
-            padding: 10px 6px;
+            overflow: hidden;
         }
 
         .bottom-nav a {
+            flex: 1 1 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -526,6 +535,7 @@
             font-size: 10px;
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
+            padding: 10px 2px;
         }
 
         .bottom-nav a svg {
@@ -787,12 +797,13 @@
                 <span>Accueil</span>
             </a>
 
-            <a href="recherche.html">
+            <a href="prestataires.html">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="M21 21l-4.35-4.35"/>
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                    <path d="M2 13h20"/>
                 </svg>
-                <span>Recherche</span>
+                <span>Prestataires</span>
             </a>
 
             <a href="messagerie.html">
@@ -834,6 +845,9 @@
 
 
     <script>
+        history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 

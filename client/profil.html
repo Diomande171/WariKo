@@ -31,7 +31,7 @@
 
         .app {
             min-height: 100vh;
-            padding-bottom: 90px;
+            padding-bottom: 110px;
             font-family: 'Poppins', sans-serif;
             overflow-x: hidden;
             width: 100%;
@@ -511,18 +511,25 @@
             font-size: 14px;
         }
 
-        /* ---------- Bottom nav ---------- */
+        /* ---------- Bottom nav (corrigée) ---------- */
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            left: 0;
+            left: 0 !important;
             right: 0;
+            top: auto !important;
+            width: auto;
             max-width: 430px;
+            height: auto !important;
             margin: 0 auto;
             background: var(--violet-fonce);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
+            justify-content: space-between;
             overflow: hidden;
+            transform: none !important;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .bottom-nav a {
@@ -531,21 +538,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 10px;
+            gap: 5px;
+            font-size: 9.5px !important;
+            letter-spacing: -0.2px;
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
-            padding: 10px 2px;
+            padding: 10px 1px 8px;
+            white-space: nowrap;
         }
 
         .bottom-nav a svg {
-            width: 22px;
-            height: 22px;
+            width: 21px;
+            height: 21px;
             stroke: rgba(255, 255, 255, 0.6);
         }
 
         .bottom-nav a.active {
-            color: var(--jaune);
+            color: var(--jaune) !important;
+            font-weight: normal !important;
         }
 
         .bottom-nav a.active svg {

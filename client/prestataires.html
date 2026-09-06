@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Prestataires</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        html, body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* ---------- En-tête ---------- */
+        .header {
+            padding: 20px 20px 16px;
+            color: var(--blanc);
+        }
+
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .header-top-row h1 {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .header-top-row p {
+            margin-top: 4px;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        .btn-devenir-prestataire {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-size: 12px;
+            font-weight: 800;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-devenir-prestataire svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--violet-fonce);
+        }
+
+        /* ---------- Recherche ---------- */
+        .search-bar {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 13px 16px;
+        }
+
+        .search-bar svg {
+            width: 17px;
+            height: 17px;
+            stroke: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--blanc);
+            font-size: 13px;
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        /* ---------- Rangée métiers ---------- */
+        .metiers-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 18px 20px 4px;
+            scrollbar-width: none;
+        }
+
+        .metiers-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .metier-item {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .metier-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metier-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .metier-item span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--blanc);
+            opacity: 0.85;
+            text-align: center;
+        }
+
+        /* ---------- Sections génériques ---------- */
+        .section {
+            padding: 22px 20px 0;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .section-head h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--blanc);
+        }
+
+        .section-head .voir-tout {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--jaune);
+            text-decoration: none;
+        }
+
+        /* ---------- Catégories populaires ---------- */
+        .categories-populaires {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .carte-categorie {
+            border-radius: 16px;
+            overflow: hidden;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .carte-categorie .visuel {
+            height: 78px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carte-categorie .visuel svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .carte-categorie .infos {
+            padding: 10px 10px 12px;
+        }
+
+        .carte-categorie h3 {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--blanc);
+        }
+
+        .carte-categorie p {
+            margin-top: 2px;
+            font-size: 10.5px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        /* ---------- Prestataires recommandés ---------- */
+        .carte-prestataire {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+
+        .avatar-prestataire {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--blanc);
+            overflow: hidden;
+        }
+
+        .avatar-prestataire img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .infos-prestataire {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .infos-prestataire h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--blanc);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .infos-prestataire .note-ligne {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        .note-ligne .etoile { color: var(--jaune); }
+
+        .btn-voir-profil {
+            flex-shrink: 0;
+            border: 1px solid var(--jaune);
+            color: var(--jaune);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .empty {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 13px;
+        }
+
+        /* ---------- Bottom nav ---------- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .bottom-nav a {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            padding: 10px 2px;
+        }
+
+        .bottom-nav a svg {
+            width: 22px;
+            height: 22px;
+            stroke: rgba(255, 255, 255, 0.6);
+        }
+
+        .bottom-nav a.active {
+            color: var(--jaune);
+        }
+
+        .bottom-nav a.active svg {
+            stroke: var(--jaune);
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <div class="header-top-row">
+                <div>
+                    <h1>Prestataires</h1>
+                    <p>Trouvez le professionnel qu'il vous faut</p>
+                </div>
+                <a href="inscription.html" id="lienDevenirPrestataire" class="btn-devenir-prestataire">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+                    </svg>
+                    Devenir prestataire
+                </a>
+            </div>
+
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input type="text" id="champRecherche" placeholder="Rechercher un service ou un prestataire...">
+            </div>
+        </header>
+
+        <div class="metiers-row" id="rangeeMetiers">
+            <a href="#" class="metier-item" data-metier="tout" onclick="filtrerParMetier(event,'tout')">
+                <div class="metier-icon" style="background:rgba(255,255,255,0.15);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>
+                </div>
+                <span>Tout</span>
+            </a>
+            <a href="#" class="metier-item" data-metier="plomberie" onclick="filtrerParMetier(event,'plomberie')">
+                <div class="metier-icon" style="background:rgba(108,92,231,0.18);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#8C7CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 3v5a2 2 0 0 0 2 2h2v6a3 3 0 0 0 3 3h2"/>
+                        <path d="M14 21l3-3-3-3"/>
+                    </svg>
+                </div>
+                <span>Plomberie</span>
+            </a>
+            <a href="#" class="metier-item" data-metier="electricite" onclick="filtrerParMetier(event,'electricite')">
+                <div class="metier-icon" style="background:rgba(245,197,24,0.18);">
+                    <svg viewBox="0 0 24 24" fill="#F5C518" stroke="#F5C518" stroke-width="1.5">
+                        <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.45 1 1.2 1 2.2h5.2c0-1 .4-1.75 1-2.2A6 6 0 0 0 12 3z"/>
+                    </svg>
+                </div>
+                <span>Électricité</span>
+            </a>
+            <a href="#" class="metier-item" data-metier="menage" onclick="filtrerParMetier(event,'menage')">
+                <div class="metier-icon" style="background:rgba(46,204,113,0.18);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 3l7 7-7.5 7.5a3 3 0 0 1-4.24-4.24L11.5 6"/>
+                        <path d="M16 3l5 5"/>
+                    </svg>
+                </div>
+                <span>Ménage</span>
+            </a>
+            <a href="#" class="metier-item" data-metier="menuiserie" onclick="filtrerParMetier(event,'menuiserie')">
+                <div class="metier-icon" style="background:rgba(230,126,34,0.18);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#E67E22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </div>
+                <span>Menuiserie</span>
+            </a>
+            <a href="#" class="metier-item" data-metier="peinture" onclick="filtrerParMetier(event,'peinture')">
+                <div class="metier-icon" style="background:rgba(142,68,173,0.18);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#B07CD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="3" width="10" height="6" rx="1"/>
+                        <path d="M9 9v4a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v4"/>
+                    </svg>
+                </div>
+                <span>Peinture</span>
+            </a>
+        </div>
+
+        <!-- Catégories populaires -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Catégories populaires</h2>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout</a>
+            </div>
+            <div class="categories-populaires" id="categoriesPopulaires">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
+        <!-- Prestataires recommandés -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Prestataires recommandés</h2>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout</a>
+            </div>
+            <div id="listePrestataires">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
+    </div>
+
+
+    <nav class="bottom-nav">
+
+        <a href="accueil.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <path d="M9 22V12h6v10"/>
+            </svg>
+            <span>Accueil</span>
+        </a>
+
+        <a href="prestataires.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                <path d="M2 13h20"/>
+            </svg>
+            <span>Prestataires</span>
+        </a>
+
+        <a href="messagerie.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>Messages</span>
+        </a>
+
+        <a href="marketplace.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2l1.5 4h9L18 2"/>
+                <path d="M4 6h16l-1.5 14a2 2 0 0 1-2 1.8H7.5a2 2 0 0 1-2-1.8L4 6z"/>
+                <path d="M9 10a3 3 0 0 0 6 0"/>
+            </svg>
+            <span>Marketplace</span>
+        </a>
+
+        <a href="commandes.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+                <path d="M3 8v8l9 5 9-5V8"/>
+                <path d="M12 13v8"/>
+            </svg>
+            <span>Commandes</span>
+        </a>
+
+        <a href="profil.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+            </svg>
+            <span>Profil</span>
+        </a>
+
+    </nav>
+
+
+    <script>
+        history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function bientotDisponible() {
+            alert("Bientôt disponible ✨");
+        }
+
+        const couleursMetier = {
+            plomberie: "#8C7CFF",
+            electricite: "#F5C518",
+            menage: "#2ECC71",
+            menuiserie: "#E67E22",
+            peinture: "#B07CD6"
+        };
+
+        const iconesMetier = {
+            plomberie: `<path d="M6 3v5a2 2 0 0 0 2 2h2v6a3 3 0 0 0 3 3h2"/><path d="M14 21l3-3-3-3"/>`,
+            electricite: `<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.45 1 1.2 1 2.2h5.2c0-1 .4-1.75 1-2.2A6 6 0 0 0 12 3z"/>`,
+            menage: `<path d="M9 3l7 7-7.5 7.5a3 3 0 0 1-4.24-4.24L11.5 6"/><path d="M16 3l5 5"/>`,
+            menuiserie: `<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>`,
+            peinture: `<rect x="4" y="3" width="10" height="6" rx="1"/><path d="M9 9v4a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v4"/>`
+        };
+
+        const labelsMetier = {
+            plomberie: "Plomberie",
+            electricite: "Électricité",
+            menage: "Ménage",
+            menuiserie: "Menuiserie",
+            peinture: "Peinture"
+        };
+
+        function initiales(nom) {
+            return nom ? nom.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "?";
+        }
+
+        function normaliserMetier(m) {
+            return (m || "").toLowerCase().trim();
+        }
+
+        let tousLesPrestataires = [];
+        let notesPrestataires = {};
+        let filtreMetierActuel = "tout";
+
+        async function chargerPrestataires() {
+            const params = new URLSearchParams(window.location.search);
+            const categorieUrl = params.get("categorie");
+            if (categorieUrl) filtreMetierActuel = normaliserMetier(categorieUrl);
+
+            const { data, error } = await supabaseClient
+                .from("prestataires_publics")
+                .select("*")
+                .order("identite_verifiee", { ascending: false });
+
+            if (error) {
+                document.getElementById("listePrestataires").innerHTML = '<p class="empty">Erreur de chargement.</p>';
+                document.getElementById("categoriesPopulaires").innerHTML = '<p class="empty">Erreur de chargement.</p>';
+                return;
+            }
+
+            tousLesPrestataires = data || [];
+
+            try {
+                const ids = tousLesPrestataires.map(p => String(p.id));
+                if (ids.length > 0) {
+                    const { data: avis } = await supabaseClient
+                        .from("avis")
+                        .select("cible_id, note")
+                        .eq("cible_type", "prestataire")
+                        .in("cible_id", ids);
+
+                    (avis || []).forEach(a => {
+                        if (!notesPrestataires[a.cible_id]) notesPrestataires[a.cible_id] = [];
+                        notesPrestataires[a.cible_id].push(a.note);
+                    });
+                }
+            } catch (e) {}
+
+            document.querySelectorAll(".metier-item").forEach(el => {
+                el.style.opacity = el.dataset.metier === filtreMetierActuel ? "1" : "0.65";
+            });
+
+            afficherCategoriesPopulaires();
+            afficherPrestataires();
+        }
+
+        function afficherCategoriesPopulaires() {
+            const conteneur = document.getElementById("categoriesPopulaires");
+            const compteurs = {};
+
+            tousLesPrestataires.forEach(p => {
+                const m = normaliserMetier(p.metier);
+                if (labelsMetier[m]) compteurs[m] = (compteurs[m] || 0) + 1;
+            });
+
+            const categories = Object.keys(labelsMetier)
+                .map(m => ({ metier: m, count: compteurs[m] || 0 }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3);
+
+            if (categories.every(c => c.count === 0)) {
+                conteneur.innerHTML = '<p class="empty">Aucune catégorie pour le moment</p>';
+                return;
+            }
+
+            conteneur.innerHTML = categories.map(c => `
+                <a href="prestataires.html?categorie=${c.metier}" class="carte-categorie">
+                    <div class="visuel" style="background:${couleursMetier[c.metier]}2A;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="${couleursMetier[c.metier]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconesMetier[c.metier]}</svg>
+                    </div>
+                    <div class="infos">
+                        <h3>${labelsMetier[c.metier]}</h3>
+                        <p>${c.count} prestataire${c.count > 1 ? "s" : ""}</p>
+                    </div>
+                </a>
+            `).join("");
+        }
+
+        function afficherPrestataires() {
+            const conteneur = document.getElementById("listePrestataires");
+
+            let liste = tousLesPrestataires;
+            if (filtreMetierActuel !== "tout") {
+                liste = liste.filter(p => normaliserMetier(p.metier) === filtreMetierActuel);
+            }
+
+            const recherche = (document.getElementById("champRecherche").value || "").toLowerCase().trim();
+            if (recherche) {
+                liste = liste.filter(p =>
+                    (p.nom || "").toLowerCase().includes(recherche) ||
+                    (p.metier || "").toLowerCase().includes(recherche)
+                );
+            }
+
+            if (liste.length === 0) {
+                conteneur.innerHTML = '<p class="empty">Aucun prestataire pour le moment</p>';
+                return;
+            }
+
+            conteneur.innerHTML = liste.map(p => {
+                const notes = notesPrestataires[String(p.id)] || [];
+                const moyenne = notes.length > 0 ? (notes.reduce((s, n) => s + n, 0) / notes.length).toFixed(1) : null;
+                const couleur = couleursMetier[normaliserMetier(p.metier)] || "#8C7CFF";
+
+                return `
+                    <a href="../prestataire/profil.html?id=${p.id}" class="carte-prestataire">
+                        <div class="avatar-prestataire" style="background:${couleur};">
+                            ${p.photo_url ? `<img src="${p.photo_url}" alt="${p.nom}">` : initiales(p.nom)}
+                        </div>
+                        <div class="infos-prestataire">
+                            <h3>${p.nom || "Prestataire"}</h3>
+                            <div class="note-ligne">
+                                ${moyenne ? `<span class="etoile">★</span> ${moyenne} (${notes.length}) • ` : ""}${labelsMetier[normaliserMetier(p.metier)] || p.metier || ""}
+                            </div>
+                        </div>
+                        <span class="btn-voir-profil">Voir profil</span>
+                    </a>
+                `;
+            }).join("");
+        }
+
+        function filtrerParMetier(e, metier) {
+            e.preventDefault();
+            filtreMetierActuel = metier;
+            document.querySelectorAll(".metier-item").forEach(el => {
+                el.style.opacity = el.dataset.metier === metier ? "1" : "0.65";
+            });
+            afficherPrestataires();
+        }
+
+        document.getElementById("champRecherche").addEventListener("input", afficherPrestataires);
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                const { data: dejaPrestataire } = await supabaseClient
+                    .from("prestataires")
+                    .select("id")
+                    .eq("user_id", session.user.id)
+                    .maybeSingle();
+
+                if (dejaPrestataire) {
+                    const lien = document.getElementById("lienDevenirPrestataire");
+                    lien.href = "../prestataire/index.html";
+                    lien.innerHTML = lien.innerHTML.replace("Devenir prestataire", "Mon espace prestataire");
+                }
+            }
+
+            chargerPrestataires();
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -339,6 +339,7 @@
             border-radius: 16px;
             padding: 14px 6px;
             text-decoration: none;
+            min-width: 0;
         }
 
         .category .category-icon {
@@ -347,6 +348,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent;
+            border-radius: 0;
         }
 
         .category .category-icon svg {
@@ -359,6 +362,7 @@
             font-weight: 700;
             color: var(--violet-fonce);
             text-align: center;
+            line-height: 1.2;
         }
 
         /* --- Boutiques mises en avant --- */
@@ -497,14 +501,21 @@
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            left: 0;
+            left: 0 !important;
             right: 0;
+            top: auto !important;
+            width: auto;
             max-width: 430px;
+            height: auto !important;
             margin: 0 auto;
             background: var(--violet-fonce);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
+            justify-content: space-between;
             overflow: hidden;
+            transform: none !important;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .bottom-nav a {
@@ -514,7 +525,7 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            font-size: 10px;
+            font-size: 10px !important;
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
             padding: 10px 2px;
@@ -527,7 +538,8 @@
         }
 
         .bottom-nav a.active {
-            color: var(--jaune);
+            color: var(--jaune) !important;
+            font-weight: normal !important;
         }
 
         .bottom-nav a.active svg {
@@ -540,7 +552,7 @@
 
 <body>
 
-    <div class="app" style="padding-bottom: 90px;">
+    <div class="app" style="padding-bottom: 110px;">
 
         <header class="header">
 

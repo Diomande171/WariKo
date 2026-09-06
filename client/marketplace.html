@@ -4,18 +4,10 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WariKo - Marketplace</title>
 
-    <link
-        rel="stylesheet"
-        href="../style.css"
-    >
+    <link rel="stylesheet" href="../style.css">
 
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#3D037A">
@@ -27,6 +19,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        html, body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             background: var(--violet-fonce);
         }
@@ -35,61 +33,114 @@
             background: var(--violet-fonce);
             min-height: 100vh;
             padding-bottom: 90px;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
         }
 
+        /* ---------- En-tête ---------- */
         .header {
-            padding: 22px 20px 18px;
+            padding: 20px 20px 16px;
             color: var(--blanc);
         }
 
-        .back-link {
-            font-size: 13px;
-            color: var(--blanc);
-            opacity: 0.75;
-            text-decoration: none;
+        .header-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
 
-        .header h1 {
-            margin-top: 14px;
-            font-size: 22px;
+        .header-top-row h1 {
+            font-size: 24px;
+            font-weight: 800;
         }
 
-        .header p {
-            margin-top: 6px;
-            font-size: 13px;
-            opacity: 0.75;
-        }
-
-        .become-seller {
-            margin-top: 16px;
-            display: block;
+        .btn-ouvrir-boutique {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             background: var(--jaune);
-            border-radius: 14px;
-            padding: 14px 16px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 800;
             color: var(--violet-fonce);
-            text-align: center;
-        }
-
-        .section {
-            padding: 10px 20px;
-        }
-
-        .section-title {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 800;
-            color: var(--blanc);
-            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            white-space: nowrap;
         }
 
+        .btn-ouvrir-boutique svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--violet-fonce);
+        }
+
+        /* ---------- Recherche ---------- */
+        .search-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .search-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        .search-bar svg {
+            width: 17px;
+            height: 17px;
+            stroke: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--blanc);
+            font-size: 13px;
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .btn-filtre {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-filtre svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--blanc);
+        }
+
+        /* ---------- Catégories ---------- */
         .categories-filter {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding-bottom: 6px;
-            margin-bottom: 6px;
+            padding: 16px 0 0;
+            margin: 0 20px;
             scrollbar-width: none;
         }
 
@@ -103,9 +154,10 @@
             color: var(--blanc);
             font-size: 12px;
             font-weight: 700;
-            padding: 8px 16px;
+            padding: 9px 16px;
             border-radius: 20px;
             border: none;
+            font-family: inherit;
         }
 
         .filter-chip.active {
@@ -113,62 +165,304 @@
             color: var(--violet-fonce);
         }
 
-        .boutique-card {
-            background: var(--jaune);
-            border-radius: 16px;
-            padding: 16px;
+        /* ---------- Sections génériques ---------- */
+        .section {
+            padding: 22px 20px 0;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 14px;
+        }
+
+        .section-head h2 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--blanc);
+        }
+
+        .section-head .voir-tout {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* ---------- Boutiques populaires ---------- */
+        .boutiques-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .boutiques-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carte-boutique {
+            flex-shrink: 0;
+            width: 165px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 14px;
             text-decoration: none;
             display: block;
         }
 
-        .boutique-card .top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .boutique-card h3 {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--violet-fonce);
-        }
-
-        .boutique-card .categorie-tag {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--violet-fonce);
-            opacity: 0.75;
-            margin-top: 4px;
-            display: block;
-        }
-
-        .boutique-card .badge {
-            flex-shrink: 0;
+        .badge-boutique {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             font-size: 10px;
             font-weight: 800;
-            padding: 4px 10px;
+            padding: 4px 9px;
             border-radius: 20px;
-            background: var(--violet-fonce);
+            background: rgba(255, 255, 255, 0.1);
             color: var(--jaune);
+            margin-bottom: 12px;
         }
 
-        .boutique-card p.description {
-            margin-top: 10px;
+        .badge-boutique.top { color: var(--jaune); }
+        .badge-boutique.nouveau { color: #C6A6FF; }
+
+        .logo-boutique-wrapper {
+            position: relative;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 12px;
+        }
+
+        .logo-boutique {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--violet-fonce);
+            color: var(--blanc);
             font-size: 13px;
-            color: var(--violet-fonce);
-            opacity: 0.85;
-            line-height: 1.4;
+            font-weight: 800;
+            overflow: hidden;
+            text-align: center;
+            padding: 4px;
+        }
+
+        .logo-boutique img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carte-boutique h3 {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--blanc);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .carte-boutique .categorie-tag {
+            display: block;
+            text-align: center;
+            font-size: 10.5px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 2px;
+        }
+
+        .carte-boutique .rating-loc {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .carte-boutique .rating-loc .etoile { color: var(--jaune); }
+
+        .btn-voir-boutique {
+            display: block;
+            margin-top: 12px;
+            text-align: center;
+            background: #5B3FA6;
+            color: var(--blanc);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 9px 6px;
+            border-radius: 10px;
+        }
+
+        /* ---------- Produits en vedette ---------- */
+        .carte-produit {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-decoration: none;
+        }
+
+        .image-produit {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: var(--blanc);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-produit img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .infos-produit {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .infos-produit h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--blanc);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .infos-produit .nom-boutique-produit {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 2px;
+        }
+
+        .infos-produit .note-produit {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 3px;
+        }
+
+        .note-produit .etoile { color: var(--jaune); }
+
+        .droite-produit {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .prix-produit {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--jaune);
+            white-space: nowrap;
+        }
+
+        .btn-favori {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-favori svg {
+            width: 15px;
+            height: 15px;
+            stroke: rgba(255, 255, 255, 0.7);
+        }
+
+        /* ---------- Bandeau confiance ---------- */
+        .bandeau-confiance {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .bandeau-confiance .icone-shield {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bandeau-confiance .icone-shield svg {
+            width: 34px;
+            height: 34px;
+            stroke: var(--jaune);
+        }
+
+        .bandeau-confiance .texte-confiance {
+            flex: 1;
+        }
+
+        .bandeau-confiance h4 {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--blanc);
+        }
+
+        .bandeau-confiance p {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 3px;
+        }
+
+        .fleche-confiance {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #5B3FA6;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .fleche-confiance svg {
+            width: 17px;
+            height: 17px;
+            stroke: var(--blanc);
         }
 
         .empty {
-            color: var(--blanc);
-            opacity: 0.6;
+            color: rgba(255, 255, 255, 0.5);
             text-align: center;
-            padding: 50px 20px;
+            padding: 30px 20px;
             font-size: 13px;
         }
 
+        /* ---------- Bottom nav ---------- */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -179,11 +473,12 @@
             background: var(--violet-fonce);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            justify-content: space-around;
-            padding: 10px 6px;
+            overflow: hidden;
         }
 
         .bottom-nav a {
+            flex: 1 1 0;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -191,6 +486,7 @@
             font-size: 10px;
             color: rgba(255, 255, 255, 0.6);
             text-decoration: none;
+            padding: 10px 2px;
         }
 
         .bottom-nav a svg {
@@ -210,22 +506,39 @@
 
 </head>
 
-
 <body>
 
     <div class="app">
 
         <header class="header">
-            <a href="accueil.html" class="back-link">← Retour</a>
-            <h1>Marketplace</h1>
-            <p>Découvre les boutiques et produits disponibles</p>
+            <div class="header-top-row">
+                <h1>Marketplace</h1>
+                <a href="../vendeur/inscription.html" class="btn-ouvrir-boutique">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l1-5h16l1 5"/>
+                        <path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>
+                        <path d="M9 20v-6h6v6"/>
+                    </svg>
+                    Ouvrir une boutique
+                </a>
+            </div>
 
-            <a href="../vendeur/inscription.html" class="become-seller">+ Ouvrir ma boutique</a>
-        </header>
-
-        <section class="section">
-
-            <div class="section-title">Boutiques</div>
+            <div class="search-row">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="champRecherche" placeholder="Rechercher un produit, une boutique...">
+                </div>
+                <button class="btn-filtre" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/>
+                        <line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/>
+                        <line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/>
+                    </svg>
+                </button>
+            </div>
 
             <div class="categories-filter" id="filtres">
                 <button class="filter-chip active" data-cat="tout">Tout</button>
@@ -233,13 +546,48 @@
                 <button class="filter-chip" data-cat="mode">Mode</button>
                 <button class="filter-chip" data-cat="electronique">Électronique</button>
                 <button class="filter-chip" data-cat="maison">Maison</button>
-                <button class="filter-chip" data-cat="autre">Autre</button>
+                <button class="filter-chip" data-cat="beaute">Beauté</button>
             </div>
+        </header>
 
-            <div id="liste-boutiques">
+        <!-- Boutiques populaires -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Boutiques populaires</h2>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout ›</a>
+            </div>
+            <div class="boutiques-scroll" id="listeBoutiques">
+                <p class="empty">Chargement...</p>
+            </div>
+        </section>
+
+        <!-- Produits en vedette -->
+        <section class="section">
+            <div class="section-head">
+                <h2>Produits en vedette</h2>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout ›</a>
+            </div>
+            <div id="listeProduits">
                 <p class="empty">Chargement...</p>
             </div>
 
+            <div class="bandeau-confiance">
+                <div class="icone-shield">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div class="texte-confiance">
+                    <h4>Achetez en toute confiance</h4>
+                    <p>Paiement sécurisé et protection sur toutes vos commandes.</p>
+                </div>
+                <button class="fleche-confiance" onclick="bientotDisponible()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+            </div>
         </section>
 
     </div>
@@ -255,12 +603,13 @@
             <span>Accueil</span>
         </a>
 
-        <a href="recherche.html">
+        <a href="prestataires.html">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                <path d="M2 13h20"/>
             </svg>
-            <span>Recherche</span>
+            <span>Prestataires</span>
         </a>
 
         <a href="messagerie.html">
@@ -300,56 +649,179 @@
 
 
     <script>
+        history.scrollRestoration = "manual";
+        window.scrollTo(0, 0);
+
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const container = document.getElementById("liste-boutiques");
-        let toutesLesBoutiques = [];
+        function bientotDisponible() {
+            alert("Bientôt disponible ✨");
+        }
+
+        function formatPrix(prix) {
+            return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
+        }
+
+        function initiales(nom) {
+            return nom
+                ? nom.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                : "?";
+        }
 
         const categorieLabels = {
-            telephones: "Téléphones",
-            mode: "Mode",
+            telephones: "Téléphones & Accessoires",
+            mode: "Mode & Accessoires",
             electronique: "Électronique",
             maison: "Maison",
-            autre: "Autre"
+            beaute: "Beauté"
         };
 
-        function afficherBoutiques(liste) {
-            if (!liste || liste.length === 0) {
-                container.innerHTML = '<p class="empty">Aucune boutique pour le moment</p>';
+        let toutesLesBoutiques = [];
+        let notesBoutiques = {};
+
+        // ---------- Boutiques populaires ----------
+        async function chargerBoutiques() {
+            const conteneur = document.getElementById("listeBoutiques");
+
+            const { data, error } = await supabaseClient
+                .from("boutiques_publiques")
+                .select("*")
+                .order("mise_en_avant", { ascending: false })
+                .order("id", { ascending: false })
+                .limit(10);
+
+            if (error) {
+                conteneur.innerHTML = '<p class="empty">Erreur de chargement.</p>';
                 return;
             }
 
-            container.innerHTML = liste.map(function (b) {
+            toutesLesBoutiques = data || [];
+
+            // Notes moyennes (best effort, ignore si la table avis n'est pas accessible)
+            try {
+                const ids = toutesLesBoutiques.map(b => String(b.id));
+                if (ids.length > 0) {
+                    const { data: avis } = await supabaseClient
+                        .from("avis")
+                        .select("cible_id, note")
+                        .eq("cible_type", "boutique")
+                        .in("cible_id", ids);
+
+                    (avis || []).forEach(a => {
+                        if (!notesBoutiques[a.cible_id]) notesBoutiques[a.cible_id] = [];
+                        notesBoutiques[a.cible_id].push(a.note);
+                    });
+                }
+            } catch (e) {}
+
+            afficherBoutiques(toutesLesBoutiques);
+        }
+
+        function afficherBoutiques(liste) {
+            const conteneur = document.getElementById("listeBoutiques");
+
+            if (!liste || liste.length === 0) {
+                conteneur.innerHTML = '<p class="empty">Aucune boutique pour le moment</p>';
+                return;
+            }
+
+            conteneur.innerHTML = liste.map(b => {
+                const notes = notesBoutiques[String(b.id)] || [];
+                const moyenne = notes.length > 0 ? (notes.reduce((s, n) => s + n, 0) / notes.length).toFixed(1) : null;
+
+                let badgeHtml = "";
+                if (b.mise_en_avant) {
+                    badgeHtml = '<span class="badge-boutique top">★ Top vendeur</span>';
+                } else {
+                    const creePeuAvant = b.created_at && (Date.now() - new Date(b.created_at).getTime()) < 1000 * 60 * 60 * 24 * 30;
+                    if (creePeuAvant) badgeHtml = '<span class="badge-boutique nouveau">✦ Nouveau</span>';
+                }
+
                 return `
-                    <a href="boutique.html?id=${b.id}" class="boutique-card">
-                        <div class="top-row">
-                            <div>
-                                <h3>${b.nom_boutique}</h3>
-                                <span class="categorie-tag">${categorieLabels[b.categorie] || b.categorie || ""}</span>
+                    <a href="boutique.html?id=${b.id}" class="carte-boutique">
+                        ${badgeHtml}
+                        <div class="logo-boutique-wrapper">
+                            <div class="logo-boutique">
+                                ${b.logo_url ? `<img src="${b.logo_url}" alt="${b.nom_boutique}">` : initiales(b.nom_boutique)}
                             </div>
-                            <span class="badge">Ouverte</span>
                         </div>
-                        <p class="description">${b.description || ""}</p>
+                        <h3>${b.nom_boutique}</h3>
+                        <span class="categorie-tag">${categorieLabels[b.categorie] || b.categorie || ""}</span>
+                        <div class="rating-loc">
+                            ${moyenne ? `<span class="etoile">★</span> ${moyenne} (${notes.length}) •` : ""}
+                            📍 Abidjan
+                        </div>
+                        <span class="btn-voir-boutique">Voir la boutique</span>
                     </a>
                 `;
             }).join("");
         }
 
-        async function chargerBoutiques() {
+        // ---------- Produits en vedette ----------
+        async function chargerProduits() {
+            const conteneur = document.getElementById("listeProduits");
+
             const { data, error } = await supabaseClient
-                .from("boutiques_publiques")
-                .select("*")
-                .order("id", { ascending: false });
+                .from("produits")
+                .select("*, boutiques(nom_boutique)")
+                .order("mise_en_avant", { ascending: false })
+                .order("id", { ascending: false })
+                .limit(5);
 
             if (error) {
-                container.innerHTML = '<p class="empty">Erreur : ' + error.message + '</p>';
+                conteneur.innerHTML = '<p class="empty">Erreur de chargement.</p>';
                 return;
             }
 
-            toutesLesBoutiques = data || [];
-            afficherBoutiques(toutesLesBoutiques);
+            const produits = data || [];
+
+            if (produits.length === 0) {
+                conteneur.innerHTML = '<p class="empty">Aucun produit pour le moment</p>';
+                return;
+            }
+
+            let notesProduits = {};
+            try {
+                const ids = produits.map(p => String(p.id));
+                const { data: avis } = await supabaseClient
+                    .from("avis")
+                    .select("cible_id, note")
+                    .eq("cible_type", "produit")
+                    .in("cible_id", ids);
+
+                (avis || []).forEach(a => {
+                    if (!notesProduits[a.cible_id]) notesProduits[a.cible_id] = [];
+                    notesProduits[a.cible_id].push(a.note);
+                });
+            } catch (e) {}
+
+            conteneur.innerHTML = produits.map(p => {
+                const notes = notesProduits[String(p.id)] || [];
+                const moyenne = notes.length > 0 ? (notes.reduce((s, n) => s + n, 0) / notes.length).toFixed(1) : null;
+
+                return `
+                    <a href="boutique.html?id=${p.boutique_id || ''}" class="carte-produit">
+                        <div class="image-produit">
+                            ${p.image_url ? `<img src="${p.image_url}" alt="${p.nom}">` : ""}
+                        </div>
+                        <div class="infos-produit">
+                            <h3>${p.nom}</h3>
+                            <div class="nom-boutique-produit">${p.boutiques ? p.boutiques.nom_boutique : ""}</div>
+                            ${moyenne ? `<div class="note-produit"><span class="etoile">★</span> ${moyenne}</div>` : ""}
+                        </div>
+                        <div class="droite-produit">
+                            <span class="prix-produit">${formatPrix(p.prix)}</span>
+                            <button class="btn-favori" onclick="event.preventDefault(); bientotDisponible()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </a>
+                `;
+            }).join("");
         }
 
         document.getElementById("filtres").addEventListener("click", function (e) {
@@ -368,6 +840,7 @@
         });
 
         chargerBoutiques();
+        chargerProduits();
     </script>
 
 </body>

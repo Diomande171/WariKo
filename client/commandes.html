@@ -21,9 +21,15 @@
 <style>
   * { box-sizing: border-box; }
 
+  html, body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
   body { background: var(--gris); }
 
-  .app { min-height: 100vh; padding-bottom: 90px; font-family: 'Poppins', sans-serif; color: var(--texte); }
+  .app { min-height: 100vh; padding-bottom: 90px; font-family: 'Poppins', sans-serif; color: var(--texte); overflow-x: hidden; width: 100%; }
 
   .header {
     background: var(--violet-fonce);
@@ -202,8 +208,30 @@
   .bandeau-securite h4 { font-size: 13px; margin-bottom: 2px; }
   .bandeau-securite p { font-size: 11px; color: var(--gris-texte); }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; background: var(--violet-fonce); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; padding: 10px 6px; }
-  .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: rgba(255, 255, 255, 0.6); text-decoration: none; }
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 430px;
+    margin: 0 auto;
+    background: var(--violet-fonce);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    overflow: hidden;
+  }
+  .bottom-nav a {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    padding: 10px 2px;
+  }
   .bottom-nav a svg { width: 22px; height: 22px; stroke: rgba(255, 255, 255, 0.6); }
   .bottom-nav a.active { color: var(--jaune); }
   .bottom-nav a.active svg { stroke: var(--jaune); }
@@ -266,12 +294,13 @@
         <span>Accueil</span>
     </a>
 
-    <a href="recherche.html">
+    <a href="prestataires.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            <path d="M2 13h20"/>
         </svg>
-        <span>Recherche</span>
+        <span>Prestataires</span>
     </a>
 
     <a href="messagerie.html">
@@ -310,6 +339,9 @@
 </nav>
 
 <script>
+history.scrollRestoration = "manual";
+window.scrollTo(0, 0);
+
 const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

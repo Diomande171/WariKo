@@ -257,6 +257,10 @@
             color: #2ECC71;
         }
 
+        .stat-card .variation.negative {
+            color: #FF6B6B;
+        }
+
         /* ---------- Raccourcis ---------- */
         .grille-menu {
             padding: 18px 20px 0;
@@ -523,6 +527,7 @@
             <div class="stat-card">
                 <div class="valeur" id="statVentes">– F</div>
                 <div class="libelle">Ventes ce mois</div>
+                <div class="variation" id="statVentesVariation"></div>
             </div>
             <div class="stat-card">
                 <div class="valeur" id="statProduits">–</div>
@@ -738,9 +743,10 @@
         }
 
         async function chargerStats(boutique) {
-            const debutMois = new Date();
-            debutMois.setDate(1);
-            debutMois.setHours(0, 0, 0, 0);
+            const maintenant = new Date();
+
+            const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1, 0, 0, 0);
+            const debutMoisPrecedent = new Date(maintenant.getFullYear(), maintenant.getMonth() - 1, 1, 0, 0, 0);
 
             const { data: commandesMois } = await supabaseClient
                 .from("commandes")
@@ -750,9 +756,33 @@
                 .neq("statut", "annulee")
                 .neq("statut", "refusee");
 
+            const { data: commandesMoisPrecedent } = await supabaseClient
+                .from("commandes")
+                .select("total")
+                .eq("boutique_id", boutique.id)
+                .gte("created_at", debutMoisPrecedent.toISOString())
+                .lt("created_at", debutMois.toISOString())
+                .neq("statut", "annulee")
+                .neq("statut", "refusee");
+
             const totalVentes = (commandesMois || []).reduce((s, c) => s + Number(c.total || 0), 0);
+            const totalVentesPrecedent = (commandesMoisPrecedent || []).reduce((s, c) => s + Number(c.total || 0), 0);
+
             document.getElementById("statVentes").textContent = formatPrix(totalVentes);
             document.getElementById("statCommandes").textContent = (commandesMois || []).length;
+
+            const variationEl = document.getElementById("statVentesVariation");
+            if (totalVentesPrecedent > 0) {
+                const variation = Math.round(((totalVentes - totalVentesPrecedent) / totalVentesPrecedent) * 100);
+                const signe = variation > 0 ? "+" : "";
+                variationEl.textContent = signe + variation + "% vs mois dernier";
+                variationEl.className = "variation" + (variation < 0 ? " negative" : "");
+            } else if (totalVentes > 0) {
+                variationEl.textContent = "Nouveau ce mois";
+                variationEl.className = "variation";
+            } else {
+                variationEl.textContent = "";
+            }
 
             const { count: nbProduits } = await supabaseClient
                 .from("produits")

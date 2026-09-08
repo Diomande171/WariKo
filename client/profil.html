@@ -209,14 +209,14 @@
         /* ---------- Mon activité ---------- */
         .activite-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
         }
 
         .activite-card {
             background: var(--blanc);
             border-radius: 16px;
-            padding: 14px 10px;
+            padding: 12px 6px;
             text-align: center;
             text-decoration: none;
             border: 2px solid transparent;
@@ -227,14 +227,14 @@
         }
 
         .activite-icon {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             margin: 0 auto 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--blanc);
         }
 
@@ -243,19 +243,20 @@
         .activite-icon.gris { background: #D9D5E3; color: #8B84A0; }
 
         .activite-card .nom {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             color: var(--texte);
         }
 
         .activite-card .statut {
             margin-top: 2px;
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 700;
         }
 
         .activite-card .statut.on { color: #2ECC71; }
         .activite-card .statut.off { color: #A39EB0; }
+        .activite-card .statut.attente { color: #F5A623; }
 
         /* ---------- Panneau d'édition ---------- */
         #panneauEdition {
@@ -633,6 +634,12 @@
                     <div class="statut off" id="statutPrestataire">Non activé</div>
                 </a>
 
+                <a href="#" id="carteLivreur" class="activite-card">
+                    <div class="activite-icon gris" id="iconLivreur">🛵</div>
+                    <div class="nom">Livreur</div>
+                    <div class="statut off" id="statutLivreur">Non activé</div>
+                </a>
+
             </div>
         </section>
 
@@ -985,6 +992,36 @@
                 statutPrestataire.classList.add("on");
             } else {
                 cartePrestataire.href = "../prestataire/inscription.html";
+            }
+
+            // Livreur actif ?
+            const { data: livreur } = await supabaseClient
+                .from("livreurs")
+                .select("id, identite_verifiee")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            const carteLivreur = document.getElementById("carteLivreur");
+            const iconLivreur = document.getElementById("iconLivreur");
+            const statutLivreur = document.getElementById("statutLivreur");
+
+            if (livreur) {
+                if (livreur.identite_verifiee) {
+                    carteLivreur.href = "../livreur/index.html";
+                    carteLivreur.classList.add("actif");
+                    iconLivreur.classList.remove("gris");
+                    iconLivreur.classList.add("jaune");
+                    statutLivreur.textContent = "Actif";
+                    statutLivreur.classList.remove("off");
+                    statutLivreur.classList.add("on");
+                } else {
+                    carteLivreur.href = "../livreur/inscription.html";
+                    statutLivreur.textContent = "En attente";
+                    statutLivreur.classList.remove("off");
+                    statutLivreur.classList.add("attente");
+                }
+            } else {
+                carteLivreur.href = "../livreur/inscription.html";
             }
 
             // Bannière promo (affichée seulement s'il manque au moins un rôle)

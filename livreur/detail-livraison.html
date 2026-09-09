@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Détail de la livraison - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 30px; }
+  .en-tete { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .en-tete-gauche { display:flex; align-items:center; gap:10px; }
+  .en-tete a { color:var(--blanc); text-decoration:none; font-size:20px; }
+  .en-tete h1 { font-family:'Playfair Display',serif; font-size:16px; margin:0; }
+  .badge-statut { font-size:11px; padding:4px 10px; border-radius:10px; font-weight:600; }
+  .badge-statut.encours { background:rgba(33,150,243,0.2); color:#8fc8f5; }
+  .badge-statut.acceptee { background:rgba(76,175,80,0.2); color:#8fd98f; }
+  .badge-statut.livree { background:rgba(76,175,80,0.2); color:#8fd98f; }
+
+  .carte-infos { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:14px; }
+  .info-boutique, .info-client { display:flex; align-items:center; gap:8px; font-size:13.5px; margin:4px 0; }
+  .info-souslabel { font-size:11.5px; opacity:0.65; margin-left:24px; }
+
+  .carte-map { position:relative; height:220px; border-radius:14px; margin-bottom:14px; overflow:hidden; background:
+    linear-gradient(135deg, #2a1a4a 0%, #1c1035 100%); border:1px solid rgba(255,255,255,0.08); }
+  .carte-map .grille { position:absolute; inset:0; background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:24px 24px; }
+  .pin { position:absolute; display:flex; flex-direction:column; align-items:center; font-size:11px; font-weight:600; }
+  .pin .point { width:14px; height:14px; border-radius:50%; border:2px solid var(--violet-fonce); margin-bottom:3px; }
+  .pin.boutique { top:18px; left:24px; }
+  .pin.boutique .point { background:var(--jaune); }
+  .pin.livreur { top:50%; left:50%; transform:translate(-50%,-50%); }
+  .pin.livreur .point { background:#4CAF50; box-shadow:0 0 8px #4CAF50; }
+  .pin.client { bottom:18px; right:24px; }
+  .pin.client .point { background:#E63946; }
+  .map-overlay { position:absolute; bottom:8px; left:8px; right:8px; text-align:center; font-size:10px; opacity:0.55; background:rgba(0,0,0,0.3); border-radius:8px; padding:4px; }
+
+  .bloc-temps { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; margin-bottom:16px; }
+  .bloc-temps .label { font-size:12px; opacity:0.7; }
+  .bloc-temps .valeur { font-size:20px; font-weight:bold; color:var(--jaune); margin-top:2px; }
+
+  .btn-principal { display:block; width:100%; box-sizing:border-box; background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:30px; padding:14px; font-size:14px; font-weight:bold; text-align:center; text-decoration:none; margin-bottom:10px; }
+  .btn-secondaire { display:block; width:100%; box-sizing:border-box; background:rgba(255,255,255,0.08); color:var(--jaune); border:1px solid var(--jaune); border-radius:30px; padding:12px; font-size:13px; font-weight:600; text-align:center; text-decoration:none; margin-bottom:10px; }
+
+  .recap { text-align:center; padding-top:20px; }
+  .recap .check { width:64px; height:64px; border-radius:50%; background:#4CAF50; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:30px; }
+  .recap h2 { font-family:'Playfair Display',serif; font-size:18px; margin:0 0 4px; }
+  .recap .souslabel { font-size:12.5px; opacity:0.7; margin-bottom:18px; }
+  .recap-carte { background:rgba(255,255,255,0.06); border-radius:14px; padding:16px; text-align:left; margin-bottom:18px; }
+  .recap-ligne { display:flex; justify-content:space-between; font-size:13px; margin:6px 0; opacity:0.85; }
+  .recap-total { display:flex; justify-content:space-between; font-size:16px; font-weight:bold; color:var(--jaune); margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); }
+
+  .vide { text-align:center; opacity:0.6; font-size:13px; padding:40px 20px; }
+</style>
+</head>
+<body>
+
+<div id="page">Chargement...</div>
+
+<input type="file" id="fichier-preuve" accept="image/*" capture="environment" style="display:none;">
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let monLivreur = null;
+let livraisonId = null;
+let livraisonActuelle = null;
+
+function pasEncoreDisponible(e) {
+  if (e) e.preventDefault();
+  alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
+}
+
+function numeroCourse(l) {
+  return 'LIV-' + l.id.replace(/-/g, '').slice(-4).toUpperCase();
+}
+
+function montantLivraison(l) {
+  if (l.prix_livraison) return l.prix_livraison;
+  if (l.distance_km) return Math.round(l.distance_km * 300);
+  return 0;
+}
+
+function tempsEstime(l) {
+  if (l.temps_estime_min) return l.temps_estime_min;
+  if (l.distance_km) return Math.max(3, Math.round(l.distance_km * 3));
+  return 5;
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  livraisonId = params.get('id');
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data: livreur } = await supabase
+    .from('livreurs')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!livreur) {
+    window.location.href = 'inscription.html';
+    return;
+  }
+  monLivreur = livreur;
+
+  if (!livraisonId) {
+    document.getElementById('page').innerHTML = '<p class="vide">Livraison introuvable.</p>';
+    return;
+  }
+
+  await charger();
+}
+
+async function recupererNomClient(l) {
+  if (l.commande_id) {
+    const { data } = await supabase.from('commandes').select('client_nom').eq('id', l.commande_id).single();
+    if (data && data.client_nom) return data.client_nom;
+  }
+  if (l.demande_id) {
+    const { data } = await supabase.from('demandes').select('client_nom').eq('id', l.demande_id).single();
+    if (data && data.client_nom) return data.client_nom;
+  }
+  return 'Client';
+}
+
+async function charger() {
+  const { data: l } = await supabase
+    .from('livraisons')
+    .select('*, boutiques(nom_boutique)')
+    .eq('id', livraisonId)
+    .single();
+
+  if (!l) {
+    document.getElementById('page').innerHTML = '<p class="vide">Livraison introuvable.</p>';
+    return;
+  }
+
+  livraisonActuelle = l;
+
+  if (l.statut === 'livree') {
+    afficherRecap(l);
+  } else {
+    const clientNom = await recupererNomClient(l);
+    afficherDetail(l, clientNom);
+  }
+}
+
+function afficherDetail(l, clientNom) {
+  const boutiqueNom = l.boutiques ? l.boutiques.nom_boutique : 'Boutique';
+  const badgeClasse = l.statut === 'acceptee' ? 'acceptee' : 'encours';
+  const badgeTexte = l.statut === 'acceptee' ? 'Acceptée' : 'En cours';
+
+  let bouton = '';
+  if (l.statut === 'acceptee') {
+    bouton = `<button class="btn-principal" style="border:none;width:100%" onclick="demarrerLivraison()">Démarrer la livraison</button>`;
+  } else {
+    bouton = `<button class="btn-principal" style="border:none;width:100%" onclick="arriverSurPlace()">📍 Arriver sur place</button>`;
+  }
+
+  document.getElementById('page').innerHTML = `
+    <div class="en-tete">
+      <div class="en-tete-gauche">
+        <a href="nouvelles-courses.html?onglet=en_cours">←</a>
+        <h1>#${numeroCourse(l)}</h1>
+      </div>
+      <span class="badge-statut ${badgeClasse}">${badgeTexte}</span>
+    </div>
+
+    <div class="carte-infos">
+      <div class="info-boutique">🏪 ${boutiqueNom}</div>
+      <div class="info-souslabel">${l.distance_km ? l.distance_km.toFixed(1) + ' km' : ''}</div>
+      <div class="info-client">📍 ${clientNom}</div>
+      <div class="info-souslabel">${l.adresse_client || 'Adresse non précisée'}</div>
+    </div>
+
+    <div class="carte-map">
+      <div class="grille"></div>
+      <div class="pin boutique"><span class="point"></span>Boutique</div>
+      <div class="pin livreur"><span class="point"></span>Vous</div>
+      <div class="pin client"><span class="point"></span>Client</div>
+      <div class="map-overlay">Carte interactive bientôt disponible</div>
+    </div>
+
+    <div class="bloc-temps">
+      <div class="label">Temps estimé</div>
+      <div class="valeur">${tempsEstime(l)} min</div>
+    </div>
+
+    ${bouton}
+    <a class="btn-secondaire" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id || ''}">Contacter le client</a>
+  `;
+}
+
+function afficherRecap(l) {
+  const montant = montantLivraison(l);
+  document.getElementById('page').innerHTML = `
+    <div class="recap">
+      <div class="check">✅</div>
+      <h2>Livraison effectuée</h2>
+      <div class="souslabel">Vous avez livré la commande #${numeroCourse(l)}</div>
+      <div class="recap-carte">
+        <div class="recap-total">
+          <span>Montant gagné</span>
+          <span>${montant.toLocaleString('fr-FR')} F</span>
+        </div>
+      </div>
+      <a class="btn-principal" href="index.html">Voir mes gains</a>
+      <a class="btn-secondaire" href="nouvelles-courses.html">Retour aux livraisons</a>
+    </div>
+  `;
+}
+
+async function demarrerLivraison() {
+  const { error } = await supabase.from('livraisons').update({ statut: 'en_cours' }).eq('id', livraisonId);
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+  await charger();
+}
+
+function arriverSurPlace() {
+  const input = document.getElementById('fichier-preuve');
+  input.onchange = confirmerAvecPhoto;
+  input.click();
+}
+
+async function confirmerAvecPhoto() {
+  const input = document.getElementById('fichier-preuve');
+  const fichier = input.files[0];
+  if (!fichier) return;
+
+  const cheminFichier = `${livraisonId}/livreur_${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('livraison-preuves')
+    .upload(cheminFichier, fichier);
+
+  if (uploadError) {
+    alert("Erreur d'envoi de la photo : " + uploadError.message);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
+
+  const { error } = await supabase
+    .from('livraisons')
+    .update({ statut: 'livree', photo_livreur: urlData.publicUrl })
+    .eq('id', livraisonId);
+
+  input.value = '';
+
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  await charger();
+}
+
+init();
+</script>
+</body>
+</html>

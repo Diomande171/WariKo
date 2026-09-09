@@ -9,27 +9,28 @@
 <style>
   body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
   .header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); flex-shrink:0; }
+  .avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); flex-shrink:0; border:2px solid var(--jaune); }
   .header-infos { flex:1; min-width:0; }
   .nom-livreur { font-family:'Playfair Display',serif; font-size:16px; font-weight:bold; margin:0; }
   .statut-badge { display:flex; align-items:center; gap:5px; font-size:12px; margin:3px 0; cursor:pointer; }
-  .dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; }
-  .dot.hors-ligne { background:#888; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; box-shadow:0 0 5px #4CAF50; }
+  .dot.hors-ligne { background:#888; box-shadow:none; }
   .note-ligne { font-size:12px; opacity:0.8; }
   .btn-profil { background:rgba(255,255,255,0.1); color:var(--jaune); border:none; border-radius:16px; padding:7px 12px; font-size:11px; white-space:nowrap; }
 
-  .stats-jour { background:rgba(255,255,255,0.06); border-radius:14px; padding:16px; margin-bottom:16px; }
+  .stats-jour { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; margin-bottom:16px; }
   .stats-jour .label { font-size:12px; opacity:0.7; margin-bottom:10px; }
   .stats-grille { display:flex; justify-content:space-between; text-align:center; }
   .stat-item .valeur { font-size:17px; font-weight:bold; color:var(--jaune); }
   .stat-item .titre { font-size:10.5px; opacity:0.75; margin-top:2px; }
 
-  .btn-action { position:relative; width:100%; display:block; text-align:left; border:none; border-radius:12px; padding:14px 16px; font-size:14px; font-weight:bold; margin-bottom:10px; text-decoration:none; }
-  .btn-action.principal { background:var(--jaune); color:var(--violet-fonce); }
+  .btn-action { position:relative; width:100%; display:flex; align-items:center; gap:10px; text-align:left; border:none; border-radius:14px; padding:14px 16px; font-size:14px; font-weight:bold; margin-bottom:10px; text-decoration:none; box-sizing:border-box; }
+  .btn-action.principal { background:var(--jaune); color:var(--violet-fonce); border-radius:30px; justify-content:center; }
   .btn-action.secondaire { background:rgba(255,255,255,0.08); color:var(--blanc); font-weight:600; }
+  .btn-action svg { width:18px; height:18px; flex-shrink:0; }
   .badge-compteur { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:#E63946; color:#fff; font-size:11px; font-weight:bold; border-radius:10px; padding:2px 7px; }
 
-  .gains-bloc { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; margin-top:8px; }
+  .gains-bloc { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:14px 16px; margin-top:8px; }
   .gains-haut { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
   .gains-haut a { color:var(--jaune); font-size:12px; text-decoration:none; }
   .gains-montant { font-size:19px; font-weight:bold; color:var(--jaune); margin-top:6px; }
@@ -51,7 +52,7 @@
     Accueil
   </a>
   <a href="nouvelles-courses.html">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M9 18h4.5l1.5-4h3l2 3"/><path d="M4 14l3-6h4l2 3h2.5"/><path d="M13 8h2.5l1.5 3"/></svg>
     Livraisons
   </a>
   <a href="#" onclick="pasEncoreDisponible(event)">
@@ -212,10 +213,12 @@ async function afficherTableauDeBord() {
       ${nbNouvellesCourses > 0 ? `<span class="badge-compteur">${nbNouvellesCourses}</span>` : ''}
     </a>
     <a href="nouvelles-courses.html?onglet=en_cours" class="btn-action secondaire">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
       Mes livraisons en cours
       ${nbEnCours > 0 ? `<span class="badge-compteur">${nbEnCours}</span>` : ''}
     </a>
     <a href="#" class="btn-action secondaire" onclick="pasEncoreDisponible(event)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
       Historique des livraisons
     </a>
 

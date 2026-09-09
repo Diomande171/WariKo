@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nouvelles courses - WariKo</title>
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
+  .en-tete { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .en-tete a { color:var(--blanc); text-decoration:none; font-size:20px; }
+  .en-tete h1 { font-family:'Playfair Display',serif; font-size:18px; color:var(--jaune); margin:0; }
+
+  .onglets { display:flex; background:rgba(255,255,255,0.06); border-radius:20px; padding:4px; margin-bottom:16px; }
+  .onglet { flex:1; text-align:center; padding:8px; border-radius:16px; font-size:12.5px; font-weight:600; cursor:pointer; color:rgba(255,255,255,0.65); }
+  .onglet.actif { background:var(--jaune); color:var(--violet-fonce); }
+
+  .carte-course { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:12px; }
+  .course-haut { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .course-numero { font-size:12px; font-weight:bold; color:var(--jaune); }
+  .course-heure { font-size:11px; opacity:0.65; }
+  .course-boutique { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:600; margin-bottom:3px; }
+  .course-ligne { display:flex; align-items:center; gap:6px; font-size:12px; opacity:0.8; margin:2px 0; }
+  .course-bas { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+  .course-prix { font-size:15px; font-weight:bold; color:var(--jaune); }
+  .badge-type { font-size:10px; padding:2px 7px; border-radius:8px; background:rgba(255,255,255,0.1); margin-left:6px; }
+  .badge { display:inline-block; font-size:11px; padding:3px 8px; border-radius:8px; margin-top:6px; }
+  .badge.acceptee { background:rgba(76,175,80,0.2); color:#8fd98f; }
+  .badge.encours { background:rgba(33,150,243,0.2); color:#8fc8f5; }
+
+  .btn-accepter { background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:8px; padding:9px 18px; font-size:12.5px; font-weight:bold; }
+  .actions { display:flex; gap:8px; margin-top:10px; }
+  .actions button, .actions a { flex:1; padding:9px; border-radius:8px; border:none; font-size:12px; text-align:center; text-decoration:none; }
+  .btn-progresser { background:rgba(255,255,255,0.12); color:var(--blanc); }
+  .btn-contacter { background:rgba(255,255,255,0.08); color:var(--jaune); border:1px solid var(--jaune); }
+
+  .vide { text-align:center; opacity:0.5; font-size:13px; padding:30px 20px; }
+
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
+  .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
+  .bottom-nav a.active { color:var(--jaune); font-weight:bold; }
+  .bottom-nav svg { width:20px; height:20px; }
+</style>
+</head>
+<body>
+
+<div class="en-tete">
+  <a href="index.html">←</a>
+  <h1>Nouvelles courses</h1>
+</div>
+
+<div class="onglets">
+  <div class="onglet" id="onglet-attente" onclick="changerOnglet('attente')">À accepter</div>
+  <div class="onglet" id="onglet-encours" onclick="changerOnglet('encours')">En cours</div>
+</div>
+
+<div id="contenu">Chargement...</div>
+
+<input type="file" id="fichier-preuve" accept="image/*" capture="environment" style="display:none;">
+
+<div class="bottom-nav">
+  <a href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Accueil
+  </a>
+  <a href="nouvelles-courses.html" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
+    Livraisons
+  </a>
+  <a href="#" onclick="pasEncoreDisponible(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
+    Portefeuille
+  </a>
+  <a href="#" onclick="pasEncoreDisponible(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    Profil
+  </a>
+</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let monLivreur = null;
+let ongletActif = 'attente';
+
+function pasEncoreDisponible(e) {
+  if (e) e.preventDefault();
+  alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
+}
+
+function numeroCourse(l) {
+  return 'LIV-' + l.id.replace(/-/g, '').slice(-4).toUpperCase();
+}
+
+function heureCourse(l) {
+  const d = new Date(l.created_at);
+  const auj = new Date();
+  const estAujourdhui = d.toDateString() === auj.toDateString();
+  const heure = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return (estAujourdhui ? "Aujourd'hui" : d.toLocaleDateString('fr-FR')) + ' · ' + heure;
+}
+
+function montantLivraison(l) {
+  if (l.prix_livraison) return l.prix_livraison;
+  if (l.distance_km) return Math.round(l.distance_km * 300);
+  return 0;
+}
+
+function typeLivraison(l) {
+  if (l.type === 'demande') return 'Prestation';
+  if (l.type === 'commande') return 'Produit';
+  return l.demande_id ? 'Prestation' : 'Produit';
+}
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data: livreur } = await supabase
+    .from('livreurs')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!livreur) {
+    window.location.href = 'inscription.html';
+    return;
+  }
+
+  monLivreur = livreur;
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('onglet') === 'en_cours') ongletActif = 'encours';
+
+  await afficherOnglets();
+  await charger();
+}
+
+async function changerOnglet(nom) {
+  ongletActif = nom;
+  await afficherOnglets();
+  await charger();
+}
+
+function afficherOnglets() {
+  document.getElementById('onglet-attente').classList.toggle('actif', ongletActif === 'attente');
+  document.getElementById('onglet-encours').classList.toggle('actif', ongletActif === 'encours');
+}
+
+async function charger() {
+  const contenu = document.getElementById('contenu');
+  contenu.innerHTML = 'Chargement...';
+
+  if (ongletActif === 'attente') {
+    const { data: courses } = await supabase
+      .from('livraisons')
+      .select('*, boutiques(nom_boutique)')
+      .eq('statut', 'en_attente')
+      .order('created_at', { ascending: true });
+
+    const listeArticles = await compterArticles(courses);
+
+    contenu.innerHTML = courses && courses.length > 0
+      ? courses.map(l => carteAttente(l, listeArticles[l.commande_id])).join('')
+      : '<p class="vide">Aucune course en attente pour le moment.</p>';
+  } else {
+    const { data: courses } = await supabase
+      .from('livraisons')
+      .select('*, boutiques(nom_boutique)')
+      .eq('livreur_id', monLivreur.id)
+      .in('statut', ['acceptee', 'en_cours'])
+      .order('created_at', { ascending: true });
+
+    const listeArticles = await compterArticles(courses);
+
+    contenu.innerHTML = courses && courses.length > 0
+      ? courses.map(l => carteEnCours(l, listeArticles[l.commande_id])).join('')
+      : '<p class="vide">Aucune livraison en cours.</p>';
+  }
+}
+
+async function compterArticles(courses) {
+  const idsCommandes = (courses || []).map(l => l.commande_id).filter(Boolean);
+  if (idsCommandes.length === 0) return {};
+
+  const { data: lignes } = await supabase
+    .from('commande_produits')
+    .select('commande_id')
+    .in('commande_id', idsCommandes);
+
+  const compte = {};
+  (lignes || []).forEach(l => {
+    compte[l.commande_id] = (compte[l.commande_id] || 0) + 1;
+  });
+  return compte;
+}
+
+function carteAttente(l, nbArticles) {
+  const distance = l.distance_km ? `${l.distance_km.toFixed(1)} km` : '';
+  const articles = nbArticles ? `${nbArticles} article${nbArticles > 1 ? 's' : ''}${distance ? ' · ' : ''}` : '';
+  return `
+    <div class="carte-course">
+      <div class="course-haut">
+        <span class="course-numero">#${numeroCourse(l)}</span>
+        <span class="course-heure">${heureCourse(l)}</span>
+      </div>
+      <div class="course-boutique">
+        ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
+        <span class="badge-type">${typeLivraison(l)}</span>
+      </div>
+      <div class="course-ligne">📦 ${articles}${distance}</div>
+      <div class="course-ligne">📍 ${l.adresse_client || 'Adresse non précisée'}</div>
+      <div class="course-bas">
+        <span class="course-prix">${montantLivraison(l).toLocaleString('fr-FR')} F</span>
+        <button class="btn-accepter" onclick="accepterLivraison('${l.id}')">Accepter</button>
+      </div>
+    </div>
+  `;
+}
+
+function carteEnCours(l, nbArticles) {
+  const distance = l.distance_km ? `${l.distance_km.toFixed(1)} km` : '';
+  const articles = nbArticles ? `${nbArticles} article${nbArticles > 1 ? 's' : ''}${distance ? ' · ' : ''}` : '';
+  const badgeClasse = l.statut === 'acceptee' ? 'acceptee' : 'encours';
+  const badgeTexte = l.statut === 'acceptee' ? 'Acceptée' : 'En cours';
+
+  let boutonAction = '';
+  if (l.statut === 'acceptee') {
+    boutonAction = `<button class="btn-progresser" onclick="changerStatut('${l.id}','en_cours')">Démarrer la livraison</button>`;
+  } else {
+    boutonAction = `<button class="btn-progresser" onclick="demarrerPhotoLivraison('${l.id}')">📷 Confirmer avec photo</button>`;
+  }
+
+  return `
+    <div class="carte-course">
+      <div class="course-haut">
+        <span class="course-numero">#${numeroCourse(l)}</span>
+        <span class="course-heure">${heureCourse(l)}</span>
+      </div>
+      <div class="course-boutique">
+        ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
+        <span class="badge-type">${typeLivraison(l)}</span>
+      </div>
+      <div class="course-ligne">📦 ${articles}${distance}</div>
+      <div class="course-ligne">📍 ${l.adresse_client || 'Adresse non précisée'}</div>
+      <span class="badge ${badgeClasse}">${badgeTexte}</span>
+      <div class="actions">
+        ${boutonAction}
+        <a class="btn-contacter" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id}">Contacter</a>
+      </div>
+    </div>
+  `;
+}
+
+async function accepterLivraison(livraisonId) {
+  const { error } = await supabase
+    .from('livraisons')
+    .update({ livreur_id: monLivreur.id, statut: 'acceptee' })
+    .eq('id', livraisonId)
+    .eq('statut', 'en_attente');
+
+  if (error) {
+    alert('Cette course a peut-être déjà été prise par un autre livreur.');
+  }
+  await charger();
+}
+
+async function changerStatut(livraisonId, nouveauStatut) {
+  const { error } = await supabase.from('livraisons').update({ statut: nouveauStatut }).eq('id', livraisonId);
+  if (error) {
+    alert('Erreur : ' + error.message);
+  }
+  await charger();
+}
+
+function demarrerPhotoLivraison(livraisonId) {
+  const input = document.getElementById('fichier-preuve');
+  input.onchange = () => confirmerLivraisonAvecPhoto(livraisonId);
+  input.click();
+}
+
+async function confirmerLivraisonAvecPhoto(livraisonId) {
+  const input = document.getElementById('fichier-preuve');
+  const fichier = input.files[0];
+  if (!fichier) return;
+
+  const cheminFichier = `${livraisonId}/livreur_${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('livraison-preuves')
+    .upload(cheminFichier, fichier);
+
+  if (uploadError) {
+    alert("Erreur d'envoi de la photo : " + uploadError.message);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
+
+  const { error } = await supabase
+    .from('livraisons')
+    .update({ statut: 'livree', photo_livreur: urlData.publicUrl })
+    .eq('id', livraisonId);
+
+  input.value = '';
+
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  alert('✅ Livraison confirmée avec photo !');
+  window.location.href = 'index.html';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -7,32 +7,62 @@
 <link rel="stylesheet" href="../style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 40px; }
-  h1 { font-family:'Playfair Display',serif; font-size:20px; color:var(--jaune); margin:0 0 4px; }
-  .statut-bloc { display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.06); border-radius:12px; padding:14px; margin:16px 0; }
-  .statut-bloc span { font-size:14px; }
-  .toggle { background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:20px; padding:8px 16px; font-size:13px; font-weight:bold; }
-  .toggle.occupe { background:rgba(255,255,255,0.15); color:var(--blanc); }
-  h2 { font-size:15px; color:var(--jaune); margin:24px 0 10px; }
-  .carte-livraison { background:rgba(255,255,255,0.06); border-radius:12px; padding:14px; margin-bottom:12px; }
-  .carte-livraison h3 { margin:0 0 6px; font-size:14px; }
-  .carte-livraison p { margin:2px 0; font-size:12px; opacity:0.8; }
-  .badge { display:inline-block; font-size:11px; padding:3px 8px; border-radius:8px; margin-top:6px; }
-  .badge.attente { background:rgba(255,193,7,0.2); color:var(--jaune); }
-  .badge.acceptee { background:rgba(76,175,80,0.2); color:#8fd98f; }
-  .badge.encours { background:rgba(33,150,243,0.2); color:#8fc8f5; }
-  .actions { display:flex; gap:8px; margin-top:10px; }
-  .actions button, .actions a { flex:1; padding:9px; border-radius:8px; border:none; font-size:12px; text-align:center; text-decoration:none; }
-  .btn-accepter { background:var(--jaune); color:var(--violet-fonce); font-weight:bold; }
-  .btn-progresser { background:rgba(255,255,255,0.12); color:var(--blanc); }
-  .btn-contacter { background:rgba(255,255,255,0.08); color:var(--jaune); border:1px solid var(--jaune); }
-  .vide { text-align:center; opacity:0.5; font-size:13px; padding:20px; }
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
+  .header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); flex-shrink:0; }
+  .header-infos { flex:1; min-width:0; }
+  .nom-livreur { font-family:'Playfair Display',serif; font-size:16px; font-weight:bold; margin:0; }
+  .statut-badge { display:flex; align-items:center; gap:5px; font-size:12px; margin:3px 0; cursor:pointer; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; }
+  .dot.hors-ligne { background:#888; }
+  .note-ligne { font-size:12px; opacity:0.8; }
+  .btn-profil { background:rgba(255,255,255,0.1); color:var(--jaune); border:none; border-radius:16px; padding:7px 12px; font-size:11px; white-space:nowrap; }
+
+  .stats-jour { background:rgba(255,255,255,0.06); border-radius:14px; padding:16px; margin-bottom:16px; }
+  .stats-jour .label { font-size:12px; opacity:0.7; margin-bottom:10px; }
+  .stats-grille { display:flex; justify-content:space-between; text-align:center; }
+  .stat-item .valeur { font-size:17px; font-weight:bold; color:var(--jaune); }
+  .stat-item .titre { font-size:10.5px; opacity:0.75; margin-top:2px; }
+
+  .btn-action { position:relative; width:100%; display:block; text-align:left; border:none; border-radius:12px; padding:14px 16px; font-size:14px; font-weight:bold; margin-bottom:10px; text-decoration:none; }
+  .btn-action.principal { background:var(--jaune); color:var(--violet-fonce); }
+  .btn-action.secondaire { background:rgba(255,255,255,0.08); color:var(--blanc); font-weight:600; }
+  .badge-compteur { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:#E63946; color:#fff; font-size:11px; font-weight:bold; border-radius:10px; padding:2px 7px; }
+
+  .gains-bloc { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; margin-top:8px; }
+  .gains-haut { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+  .gains-haut a { color:var(--jaune); font-size:12px; text-decoration:none; }
+  .gains-montant { font-size:19px; font-weight:bold; color:var(--jaune); margin-top:6px; }
+  .gains-souslabel { font-size:11px; opacity:0.7; }
+
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
+  .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
+  .bottom-nav a.active { color:var(--jaune); font-weight:bold; }
+  .bottom-nav svg { width:20px; height:20px; }
 </style>
 </head>
 <body>
 
-<h1>Tableau de bord livreur</h1>
 <div id="contenu">Chargement...</div>
+
+<div class="bottom-nav">
+  <a href="index.html" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Accueil
+  </a>
+  <a href="nouvelles-courses.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
+    Livraisons
+  </a>
+  <a href="#" onclick="pasEncoreDisponible(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
+    Portefeuille
+  </a>
+  <a href="#" onclick="pasEncoreDisponible(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    Profil
+  </a>
+</div>
 
 <script>
 const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
@@ -40,6 +70,11 @@ const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let monLivreur = null;
+
+function pasEncoreDisponible(e) {
+  if (e) e.preventDefault();
+  alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
+}
 
 async function init() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -63,155 +98,150 @@ async function init() {
   await afficherTableauDeBord();
 }
 
+function debutJournee() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function debutMois() {
+  const d = new Date();
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function montantLivraison(l) {
+  if (l.prix_livraison) return l.prix_livraison;
+  if (l.distance_km) return Math.round(l.distance_km * 300);
+  return 0;
+}
+
+function formaterTempsTravail() {
+  if (!monLivreur.en_ligne || !monLivreur.en_ligne_depuis) return '0h00';
+  const debut = new Date(monLivreur.en_ligne_depuis);
+  const diffMin = Math.max(0, Math.floor((Date.now() - debut.getTime()) / 60000));
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  return `${h}h${m.toString().padStart(2, '0')}`;
+}
+
 async function afficherTableauDeBord() {
   const contenu = document.getElementById('contenu');
 
-  const { data: disponibles } = await supabase
-    .from('livraisons')
-    .select('*, boutiques(nom_boutique)')
-    .eq('statut', 'en_attente')
-    .order('created_at', { ascending: true });
+  const { data: avis } = await supabase
+    .from('avis_livreurs')
+    .select('note')
+    .eq('livreur_id', monLivreur.id);
 
-  const { data: mesLivraisons } = await supabase
+  const noteMoyenne = avis && avis.length > 0
+    ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)
+    : '—';
+  const nbAvis = avis ? avis.length : 0;
+
+  const { count: nbLivraisonsTotal } = await supabase
     .from('livraisons')
-    .select('*, boutiques(nom_boutique)')
+    .select('*', { count: 'exact', head: true })
     .eq('livreur_id', monLivreur.id)
-    .in('statut', ['acceptee', 'en_cours'])
-    .order('created_at', { ascending: true });
+    .eq('statut', 'livree');
+
+  const { data: livraisonsJour } = await supabase
+    .from('livraisons')
+    .select('*')
+    .eq('livreur_id', monLivreur.id)
+    .eq('statut', 'livree')
+    .gte('created_at', debutJournee());
+
+  const nbLivraisonsJour = livraisonsJour ? livraisonsJour.length : 0;
+  const gainsJour = livraisonsJour ? livraisonsJour.reduce((s, l) => s + montantLivraison(l), 0) : 0;
+
+  const { data: livraisonsMois } = await supabase
+    .from('livraisons')
+    .select('*')
+    .eq('livreur_id', monLivreur.id)
+    .eq('statut', 'livree')
+    .gte('created_at', debutMois());
+
+  const gainsMois = livraisonsMois ? livraisonsMois.reduce((s, l) => s + montantLivraison(l), 0) : 0;
+
+  const { count: nbNouvellesCourses } = await supabase
+    .from('livraisons')
+    .select('*', { count: 'exact', head: true })
+    .eq('statut', 'en_attente');
+
+  const { count: nbEnCours } = await supabase
+    .from('livraisons')
+    .select('*', { count: 'exact', head: true })
+    .eq('livreur_id', monLivreur.id)
+    .in('statut', ['acceptee', 'en_cours']);
 
   contenu.innerHTML = `
-    <div class="statut-bloc">
-      <span>Statut : <strong>${monLivreur.en_ligne ? '🟢 Disponible' : '⚪ Occupé'}</strong></span>
-      <button class="toggle ${!monLivreur.en_ligne ? 'occupe' : ''}" onclick="basculerStatut()">
-        ${monLivreur.en_ligne ? 'Passer occupé' : 'Passer disponible'}
-      </button>
+    <div class="header">
+      <img class="avatar" src="${monLivreur.photo1_url || ''}" onerror="this.style.opacity=0">
+      <div class="header-infos">
+        <p class="nom-livreur">${monLivreur.nom_complet || 'Livreur'}</p>
+        <div class="statut-badge" onclick="basculerStatut()">
+          <span class="dot ${monLivreur.en_ligne ? '' : 'hors-ligne'}"></span>
+          ${monLivreur.en_ligne ? 'En ligne' : 'Hors ligne'}
+        </div>
+        <div class="note-ligne">⭐ ${noteMoyenne} (${nbLivraisonsTotal || 0} livraisons)</div>
+      </div>
+      <button class="btn-profil" onclick="pasEncoreDisponible()">Mon profil</button>
     </div>
 
-    <h2>Livraisons en attente</h2>
-    <div id="liste-attente">
-      ${disponibles && disponibles.length > 0 ? disponibles.map(carteAttente).join('') : '<p class="vide">Aucune livraison en attente pour le moment.</p>'}
-    </div>
-
-    <h2>Mes livraisons en cours</h2>
-    <div id="liste-mes-livraisons">
-      ${mesLivraisons && mesLivraisons.length > 0 ? mesLivraisons.map(carteEnCours).join('') : '<p class="vide">Aucune livraison en cours.</p>'}
-    </div>
-
-    <input type="file" id="fichier-preuve" accept="image/*" capture="environment" style="display:none;">
-  `;
-}
-
-function carteAttente(l) {
-  const distance = l.distance_km ? `${l.distance_km.toFixed(1)} km` : 'Distance inconnue';
-  const temps = l.temps_estime_min ? `${l.temps_estime_min} min estimées` : '';
-  return `
-    <div class="carte-livraison">
-      <h3>${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}</h3>
-      <p>📍 ${l.adresse_client || 'Adresse non précisée'}</p>
-      <p>${distance} ${temps ? '· ' + temps : ''}</p>
-      <span class="badge attente">En attente</span>
-      <div class="actions">
-        <button class="btn-accepter" onclick="accepterLivraison('${l.id}')">Accepter</button>
+    <div class="stats-jour">
+      <div class="label">Aujourd'hui</div>
+      <div class="stats-grille">
+        <div class="stat-item">
+          <div class="valeur">${nbLivraisonsJour}</div>
+          <div class="titre">livraisons</div>
+        </div>
+        <div class="stat-item">
+          <div class="valeur">${gainsJour.toLocaleString('fr-FR')} F</div>
+          <div class="titre">gains du jour</div>
+        </div>
+        <div class="stat-item">
+          <div class="valeur">${formaterTempsTravail()}</div>
+          <div class="titre">temps de travail</div>
+        </div>
       </div>
     </div>
-  `;
-}
 
-function carteEnCours(l) {
-  const badgeClasse = l.statut === 'acceptee' ? 'acceptee' : 'encours';
-  const badgeTexte = l.statut === 'acceptee' ? 'Acceptée' : 'En cours';
+    <a href="nouvelles-courses.html" class="btn-action principal">
+      Nouvelles courses
+      ${nbNouvellesCourses > 0 ? `<span class="badge-compteur">${nbNouvellesCourses}</span>` : ''}
+    </a>
+    <a href="nouvelles-courses.html?onglet=en_cours" class="btn-action secondaire">
+      Mes livraisons en cours
+      ${nbEnCours > 0 ? `<span class="badge-compteur">${nbEnCours}</span>` : ''}
+    </a>
+    <a href="#" class="btn-action secondaire" onclick="pasEncoreDisponible(event)">
+      Historique des livraisons
+    </a>
 
-  let boutonAction = '';
-  if (l.statut === 'acceptee') {
-    boutonAction = `<button class="btn-progresser" onclick="changerStatut('${l.id}','en_cours')">Démarrer la livraison</button>`;
-  } else {
-    boutonAction = `<button class="btn-progresser" onclick="demarrerPhotoLivraison('${l.id}')">📷 Confirmer avec photo</button>`;
-  }
-
-  return `
-    <div class="carte-livraison">
-      <h3>${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}</h3>
-      <p>📍 ${l.adresse_client || 'Adresse non précisée'}</p>
-      <span class="badge ${badgeClasse}">${badgeTexte}</span>
-      <div class="actions">
-        ${boutonAction}
-        <a class="btn-contacter" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id}">Contacter</a>
+    <div class="gains-bloc">
+      <div class="gains-haut">
+        <span>Mes gains</span>
+        <a href="#" onclick="pasEncoreDisponible(event)">Voir tout</a>
       </div>
+      <div class="gains-montant">${gainsMois.toLocaleString('fr-FR')} F</div>
+      <div class="gains-souslabel">Ce mois-ci</div>
     </div>
   `;
 }
 
 async function basculerStatut() {
   const nouveauEnLigne = !monLivreur.en_ligne;
-  const { error } = await supabase.from('livreurs').update({ en_ligne: nouveauEnLigne }).eq('id', monLivreur.id);
+  const updates = { en_ligne: nouveauEnLigne };
+  if (nouveauEnLigne) {
+    updates.en_ligne_depuis = new Date().toISOString();
+  }
+  const { error } = await supabase.from('livreurs').update(updates).eq('id', monLivreur.id);
   if (!error) {
     monLivreur.en_ligne = nouveauEnLigne;
+    if (nouveauEnLigne) monLivreur.en_ligne_depuis = updates.en_ligne_depuis;
     await afficherTableauDeBord();
   }
-}
-
-async function accepterLivraison(livraisonId) {
-  const { error } = await supabase
-    .from('livraisons')
-    .update({ livreur_id: monLivreur.id, statut: 'acceptee' })
-    .eq('id', livraisonId)
-    .eq('statut', 'en_attente');
-
-  if (error) {
-    alert('Cette livraison a peut-être déjà été prise par un autre livreur.');
-  }
-  await afficherTableauDeBord();
-}
-
-async function changerStatut(livraisonId, nouveauStatut) {
-  const { error } = await supabase.from('livraisons').update({ statut: nouveauStatut }).eq('id', livraisonId);
-  if (error) {
-    alert('Erreur : ' + error.message);
-  }
-  await afficherTableauDeBord();
-}
-
-let livraisonEnAttentePhoto = null;
-
-function demarrerPhotoLivraison(livraisonId) {
-  livraisonEnAttentePhoto = livraisonId;
-  const input = document.getElementById('fichier-preuve');
-  input.onchange = () => confirmerLivraisonAvecPhoto(livraisonId);
-  input.click();
-}
-
-async function confirmerLivraisonAvecPhoto(livraisonId) {
-  const input = document.getElementById('fichier-preuve');
-  const fichier = input.files[0];
-  if (!fichier) return;
-
-  const cheminFichier = `${livraisonId}/livreur_${Date.now()}.jpg`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('livraison-preuves')
-    .upload(cheminFichier, fichier);
-
-  if (uploadError) {
-    alert("Erreur d'envoi de la photo : " + uploadError.message);
-    return;
-  }
-
-  const { data: urlData } = supabase.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
-
-  const { error } = await supabase
-    .from('livraisons')
-    .update({ statut: 'livree', photo_livreur: urlData.publicUrl })
-    .eq('id', livraisonId);
-
-  input.value = '';
-
-  if (error) {
-    alert('Erreur : ' + error.message);
-    return;
-  }
-
-  alert('✅ Livraison confirmée avec photo !');
-  await afficherTableauDeBord();
 }
 
 init();

@@ -257,6 +257,7 @@
         .activite-card .statut.on { color: #2ECC71; }
         .activite-card .statut.off { color: #A39EB0; }
         .activite-card .statut.attente { color: #F5A623; }
+        .activite-card .statut.refuse { color: #E23744; }
 
         /* ---------- Panneau d'édition ---------- */
         #panneauEdition {
@@ -994,10 +995,10 @@
                 cartePrestataire.href = "../prestataire/inscription.html";
             }
 
-            // Livreur actif ?
+            // Livreur actif ? (basé sur la colonne statut : en_attente / approuve / refuse)
             const { data: livreur } = await supabaseClient
                 .from("livreurs")
-                .select("id, identite_verifiee")
+                .select("id, statut")
                 .eq("user_id", userId)
                 .maybeSingle();
 
@@ -1006,18 +1007,23 @@
             const statutLivreur = document.getElementById("statutLivreur");
 
             if (livreur) {
-                if (livreur.identite_verifiee) {
+                if (livreur.statut === "approuve") {
                     carteLivreur.href = "../livreur/index.html";
                     carteLivreur.classList.add("actif");
                     iconLivreur.classList.remove("gris");
                     iconLivreur.classList.add("jaune");
                     statutLivreur.textContent = "Actif";
-                    statutLivreur.classList.remove("off");
+                    statutLivreur.classList.remove("off", "attente", "refuse");
                     statutLivreur.classList.add("on");
+                } else if (livreur.statut === "refuse") {
+                    carteLivreur.href = "../livreur/inscription.html";
+                    statutLivreur.textContent = "Refusé";
+                    statutLivreur.classList.remove("off", "on");
+                    statutLivreur.classList.add("refuse");
                 } else {
                     carteLivreur.href = "../livreur/inscription.html";
                     statutLivreur.textContent = "En attente";
-                    statutLivreur.classList.remove("off");
+                    statutLivreur.classList.remove("off", "on");
                     statutLivreur.classList.add("attente");
                 }
             } else {

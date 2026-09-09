@@ -1,5 +1,375 @@
-<body style="background:#1a0a2e;color:#fff;font-family:sans-serif;padding:40px 20px;text-align:center;max-width:430px;margin:0 auto;">
-  <h1 style="color:#f5d949;font-family:'Playfair Display',serif;">Service livreur temporairement indisponible</h1>
-  <p style="opacity:0.8;margin-top:16px;">Les inscriptions livreur sont suspendues pour le moment. Reviens bientôt !</p>
-  <a href="../client/accueil.html" style="display:inline-block;margin-top:24px;background:#f5d949;color:#1a0a2e;padding:14px 24px;border-radius:12px;text-decoration:none;font-weight:bold;">Retour à l'accueil</a>
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Devenir livreur</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: #F4F2F8;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            padding: 20px;
+            border-radius: 0 0 26px 26px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--blanc);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        form {
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gris-texte);
+            margin-top: 18px;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid #EEEEEE;
+            background: var(--blanc);
+            color: var(--texte);
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .photos-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .photo-upload {
+            position: relative;
+            aspect-ratio: 1.4;
+            border-radius: 14px;
+            border: 2px dashed #D9D5E3;
+            background: var(--blanc);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .photo-upload span {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gris-texte);
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .photo-upload svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--violet-fonce);
+        }
+
+        .photo-upload img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload input {
+            display: none;
+        }
+
+        .note-legale {
+            margin-top: 14px;
+            font-size: 11px;
+            color: var(--gris-texte);
+            line-height: 1.5;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 26px;
+            padding: 15px;
+            border-radius: 14px;
+            border: none;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-weight: 800;
+            font-size: 15px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+        }
+
+        #status-message {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 700;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="../client/profil.html" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"/>
+                    <path d="M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div>
+                <h1>Devenir livreur</h1>
+                <p>Livre des commandes et des courses près de chez toi</p>
+            </div>
+        </header>
+
+        <form id="livreur-form">
+
+            <label for="nom_complet">Nom complet</label>
+            <input id="nom_complet" type="text" required>
+
+            <label for="telephone">Téléphone</label>
+            <input id="telephone" type="tel" required>
+
+            <label for="zone_couverture">Zone de couverture</label>
+            <input id="zone_couverture" type="text" placeholder="Ex : Cocody, Riviera, Angré" required>
+
+            <label for="moyen_transport">Moyen de transport</label>
+            <select id="moyen_transport" required>
+                <option value="" disabled selected>Choisir...</option>
+                <option value="Moto">Moto</option>
+                <option value="Vélo">Vélo</option>
+                <option value="Voiture">Voiture</option>
+                <option value="Tricycle">Tricycle</option>
+                <option value="À pied">À pied</option>
+            </select>
+
+            <label>Pièce d'identité (recto / verso)</label>
+            <div class="photos-row">
+
+                <label class="photo-upload" id="uploadRecto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 19"/></svg>
+                    <span>Recto</span>
+                    <input type="file" id="photo1" accept="image/*" required>
+                </label>
+
+                <label class="photo-upload" id="uploadVerso">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 19"/></svg>
+                    <span>Verso</span>
+                    <input type="file" id="photo2" accept="image/*" required>
+                </label>
+
+            </div>
+
+            <p class="note-legale">Tes photos restent privées et ne sont visibles que par l'équipe WariKo pour la vérification de ton compte.</p>
+
+            <p id="status-message"></p>
+
+            <button type="submit" class="submit-btn" id="submit-btn">Envoyer ma demande</button>
+
+        </form>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let userId = null;
+        let fichierPhoto1 = null;
+        let fichierPhoto2 = null;
+
+        const statusMessage = document.getElementById("status-message");
+        const submitBtn = document.getElementById("submit-btn");
+
+        (async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "../client/connexion.html";
+                return;
+            }
+
+            userId = session.user.id;
+
+            // Si une inscription livreur existe déjà, redirige directement vers le profil
+            const { data: existant } = await supabaseClient
+                .from("livreurs")
+                .select("id")
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            if (existant) {
+                window.location.href = "../client/profil.html";
+            }
+        })();
+
+        function previsualiser(inputId, wrapperId, fichier) {
+            const wrapper = document.getElementById(wrapperId);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                wrapper.querySelector("img")?.remove();
+                wrapper.appendChild(img);
+            };
+            reader.readAsDataURL(fichier);
+        }
+
+        document.getElementById("photo1").addEventListener("change", (e) => {
+            fichierPhoto1 = e.target.files[0];
+            if (fichierPhoto1) previsualiser("photo1", "uploadRecto", fichierPhoto1);
+        });
+
+        document.getElementById("photo2").addEventListener("change", (e) => {
+            fichierPhoto2 = e.target.files[0];
+            if (fichierPhoto2) previsualiser("photo2", "uploadVerso", fichierPhoto2);
+        });
+
+        document.getElementById("livreur-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            if (!fichierPhoto1 || !fichierPhoto2) {
+                statusMessage.style.color = "#E23744";
+                statusMessage.textContent = "Merci d'ajouter les 2 photos de ta pièce d'identité.";
+                return;
+            }
+
+            submitBtn.disabled = true;
+            statusMessage.style.color = "var(--gris-texte)";
+            statusMessage.textContent = "Envoi en cours...";
+
+            try {
+                const nom_complet = document.getElementById("nom_complet").value;
+                const telephone = document.getElementById("telephone").value;
+                const zone_couverture = document.getElementById("zone_couverture").value;
+                const moyen_transport = document.getElementById("moyen_transport").value;
+
+                const cheminRecto = `${userId}/recto_${Date.now()}.${fichierPhoto1.name.split('.').pop()}`;
+                const cheminVerso = `${userId}/verso_${Date.now()}.${fichierPhoto2.name.split('.').pop()}`;
+
+                const { error: err1 } = await supabaseClient.storage
+                    .from("livreurs-identite")
+                    .upload(cheminRecto, fichierPhoto1);
+
+                if (err1) throw new Error(err1.message);
+
+                const { error: err2 } = await supabaseClient.storage
+                    .from("livreurs-identite")
+                    .upload(cheminVerso, fichierPhoto2);
+
+                if (err2) throw new Error(err2.message);
+
+                const { error: insertError } = await supabaseClient
+                    .from("livreurs")
+                    .insert({
+                        user_id: userId,
+                        nom_complet,
+                        telephone,
+                        zone_couverture,
+                        moyen_transport,
+                        statut: "en_attente",
+                        photo1_url: cheminRecto,
+                        photo2_url: cheminVerso
+                    });
+
+                if (insertError) throw new Error(insertError.message);
+
+                statusMessage.style.color = "#2ECC71";
+                statusMessage.textContent = "Demande envoyée ! Tu seras notifié une fois validée.";
+
+                setTimeout(() => {
+                    window.location.href = "../client/profil.html";
+                }, 1500);
+
+            } catch (err) {
+                statusMessage.style.color = "#E23744";
+                statusMessage.textContent = "Erreur : " + err.message;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+
 </body>
+
+</html>

@@ -65,7 +65,7 @@
     Accueil
   </a>
   <a href="nouvelles-courses.html" class="active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M9 18h4.5l1.5-4h3l2 3"/><path d="M4 14l3-6h4l2 3h2.5"/><path d="M13 8h2.5l1.5 3"/></svg>
     Livraisons
   </a>
   <a href="#" onclick="pasEncoreDisponible(event)">
@@ -138,13 +138,13 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('onglet') === 'en_cours') ongletActif = 'encours';
 
-  await afficherOnglets();
+  afficherOnglets();
   await charger();
 }
 
 async function changerOnglet(nom) {
   ongletActif = nom;
-  await afficherOnglets();
+  afficherOnglets();
   await charger();
 }
 
@@ -153,9 +153,27 @@ function afficherOnglets() {
   document.getElementById('onglet-encours').classList.toggle('actif', ongletActif === 'encours');
 }
 
+async function chargerCompteurs() {
+  const { count: nbAttente } = await supabase
+    .from('livraisons')
+    .select('*', { count: 'exact', head: true })
+    .eq('statut', 'en_attente');
+
+  const { count: nbEnCours } = await supabase
+    .from('livraisons')
+    .select('*', { count: 'exact', head: true })
+    .eq('livreur_id', monLivreur.id)
+    .in('statut', ['acceptee', 'en_cours']);
+
+  document.getElementById('onglet-attente').textContent = `À accepter (${nbAttente || 0})`;
+  document.getElementById('onglet-encours').textContent = `En cours (${nbEnCours || 0})`;
+}
+
 async function charger() {
   const contenu = document.getElementById('contenu');
   contenu.innerHTML = 'Chargement...';
+
+  await chargerCompteurs();
 
   if (ongletActif === 'attente') {
     const { data: courses } = await supabase
@@ -211,7 +229,7 @@ function carteAttente(l, nbArticles) {
         <span class="course-heure">${heureCourse(l)}</span>
       </div>
       <div class="course-boutique">
-        ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
+        🏪 ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
         <span class="badge-type">${typeLivraison(l)}</span>
       </div>
       <div class="course-ligne">📦 ${articles}${distance}</div>
@@ -244,7 +262,7 @@ function carteEnCours(l, nbArticles) {
         <span class="course-heure">${heureCourse(l)}</span>
       </div>
       <div class="course-boutique">
-        ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
+        🏪 ${l.boutiques ? l.boutiques.nom_boutique : 'Boutique'}
         <span class="badge-type">${typeLivraison(l)}</span>
       </div>
       <div class="course-ligne">📦 ${articles}${distance}</div>

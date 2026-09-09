@@ -81,9 +81,9 @@ async function afficherTableauDeBord() {
 
   contenu.innerHTML = `
     <div class="statut-bloc">
-      <span>Statut : <strong>${monLivreur.statut === 'disponible' ? '🟢 Disponible' : '⚪ Occupé'}</strong></span>
-      <button class="toggle ${monLivreur.statut !== 'disponible' ? 'occupe' : ''}" onclick="basculerStatut()">
-        ${monLivreur.statut === 'disponible' ? 'Passer occupé' : 'Passer disponible'}
+      <span>Statut : <strong>${monLivreur.en_ligne ? '🟢 Disponible' : '⚪ Occupé'}</strong></span>
+      <button class="toggle ${!monLivreur.en_ligne ? 'occupe' : ''}" onclick="basculerStatut()">
+        ${monLivreur.en_ligne ? 'Passer occupé' : 'Passer disponible'}
       </button>
     </div>
 
@@ -142,10 +142,10 @@ function carteEnCours(l) {
 }
 
 async function basculerStatut() {
-  const nouveauStatut = monLivreur.statut === 'disponible' ? 'occupe' : 'disponible';
-  const { error } = await supabase.from('livreurs').update({ statut: nouveauStatut }).eq('id', monLivreur.id);
+  const nouveauEnLigne = !monLivreur.en_ligne;
+  const { error } = await supabase.from('livreurs').update({ en_ligne: nouveauEnLigne }).eq('id', monLivreur.id);
   if (!error) {
-    monLivreur.statut = nouveauStatut;
+    monLivreur.en_ligne = nouveauEnLigne;
     await afficherTableauDeBord();
   }
 }

@@ -181,13 +181,50 @@
             text-align: center;
             font-weight: 700;
         }
+
+        .attente-wrap {
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        .attente-wrap .icone {
+            font-size: 46px;
+            margin-bottom: 18px;
+        }
+
+        .attente-wrap h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 19px;
+            color: var(--violet-fonce);
+            margin-bottom: 10px;
+        }
+
+        .attente-wrap p {
+            font-size: 13px;
+            color: var(--gris-texte);
+            line-height: 1.6;
+            margin-bottom: 26px;
+        }
+
+        .attente-wrap .btn-accueil {
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 15px;
+            border-radius: 14px;
+            background: var(--violet-fonce);
+            color: var(--blanc);
+            font-weight: 800;
+            font-size: 14px;
+            text-decoration: none;
+        }
     </style>
 
 </head>
 
 <body>
 
-    <div class="app">
+    <div class="app" id="app" style="display:none;">
 
         <header class="header">
             <a href="../client/profil.html" class="back-btn">
@@ -250,6 +287,31 @@
 
     </div>
 
+    <div class="app" id="attente-block" style="display:none;">
+        <header class="header">
+            <a href="../client/accueil.html" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"/>
+                    <path d="M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <div>
+                <h1>Compte livreur</h1>
+                <p>Statut de ta demande</p>
+            </div>
+        </header>
+
+        <div class="attente-wrap">
+            <div class="icone" id="attente-icone">⏳</div>
+            <h2 id="attente-titre">Demande en cours de vérification</h2>
+            <p id="attente-texte">
+                L'équipe WariKo vérifie actuellement ta pièce d'identité.
+                Tu seras notifié dès que ton compte livreur sera activé.
+            </p>
+            <a href="../client/accueil.html" class="btn-accueil">Retour à l'accueil</a>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
@@ -258,6 +320,12 @@
         let userId = null;
         let fichierPhoto1 = null;
         let fichierPhoto2 = null;
+
+        const appEl = document.getElementById("app");
+        const attenteBlock = document.getElementById("attente-block");
+        const attenteIcone = document.getElementById("attente-icone");
+        const attenteTitre = document.getElementById("attente-titre");
+        const attenteTexte = document.getElementById("attente-texte");
 
         const statusMessage = document.getElementById("status-message");
         const submitBtn = document.getElementById("submit-btn");
@@ -272,16 +340,37 @@
 
             userId = session.user.id;
 
-            // Si une inscription livreur existe déjà, redirige directement vers le profil
+            // Si une inscription livreur existe déjà, on regarde son statut
             const { data: existant } = await supabaseClient
                 .from("livreurs")
-                .select("id")
+                .select("id, statut")
                 .eq("user_id", userId)
                 .maybeSingle();
 
             if (existant) {
-                window.location.href = "../client/profil.html";
+                if (existant.statut === "approuve") {
+                    // Compte validé par l'admin → accès direct au tableau de bord
+                    window.location.href = "index.html";
+                    return;
+                }
+
+                if (existant.statut === "refuse") {
+                    attenteIcone.textContent = "❌";
+                    attenteTitre.textContent = "Demande refusée";
+                    attenteTexte.textContent = "Ta demande pour devenir livreur n'a pas été validée. Tu peux contacter l'équipe WariKo pour plus d'informations.";
+                } else {
+                    // en_attente (valeur par défaut)
+                    attenteIcone.textContent = "⏳";
+                    attenteTitre.textContent = "Demande en cours de vérification";
+                    attenteTexte.textContent = "L'équipe WariKo vérifie actuellement ta pièce d'identité. Tu seras notifié dès que ton compte livreur sera activé.";
+                }
+
+                attenteBlock.style.display = "block";
+                return;
             }
+
+            // Pas encore de demande → on affiche le formulaire
+            appEl.style.display = "block";
         })();
 
         function previsualiser(inputId, wrapperId, fichier) {
@@ -359,7 +448,7 @@
                 statusMessage.textContent = "Demande envoyée ! Tu seras notifié une fois validée.";
 
                 setTimeout(() => {
-                    window.location.href = "../client/profil.html";
+                    window.location.href = "../client/accueil.html";
                 }, 1500);
 
             } catch (err) {

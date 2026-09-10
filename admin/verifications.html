@@ -55,7 +55,33 @@
         .sous-titre {
             font-size: 13px;
             opacity: 0.75;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+        }
+
+        .type-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .type-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--blanc);
+            opacity: 0.7;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .type-btn.actif {
+            border-color: var(--jaune);
+            color: var(--jaune);
+            opacity: 1;
         }
 
         .onglets {
@@ -97,11 +123,21 @@
             margin-bottom: 10px;
         }
 
+        .verif-card .infos-livreur {
+            font-size: 13px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .verif-card .infos-livreur strong {
+            color: var(--jaune);
+        }
+
         .verif-card img {
             width: 100%;
             border-radius: 10px;
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             background: rgba(255,255,255,0.1);
             min-height: 120px;
             object-fit: contain;
@@ -214,6 +250,11 @@
         </div>
         <p class="sous-titre">Vérification des pièces d'identité</p>
 
+        <div class="type-switch">
+            <div class="type-btn actif" data-type="verif">Boutiques / Prestataires</div>
+            <div class="type-btn" data-type="livreurs">🛵 Livreurs</div>
+        </div>
+
         <div class="onglets">
             <div class="onglet actif" data-statut="en_attente">En attente</div>
             <div class="onglet" data-statut="approuve">Approuvées</div>
@@ -245,13 +286,20 @@
 
         const ADMIN_UID = "895d437b-aa9b-4c68-9f82-11ed30953687";
 
+        // ⚠️ À confirmer : nom du bucket où sont stockées les photos de pièce
+        // d'identité des livreurs (photo1_url / photo2_url). Mets ici le vrai
+        // nom si ce n'est pas "livreurs-photos".
+        const BUCKET_LIVREUR_PHOTOS = "livreurs-photos";
+
         const appEl = document.getElementById("app");
         const accesRefuseEl = document.getElementById("acces-refuse-zone");
         const navEl = document.getElementById("nav-admin");
         const listeEl = document.getElementById("liste-verifications");
         const onglets = document.querySelectorAll(".onglet");
+        const typeBtns = document.querySelectorAll(".type-btn");
 
         let statutActif = "en_attente";
+        let typeActif = "verif"; // "verif" = boutiques/prestataires, "livreurs" = livreurs
 
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -278,9 +326,26 @@
             });
         });
 
+        typeBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                typeBtns.forEach(b => b.classList.remove("actif"));
+                btn.classList.add("actif");
+                typeActif = btn.dataset.type;
+                chargerVerifications();
+            });
+        });
+
         async function chargerVerifications() {
             listeEl.innerHTML = '<p class="empty">Chargement...</p>';
 
+            if (typeActif === "livreurs") {
+                await chargerLivreurs();
+            } else {
+                await chargerVerifsIdentite();
+            }
+        }
+
+        async function chargerVerifsIdentite() {
             const { data, error } = await supabaseClient
                 .from("verifications_identite")
                 .select("*")
@@ -298,19 +363,61 @@
             }
 
             listeEl.innerHTML = data.map(v => `
-                <div class="verif-card" id="carte-${v.user_id}">
+                <div class="verif-card" id="carte-verif-${v.user_id}">
                     <span class="statut-tag ${v.statut}">${libelleStatut(v.statut)}</span>
                     <p class="uid">Utilisateur : ${v.user_id}</p>
                     <div class="chargement-image">Chargement du document...</div>
                     ${v.statut === "en_attente" ? `
                     <div class="actions">
-                        <button class="btn-approuver" onclick="changerStatut('${v.user_id}', 'approuve')">✅ Approuver</button>
-                        <button class="btn-refuser" onclick="changerStatut('${v.user_id}', 'refuse')">❌ Refuser</button>
+                        <button class="btn-approuver" onclick="changerStatutVerif('${v.user_id}', 'approuve')">✅ Approuver</button>
+                        <button class="btn-refuser" onclick="changerStatutVerif('${v.user_id}', 'refuse')">❌ Refuser</button>
                     </div>` : ""}
                 </div>
             `).join("");
 
-            data.forEach(v => afficherImage(v.user_id, v.carte_identite_url));
+            data.forEach(v => afficherImage("carte-verif-" + v.user_id, "identite", v.carte_identite_url));
+        }
+
+        async function chargerLivreurs() {
+            const { data, error } = await supabaseClient
+                .from("livreurs")
+                .select("*")
+                .eq("statut", statutActif)
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                listeEl.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listeEl.innerHTML = '<p class="empty">Aucun livreur ici</p>';
+                return;
+            }
+
+            listeEl.innerHTML = data.map(v => `
+                <div class="verif-card" id="carte-livreur-${v.id}">
+                    <span class="statut-tag ${v.statut}">${libelleStatut(v.statut)}</span>
+                    <div class="infos-livreur">
+                        <div><strong>Nom :</strong> ${v.nom_complet || "—"}</div>
+                        <div><strong>Téléphone :</strong> ${v.telephone || "—"}</div>
+                        <div><strong>Zone :</strong> ${v.zone_couverture || "—"}</div>
+                        <div><strong>Moyen de transport :</strong> ${v.moyen_transport || "—"}</div>
+                    </div>
+                    <div class="chargement-image" id="photo1-${v.id}">Chargement de la pièce (recto)...</div>
+                    <div class="chargement-image" id="photo2-${v.id}">Chargement de la pièce (verso)...</div>
+                    ${v.statut === "en_attente" ? `
+                    <div class="actions">
+                        <button class="btn-approuver" onclick="changerStatutLivreur('${v.id}', 'approuve')">✅ Approuver</button>
+                        <button class="btn-refuser" onclick="changerStatutLivreur('${v.id}', 'refuse')">❌ Refuser</button>
+                    </div>` : ""}
+                </div>
+            `).join("");
+
+            data.forEach(v => {
+                afficherImageParId("photo1-" + v.id, BUCKET_LIVREUR_PHOTOS, v.photo1_url);
+                afficherImageParId("photo2-" + v.id, BUCKET_LIVREUR_PHOTOS, v.photo2_url);
+            });
         }
 
         function libelleStatut(statut) {
@@ -319,20 +426,21 @@
             return "En attente";
         }
 
-        async function afficherImage(userId, chemin) {
-            const carte = document.getElementById("carte-" + userId);
+        async function afficherImage(idCarte, bucket, chemin) {
+            const carte = document.getElementById(idCarte);
             if (!carte) return;
 
+            const zoneImage = carte.querySelector(".chargement-image");
+            if (!zoneImage) return;
+
             if (!chemin) {
-                carte.querySelector(".chargement-image").textContent = "Aucun document.";
+                zoneImage.textContent = "Aucun document.";
                 return;
             }
 
             const { data, error } = await supabaseClient.storage
-                .from("identite")
+                .from(bucket)
                 .createSignedUrl(chemin, 300);
-
-            const zoneImage = carte.querySelector(".chargement-image");
 
             if (error || !data) {
                 zoneImage.textContent = "Impossible de charger le document.";
@@ -345,11 +453,49 @@
             zoneImage.replaceWith(img);
         }
 
-        async function changerStatut(userId, nouveauStatut) {
+        async function afficherImageParId(idZone, bucket, chemin) {
+            const zoneImage = document.getElementById(idZone);
+            if (!zoneImage) return;
+
+            if (!chemin) {
+                zoneImage.textContent = "Aucun document.";
+                return;
+            }
+
+            const { data, error } = await supabaseClient.storage
+                .from(bucket)
+                .createSignedUrl(chemin, 300);
+
+            if (error || !data) {
+                zoneImage.textContent = "Impossible de charger le document.";
+                return;
+            }
+
+            const img = document.createElement("img");
+            img.src = data.signedUrl;
+            img.alt = "Pièce d'identité";
+            zoneImage.replaceWith(img);
+        }
+
+        async function changerStatutVerif(userId, nouveauStatut) {
             const { error } = await supabaseClient
                 .from("verifications_identite")
                 .update({ statut: nouveauStatut })
                 .eq("user_id", userId);
+
+            if (error) {
+                alert("Erreur : " + error.message);
+                return;
+            }
+
+            chargerVerifications();
+        }
+
+        async function changerStatutLivreur(livreurId, nouveauStatut) {
+            const { error } = await supabaseClient
+                .from("livreurs")
+                .update({ statut: nouveauStatut })
+                .eq("id", livreurId);
 
             if (error) {
                 alert("Erreur : " + error.message);

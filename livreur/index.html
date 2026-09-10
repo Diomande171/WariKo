@@ -95,6 +95,12 @@ async function init() {
     return;
   }
 
+  // Accès au dashboard réservé aux livreurs dont l'identité a été validée par l'admin
+  if (livreur.statut !== 'approuve') {
+    window.location.href = 'inscription.html';
+    return;
+  }
+
   monLivreur = livreur;
   await afficherTableauDeBord();
 }

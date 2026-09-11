@@ -13,36 +13,76 @@
 <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
 
 <link rel="stylesheet" href="../style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
-  .header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .avatar { width:52px; height:52px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); flex-shrink:0; border:2px solid var(--jaune); }
-  .header-infos { flex:1; min-width:0; }
-  .nom-livreur { font-family:'Playfair Display',serif; font-size:16px; font-weight:bold; margin:0; }
-  .statut-badge { display:flex; align-items:center; gap:5px; font-size:12px; margin:3px 0; cursor:pointer; }
-  .dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; box-shadow:0 0 5px #4CAF50; }
-  .dot.hors-ligne { background:#888; box-shadow:none; }
-  .note-ligne { font-size:12px; opacity:0.8; }
-  .btn-profil { background:rgba(255,255,255,0.1); color:var(--jaune); border:none; border-radius:16px; padding:7px 12px; font-size:11px; white-space:nowrap; }
+  body { max-width:430px; margin:0 auto; background:#f4f4f7; color:#222; font-family:'Poppins',sans-serif; padding:0 0 90px; }
 
-  .stats-jour { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; margin-bottom:16px; }
-  .stats-jour .label { font-size:12px; opacity:0.7; margin-bottom:10px; }
-  .stats-grille { display:flex; justify-content:space-between; text-align:center; }
-  .stat-item .valeur { font-size:17px; font-weight:bold; color:var(--jaune); }
-  .stat-item .titre { font-size:10.5px; opacity:0.75; margin-top:2px; }
+  .header-top { background:var(--violet-fonce); color:var(--blanc); padding:16px 20px 20px; border-radius:0 0 22px 22px; }
+  .header-ligne1 { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .marque { display:flex; align-items:center; gap:10px; }
+  .marque img { width:34px; height:34px; border-radius:8px; }
+  .marque .nom { font-family:'Playfair Display',serif; font-size:16px; font-weight:800; color:var(--jaune); line-height:1.1; }
+  .marque .slogan { font-size:9.5px; opacity:0.7; }
+  .icones-haut { display:flex; gap:14px; }
+  .icone-bouton { position:relative; background:rgba(255,255,255,0.1); width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; color:var(--blanc); font-size:16px; }
+  .badge-notif { position:absolute; top:-2px; right:-2px; background:#E63946; color:#fff; font-size:9px; font-weight:bold; border-radius:8px; padding:1px 5px; }
 
-  .btn-action { position:relative; width:100%; display:flex; align-items:center; gap:10px; text-align:left; border:none; border-radius:14px; padding:14px 16px; font-size:14px; font-weight:bold; margin-bottom:10px; text-decoration:none; box-sizing:border-box; }
-  .btn-action.principal { background:var(--jaune); color:var(--violet-fonce); border-radius:30px; justify-content:center; }
-  .btn-action.secondaire { background:rgba(255,255,255,0.08); color:var(--blanc); font-weight:600; }
-  .btn-action svg { width:18px; height:18px; flex-shrink:0; }
-  .badge-compteur { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:#E63946; color:#fff; font-size:11px; font-weight:bold; border-radius:10px; padding:2px 7px; }
+  .profil-ligne { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--blanc); }
+  .avatar-mini { width:48px; height:48px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.15); border:2px solid var(--jaune); flex-shrink:0; }
+  .profil-infos { flex:1; min-width:0; }
+  .profil-nom { font-size:15px; font-weight:700; }
+  .profil-role { font-size:11px; opacity:0.7; }
+  .profil-note { font-size:12px; margin-top:2px; }
+  .pill-statut { display:flex; align-items:center; gap:5px; background:rgba(76,175,80,0.15); color:#4CAF50; border-radius:14px; padding:5px 11px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .pill-statut.hors-ligne { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.6); }
+  .pill-statut .dot { width:6px; height:6px; border-radius:50%; background:#4CAF50; }
+  .pill-statut.hors-ligne .dot { background:rgba(255,255,255,0.5); }
 
-  .gains-bloc { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:14px 16px; margin-top:8px; }
-  .gains-haut { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
-  .gains-haut a { color:var(--jaune); font-size:12px; text-decoration:none; }
-  .gains-montant { font-size:19px; font-weight:bold; color:var(--jaune); margin-top:6px; }
-  .gains-souslabel { font-size:11px; opacity:0.7; }
+  .contenu-scroll { padding:16px 16px 0; }
+
+  .stats-bar { display:flex; background:var(--violet-fonce); border-radius:16px; padding:14px 6px; margin-top:-14px; margin-bottom:16px; text-decoration:none; }
+  .stats-item { flex:1; display:flex; align-items:center; gap:9px; padding:0 10px; text-decoration:none; color:var(--blanc); }
+  .stats-item .icone { font-size:18px; }
+  .stats-item .val { font-size:14.5px; font-weight:800; color:var(--jaune); }
+  .stats-item .titre { font-size:10px; opacity:0.75; }
+  .stats-sep { width:1px; background:rgba(255,255,255,0.15); margin:2px 0; }
+  .chevron { margin-left:auto; opacity:0.5; font-size:13px; }
+
+  .promo-bandeau { background:linear-gradient(135deg, var(--violet-fonce), #5a0fae); border-radius:18px; padding:18px; margin-bottom:16px; color:var(--blanc); position:relative; overflow:hidden; }
+  .promo-bandeau h3 { font-size:16px; margin:0 0 4px; line-height:1.3; }
+  .promo-bandeau h3 span { color:var(--jaune); }
+  .promo-bandeau p { font-size:11.5px; opacity:0.8; margin:0 0 14px; max-width:75%; }
+  .btn-promo { position:relative; display:inline-flex; align-items:center; gap:8px; background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:20px; padding:10px 18px; font-size:13px; font-weight:800; text-decoration:none; }
+  .badge-compteur { background:#E63946; color:#fff; font-size:10.5px; font-weight:bold; border-radius:10px; padding:1px 7px; }
+
+  .carte-en-cours { background:var(--blanc); border-radius:16px; padding:15px; margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+  .badge-en-cours { display:inline-block; background:rgba(61,3,122,0.1); color:var(--violet-fonce); font-size:10.5px; font-weight:800; padding:3px 10px; border-radius:10px; margin-bottom:8px; }
+  .en-cours-titre { font-size:14px; font-weight:700; margin-bottom:6px; }
+  .en-cours-adresse { font-size:12px; color:#777; margin-bottom:10px; }
+  .en-cours-bas { display:flex; justify-content:space-between; align-items:center; }
+  .en-cours-details { font-size:11px; color:#999; }
+  .btn-trajet { background:var(--violet-fonce); color:var(--blanc); border:none; border-radius:14px; padding:9px 14px; font-size:12px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:6px; }
+
+  .section-haut { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .section-titre { font-size:14px; font-weight:800; color:#222; }
+  .section-haut a { font-size:12px; color:var(--violet-fonce); font-weight:700; text-decoration:none; }
+
+  .item-livraison { display:flex; align-items:center; gap:12px; background:var(--blanc); border-radius:14px; padding:12px; margin-bottom:10px; text-decoration:none; color:#222; box-shadow:0 1px 6px rgba(0,0,0,0.04); }
+  .item-icone { width:42px; height:42px; border-radius:10px; background:rgba(61,3,122,0.08); display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .item-infos { flex:1; min-width:0; }
+  .item-titre { font-size:12.5px; font-weight:700; }
+  .item-badge { display:inline-block; background:rgba(255,209,0,0.2); color:#a67c00; font-size:9.5px; font-weight:700; padding:1px 7px; border-radius:8px; margin-bottom:3px; }
+  .item-details { font-size:10.5px; color:#999; margin-top:2px; }
+  .item-prix { font-size:13px; font-weight:800; color:var(--violet-fonce); white-space:nowrap; }
+
+  .empty-mini { text-align:center; font-size:12px; color:#999; padding:20px 0; }
+
+  .bandeau-securite { display:flex; align-items:center; gap:12px; background:rgba(61,3,122,0.06); border:1px solid rgba(61,3,122,0.12); border-radius:14px; padding:13px 15px; margin:6px 0 16px; }
+  .bandeau-securite .icone { font-size:20px; }
+  .bandeau-securite .texte-titre { font-size:12px; font-weight:700; color:var(--violet-fonce); }
+  .bandeau-securite .texte-sous { font-size:10.5px; color:#777; }
+
+  .erreur-globale { padding:30px 20px; text-align:center; color:#222; font-size:13px; line-height:1.6; }
+  .erreur-globale button { margin-top:16px; background:var(--violet-fonce); color:var(--blanc); border:none; border-radius:20px; padding:10px 20px; font-weight:bold; font-family:inherit; }
 
   .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
   .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
@@ -52,7 +92,25 @@
 </head>
 <body>
 
-<div id="contenu">Chargement...</div>
+<div id="contenu">
+  <div class="header-top">
+    <div class="header-ligne1">
+      <div class="marque">
+        <img src="../assets/IMG_9862.png" alt="WariKo">
+        <div>
+          <div class="nom">WariKo</div>
+          <div class="slogan">Livraison rapide, clients satisfaits</div>
+        </div>
+      </div>
+      <div class="icones-haut">
+        <a href="#" class="icone-bouton" onclick="pasEncoreDisponible(event)">🔔</a>
+        <a href="../client/messagerie.html" class="icone-bouton">💬</a>
+      </div>
+    </div>
+    <div id="zone-profil-header"><p style="opacity:0.7; font-size:12px;">Chargement...</p></div>
+  </div>
+  <div class="contenu-scroll" id="zone-contenu-bas"></div>
+</div>
 
 <div class="bottom-nav">
   <a href="index.html" class="active">
@@ -74,10 +132,36 @@
 </div>
 
 <script>
+  window.addEventListener('error', function (e) {
+    var c = document.getElementById('contenu');
+    if (c) c.innerHTML = '<div class="erreur-globale">⚠️ Erreur JavaScript.<br><span style="opacity:0.7;font-size:11.5px;">' + e.message + '</span><br><button onclick="location.reload()">Réessayer</button></div>';
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var c = document.getElementById('contenu');
+    if (c) c.innerHTML = '<div class="erreur-globale">⚠️ Erreur (promesse).<br><span style="opacity:0.7;font-size:11.5px;">' + (e.reason && e.reason.message ? e.reason.message : e.reason) + '</span><br><button onclick="location.reload()">Réessayer</button></div>';
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  onerror="document.getElementById('contenu').innerHTML = '&lt;div class=&quot;erreur-globale&quot;&gt;⚠️ La librairie Supabase n\'a pas pu se charger.&lt;br&gt;&lt;span style=&quot;opacity:0.7;font-size:11.5px;&quot;&gt;Vérifie ta connexion internet puis réessaie.&lt;/span&gt;&lt;br&gt;&lt;button onclick=&quot;location.reload()&quot;&gt;Réessayer&lt;/button&gt;&lt;/div&gt;';">
+</script>
+
+<script>
+if (typeof window.supabase === 'undefined') {
+  document.getElementById('contenu').innerHTML = `
+    <div class="erreur-globale">
+      ⚠️ La librairie Supabase n'a pas pu se charger.<br>
+      <span style="opacity:0.7; font-size:11.5px;">Vérifie ta connexion internet puis réessaie.</span><br>
+      <button onclick="location.reload()">Réessayer</button>
+    </div>
+  `;
+} else {
+
 const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
 const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+let currentUser = null;
 let monLivreur = null;
 
 function pasEncoreDisponible(e) {
@@ -85,44 +169,25 @@ function pasEncoreDisponible(e) {
   alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
 }
 
-async function init() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = '../client/connexion.html';
-    return;
-  }
+function afficherErreur(message) {
+  document.getElementById('contenu').innerHTML = `
+    <div class="erreur-globale">
+      ⚠️ Impossible de charger le tableau de bord.<br>
+      <span style="opacity:0.7; font-size:11.5px;">${message}</span><br>
+      <button onclick="location.reload()">Réessayer</button>
+    </div>
+  `;
+}
 
-  const { data: livreur } = await supabase
-    .from('livreurs')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!livreur) {
-    window.location.href = 'inscription.html';
-    return;
-  }
-
-  if (livreur.statut !== 'approuve') {
-    window.location.href = 'inscription.html';
-    return;
-  }
-
-  monLivreur = livreur;
-  await afficherTableauDeBord();
+function avecTimeout(promesse, ms, label) {
+  return Promise.race([
+    promesse,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout après ${ms / 1000}s sur : ${label}`)), ms))
+  ]);
 }
 
 function debutJournee() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
-function debutMois() {
-  const d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+  const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString();
 }
 
 function montantLivraison(l) {
@@ -131,127 +196,161 @@ function montantLivraison(l) {
   return 0;
 }
 
-function formaterTempsTravail() {
-  if (!monLivreur.en_ligne || !monLivreur.en_ligne_depuis) return '0h00';
-  const debut = new Date(monLivreur.en_ligne_depuis);
-  const diffMin = Math.max(0, Math.floor((Date.now() - debut.getTime()) / 60000));
-  const h = Math.floor(diffMin / 60);
-  const m = diffMin % 60;
-  return `${h}h${m.toString().padStart(2, '0')}`;
+async function init() {
+  try {
+    const { data: { user }, error: erreurUser } = await avecTimeout(supabase.auth.getUser(), 8000, 'auth.getUser()');
+    if (erreurUser) { afficherErreur(erreurUser.message); return; }
+    if (!user) { window.location.href = '../client/connexion.html'; return; }
+    currentUser = user;
+
+    const { data: livreur, error: erreurLivreur } = await avecTimeout(
+      supabase.from('livreurs').select('*').eq('user_id', user.id).single(), 8000, 'select livreurs'
+    );
+    if (erreurLivreur) { afficherErreur(erreurLivreur.message); return; }
+    if (!livreur) { window.location.href = 'inscription.html'; return; }
+    if (livreur.statut !== 'approuve') { window.location.href = 'inscription.html'; return; }
+
+    monLivreur = livreur;
+    await afficherTableauDeBord();
+  } catch (e) {
+    afficherErreur(e.message || 'Erreur inconnue');
+  }
 }
 
 async function afficherTableauDeBord() {
-  const contenu = document.getElementById('contenu');
+  let avis = [];
+  try {
+    const r = await avecTimeout(supabase.from('avis_livreurs').select('note').eq('livreur_id', monLivreur.id), 8000, 'avis_livreurs');
+    avis = r.data || [];
+  } catch (e) { avis = []; }
+  const noteMoyenne = avis.length > 0 ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1) : '—';
 
-  const { data: avis } = await supabase
-    .from('avis_livreurs')
-    .select('note')
-    .eq('livreur_id', monLivreur.id);
+  let livraisonsJour = [];
+  try {
+    const r = await avecTimeout(
+      supabase.from('livraisons').select('*').eq('livreur_id', monLivreur.id).eq('statut', 'livree').gte('created_at', debutJournee()),
+      8000, 'livraisons jour'
+    );
+    livraisonsJour = r.data || [];
+  } catch (e) { livraisonsJour = []; }
+  const nbLivraisonsJour = livraisonsJour.length;
+  const gainsJour = livraisonsJour.reduce((s, l) => s + montantLivraison(l), 0);
 
-  const noteMoyenne = avis && avis.length > 0
-    ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)
-    : '—';
-  const nbAvis = avis ? avis.length : 0;
+  let nbNouvellesCourses = 0;
+  try {
+    const r = await avecTimeout(
+      supabase.from('livraisons').select('*', { count: 'exact', head: true }).eq('statut', 'en_attente'),
+      8000, 'nouvelles courses'
+    );
+    nbNouvellesCourses = r.count || 0;
+  } catch (e) { nbNouvellesCourses = 0; }
 
-  const { count: nbLivraisonsTotal } = await supabase
-    .from('livraisons')
-    .select('*', { count: 'exact', head: true })
-    .eq('livreur_id', monLivreur.id)
-    .eq('statut', 'livree');
+  let livraisonsEnCours = [];
+  try {
+    const r = await avecTimeout(
+      supabase.from('livraisons').select('*, boutiques(nom_boutique)').eq('livreur_id', monLivreur.id).in('statut', ['acceptee', 'en_cours']).order('created_at', { ascending: false }),
+      8000, 'livraisons en cours'
+    );
+    livraisonsEnCours = r.data || [];
+  } catch (e) { livraisonsEnCours = []; }
 
-  const { data: livraisonsJour } = await supabase
-    .from('livraisons')
-    .select('*')
-    .eq('livreur_id', monLivreur.id)
-    .eq('statut', 'livree')
-    .gte('created_at', debutJournee());
-
-  const nbLivraisonsJour = livraisonsJour ? livraisonsJour.length : 0;
-  const gainsJour = livraisonsJour ? livraisonsJour.reduce((s, l) => s + montantLivraison(l), 0) : 0;
-
-  const { data: livraisonsMois } = await supabase
-    .from('livraisons')
-    .select('*')
-    .eq('livreur_id', monLivreur.id)
-    .eq('statut', 'livree')
-    .gte('created_at', debutMois());
-
-  const gainsMois = livraisonsMois ? livraisonsMois.reduce((s, l) => s + montantLivraison(l), 0) : 0;
-
-  const { count: nbNouvellesCourses } = await supabase
-    .from('livraisons')
-    .select('*', { count: 'exact', head: true })
-    .eq('statut', 'en_attente');
-
-  const { count: nbEnCours } = await supabase
-    .from('livraisons')
-    .select('*', { count: 'exact', head: true })
-    .eq('livreur_id', monLivreur.id)
-    .in('statut', ['acceptee', 'en_cours']);
-
-  contenu.innerHTML = `
-    <div class="header">
-      <img class="avatar" src="${monLivreur.photo1_url || ''}" onerror="this.style.opacity=0">
-      <div class="header-infos">
-        <p class="nom-livreur">${monLivreur.nom_complet || 'Livreur'}</p>
-        <div class="statut-badge" onclick="basculerStatut()">
-          <span class="dot ${monLivreur.en_ligne ? '' : 'hors-ligne'}"></span>
-          ${monLivreur.en_ligne ? 'En ligne' : 'Hors ligne'}
-        </div>
-        <div class="note-ligne">⭐ ${noteMoyenne} (${nbLivraisonsTotal || 0} livraisons)</div>
+  // --- Header profil ---
+  const avatarUrl = currentUser.user_metadata?.avatar_url || '';
+  document.getElementById('zone-profil-header').innerHTML = `
+    <a href="profil.html" class="profil-ligne">
+      <img class="avatar-mini" src="${avatarUrl}" onerror="this.style.opacity=0">
+      <div class="profil-infos">
+        <div class="profil-nom">${monLivreur.nom_complet || 'Livreur'}</div>
+        <div class="profil-role">Livreur WariKo</div>
+        <div class="profil-note">⭐ ${noteMoyenne} (${avis.length} avis)</div>
       </div>
-      <a class="btn-profil" href="profil.html" style="text-decoration:none; display:inline-block;">Mon profil</a>
-    </div>
+      <span class="pill-statut ${monLivreur.en_ligne ? '' : 'hors-ligne'}" id="pill-statut" onclick="basculerStatut(event)">
+        <span class="dot"></span>${monLivreur.en_ligne ? 'En ligne' : 'Hors ligne'}
+      </span>
+    </a>
+  `;
 
-    <div class="stats-jour">
-      <div class="label">Aujourd'hui</div>
-      <div class="stats-grille">
-        <div class="stat-item">
-          <div class="valeur">${nbLivraisonsJour}</div>
-          <div class="titre">livraisons</div>
-        </div>
-        <div class="stat-item">
-          <div class="valeur">${gainsJour.toLocaleString('fr-FR')} F</div>
-          <div class="titre">gains du jour</div>
-        </div>
-        <div class="stat-item">
-          <div class="valeur">${formaterTempsTravail()}</div>
-          <div class="titre">temps de travail</div>
-        </div>
+  // --- Corps ---
+  const premiereEnCours = livraisonsEnCours[0];
+  const carteEnCoursHtml = premiereEnCours ? `
+    <div class="carte-en-cours">
+      <span class="badge-en-cours">🛵 En cours</span>
+      <div class="en-cours-titre">${premiereEnCours.boutiques?.nom_boutique || (premiereEnCours.demande_id ? 'Livraison de matériel' : 'Livraison')}</div>
+      <div class="en-cours-adresse">📍 ${premiereEnCours.adresse_client || 'Adresse non précisée'}</div>
+      <div class="en-cours-bas">
+        <span class="en-cours-details">${premiereEnCours.distance_km ? premiereEnCours.distance_km + ' km' : ''} ${premiereEnCours.temps_estime_min ? '· ' + premiereEnCours.temps_estime_min + ' min' : ''}</span>
+        <a href="detail-livraison.html?id=${premiereEnCours.id}" class="btn-trajet">Voir le trajet →</a>
       </div>
     </div>
+  ` : '';
 
-    <a href="nouvelles-courses.html" class="btn-action principal">
-      Nouvelles courses
-      ${nbNouvellesCourses > 0 ? `<span class="badge-compteur">${nbNouvellesCourses}</span>` : ''}
-    </a>
-    <a href="nouvelles-courses.html?onglet=en_cours" class="btn-action secondaire">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10h3l2 3v4h-5z"/><circle cx="7" cy="19" r="1.5"/><circle cx="18" cy="19" r="1.5"/></svg>
-      Mes livraisons en cours
-      ${nbEnCours > 0 ? `<span class="badge-compteur">${nbEnCours}</span>` : ''}
-    </a>
-    <a href="historique-livraisons.html" class="btn-action secondaire">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-      Historique des livraisons
-    </a>
+  const listeEnCoursHtml = livraisonsEnCours.length === 0
+    ? '<p class="empty-mini">Aucune livraison en cours pour le moment</p>'
+    : livraisonsEnCours.map(l => `
+      <a href="detail-livraison.html?id=${l.id}" class="item-livraison">
+        <div class="item-icone">${l.demande_id ? '🔧' : '📦'}</div>
+        <div class="item-infos">
+          <span class="item-badge">${l.statut === 'acceptee' ? 'Acceptée' : 'En cours'}</span>
+          <div class="item-titre">${l.boutiques?.nom_boutique || (l.demande_id ? 'Livraison de matériel' : 'Livraison')}</div>
+          <div class="item-details">${l.adresse_client || ''} ${l.distance_km ? '· ' + l.distance_km + ' km' : ''}</div>
+        </div>
+        <div class="item-prix">+${montantLivraison(l).toLocaleString('fr-FR')} F</div>
+      </a>
+    `).join('');
 
-    <div class="gains-bloc">
-      <div class="gains-haut">
-        <span>Mes gains</span>
-        <a href="portefeuille.html">Voir tout</a>
+  document.getElementById('zone-contenu-bas').innerHTML = `
+    <div class="stats-bar">
+      <a href="portefeuille.html" class="stats-item">
+        <span class="icone">💰</span>
+        <div>
+          <div class="val">${gainsJour.toLocaleString('fr-FR')} F</div>
+          <div class="titre">Mes gains du jour</div>
+        </div>
+        <span class="chevron">›</span>
+      </a>
+      <div class="stats-sep"></div>
+      <a href="historique-livraisons.html" class="stats-item">
+        <span class="icone">📦</span>
+        <div>
+          <div class="val">${nbLivraisonsJour}</div>
+          <div class="titre">Livraisons du jour</div>
+        </div>
+        <span class="chevron">›</span>
+      </a>
+    </div>
+
+    <div class="promo-bandeau">
+      <h3>Plus de livraisons,<br><span>plus de gains !</span></h3>
+      <p>Accepte des courses proches de toi et augmente tes gains.</p>
+      <a href="nouvelles-courses.html" class="btn-promo">
+        Voir mes courses
+        ${nbNouvellesCourses > 0 ? `<span class="badge-compteur">${nbNouvellesCourses}</span>` : ''}
+      </a>
+    </div>
+
+    ${carteEnCoursHtml}
+
+    <div class="section-haut">
+      <span class="section-titre">Mes livraisons en cours</span>
+      <a href="nouvelles-courses.html?onglet=en_cours">Voir tout ›</a>
+    </div>
+    ${listeEnCoursHtml}
+
+    <div class="bandeau-securite">
+      <span class="icone">🛡️</span>
+      <div>
+        <div class="texte-titre">Livraison sécurisée</div>
+        <div class="texte-sous">Suis ton itinéraire et reste en contact avec le client.</div>
       </div>
-      <div class="gains-montant">${gainsMois.toLocaleString('fr-FR')} F</div>
-      <div class="gains-souslabel">Ce mois-ci</div>
     </div>
   `;
 }
 
-async function basculerStatut() {
+async function basculerStatut(e) {
+  e.preventDefault();
   const nouveauEnLigne = !monLivreur.en_ligne;
   const updates = { en_ligne: nouveauEnLigne };
-  if (nouveauEnLigne) {
-    updates.en_ligne_depuis = new Date().toISOString();
-  }
+  if (nouveauEnLigne) updates.en_ligne_depuis = new Date().toISOString();
   const { error } = await supabase.from('livreurs').update(updates).eq('id', monLivreur.id);
   if (!error) {
     monLivreur.en_ligne = nouveauEnLigne;
@@ -261,6 +360,8 @@ async function basculerStatut() {
 }
 
 init();
+
+}
 </script>
 </body>
 </html>

@@ -69,7 +69,7 @@
   <h1>Mon profil</h1>
 </div>
 
-<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement...</p></div>
+<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement... (v2)</p></div>
 
 <div class="bottom-nav">
   <a href="index.html">
@@ -123,8 +123,6 @@ async function init() {
     }
     currentUser = user;
 
-    // Sécurité : select filtré par user_id ; RLS empêche de toute façon
-    // de récupérer la ligne d'un autre livreur.
     const { data: livreur, error: erreurLivreur } = await supabase
       .from('livreurs')
       .select('*')
@@ -265,9 +263,6 @@ async function enregistrerProfil(e) {
   const zone = document.getElementById('champ-zone').value.trim();
   const transport = document.getElementById('champ-transport').value;
 
-  // Sécurité : whitelist stricte des colonnes envoyées — jamais statut,
-  // photo1_url, photo2_url ou user_id. Le trigger proteger_statut_livreur()
-  // bloque de toute façon tout changement de statut côté base.
   const { error } = await supabase
     .from('livreurs')
     .update({
@@ -276,7 +271,7 @@ async function enregistrerProfil(e) {
       zone_couverture: zone,
       moyen_transport: transport
     })
-    .eq('user_id', currentUser.id); // jamais .eq('id', ...) avec une valeur venant du client
+    .eq('user_id', currentUser.id);
 
   if (error) {
     alert('Erreur : ' + error.message);

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon profil livreur - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
+
+  .top-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .top-bar a { color:var(--blanc); text-decoration:none; font-size:20px; }
+  .top-bar h1 { font-family:'Playfair Display',serif; font-size:17px; margin:0; }
+
+  .header { display:flex; flex-direction:column; align-items:center; margin-bottom:20px; }
+  .avatar-wrap { position:relative; width:88px; height:88px; margin-bottom:10px; }
+  .avatar { width:88px; height:88px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); border:3px solid var(--jaune); display:block; }
+  .avatar-edit { position:absolute; bottom:0; right:0; background:var(--jaune); color:var(--violet-fonce); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--violet-fonce); cursor:pointer; font-size:13px; }
+  .avatar-edit input { display:none; }
+  .nom-livreur { font-family:'Playfair Display',serif; font-size:18px; font-weight:bold; margin:2px 0; }
+  .membre-depuis { font-size:11.5px; opacity:0.65; }
+
+  .stats-row { display:flex; justify-content:center; gap:26px; margin:14px 0 4px; }
+  .stat-item { text-align:center; }
+  .stat-item .valeur { font-size:16px; font-weight:bold; color:var(--jaune); }
+  .stat-item .titre { font-size:10.5px; opacity:0.75; margin-top:2px; }
+
+  .carte { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; margin-top:18px; }
+  .carte h3 { font-size:13px; color:var(--jaune); margin:0 0 12px; }
+
+  .champ { margin-bottom:14px; }
+  .champ label { display:block; font-size:12px; opacity:0.75; margin-bottom:6px; }
+  .champ input, .champ select { width:100%; box-sizing:border-box; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:11px 12px; color:var(--blanc); font-family:inherit; font-size:13.5px; }
+  .champ input:disabled, .champ select:disabled { opacity:0.6; }
+
+  .btn { width:100%; border:none; border-radius:30px; padding:13px; font-size:14px; font-weight:bold; font-family:inherit; margin-top:6px; cursor:pointer; }
+  .btn-jaune { background:var(--jaune); color:var(--violet-fonce); }
+  .btn-contour { background:transparent; border:2px solid rgba(255,255,255,0.25); color:var(--blanc); }
+  .btn-danger { background:transparent; border:2px solid rgba(255,92,92,0.4); color:#ff5c5c; }
+
+  .msg-confirmation { text-align:center; font-size:12.5px; color:#4CAF50; margin-top:8px; display:none; }
+
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
+  .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
+  .bottom-nav a.active { color:var(--jaune); font-weight:bold; }
+  .bottom-nav svg { width:20px; height:20px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html">←</a>
+  <h1>Mon profil</h1>
+</div>
+
+<div id="contenu">Chargement...</div>
+
+<div class="bottom-nav">
+  <a href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Accueil
+  </a>
+  <a href="nouvelles-courses.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M9 18h4.5l1.5-4h3l2 3"/><path d="M4 14l3-6h4l2 3h2.5"/><path d="M13 8h2.5l1.5 3"/></svg>
+    Livraisons
+  </a>
+  <a href="#" onclick="pasEncoreDisponible(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
+    Portefeuille
+  </a>
+  <a href="profil.html" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    Profil
+  </a>
+</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const BUCKET_AVATARS = 'avatars';
+let currentUser = null;
+let monLivreur = null;
+
+function pasEncoreDisponible(e) {
+  if (e) e.preventDefault();
+  alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
+}
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+  currentUser = user;
+
+  // Sécurité : select filtré par user_id ; RLS "livreur_lit_sa_propre_ligne"
+  // empêche de toute façon de récupérer la ligne d'un autre livreur.
+  const { data: livreur } = await supabase
+    .from('livreurs')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (!livreur) {
+    window.location.href = 'inscription.html';
+    return;
+  }
+  if (livreur.statut !== 'approuve') {
+    window.location.href = 'inscription.html';
+    return;
+  }
+
+  monLivreur = livreur;
+  await afficherProfil();
+}
+
+async function afficherProfil() {
+  const contenu = document.getElementById('contenu');
+
+  const { data: avis } = await supabase
+    .from('avis_livreurs')
+    .select('note')
+    .eq('livreur_id', monLivreur.id);
+
+  const noteMoyenne = avis && avis.length > 0
+    ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)
+    : '—';
+
+  const { count: nbLivraisonsTotal } = await supabase
+    .from('livraisons')
+    .select('*', { count: 'exact', head: true })
+    .eq('livreur_id', monLivreur.id)
+    .eq('statut', 'livree');
+
+  const avatarUrl = currentUser.user_metadata?.avatar_url || '';
+  const dateInscription = monLivreur.created_at
+    ? new Date(monLivreur.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    : '';
+
+  const optionsTransport = ['Moto', 'Vélo', 'Voiture', 'Tricycle', 'À pied'];
+  const optionsHtml = optionsTransport.map(o =>
+    `<option value="${o}" ${monLivreur.moyen_transport === o ? 'selected' : ''}>${o}</option>`
+  ).join('');
+
+  contenu.innerHTML = `
+    <div class="header">
+      <div class="avatar-wrap">
+        <img class="avatar" id="avatar-img" src="${avatarUrl}" onerror="this.style.opacity=0">
+        <label class="avatar-edit">
+          📷
+          <input type="file" accept="image/*" id="input-avatar">
+        </label>
+      </div>
+      <div class="nom-livreur">${monLivreur.nom_complet || 'Livreur'}</div>
+      <div class="membre-depuis">Livreur depuis ${dateInscription}</div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="valeur">⭐ ${noteMoyenne}</div>
+          <div class="titre">note</div>
+        </div>
+        <div class="stat-item">
+          <div class="valeur">${nbLivraisonsTotal || 0}</div>
+          <div class="titre">livraisons</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="carte">
+      <h3>Informations personnelles</h3>
+      <form id="form-profil">
+        <div class="champ">
+          <label>Nom complet</label>
+          <input type="text" id="champ-nom" value="${monLivreur.nom_complet || ''}" required>
+        </div>
+        <div class="champ">
+          <label>Téléphone</label>
+          <input type="tel" id="champ-telephone" value="${monLivreur.telephone || ''}" required>
+        </div>
+        <div class="champ">
+          <label>Zone de couverture</label>
+          <input type="text" id="champ-zone" value="${monLivreur.zone_couverture || ''}" required>
+        </div>
+        <div class="champ">
+          <label>Moyen de transport</label>
+          <select id="champ-transport">${optionsHtml}</select>
+        </div>
+        <button type="submit" class="btn btn-jaune">Enregistrer les modifications</button>
+        <div class="msg-confirmation" id="msg-confirmation">✅ Profil mis à jour</div>
+      </form>
+    </div>
+
+    <button class="btn btn-contour" style="margin-top:14px;" onclick="pasEncoreDisponible()">Voir mes documents (à venir)</button>
+    <button class="btn btn-danger" id="btn-deconnexion">Déconnexion</button>
+  `;
+
+  document.getElementById('form-profil').addEventListener('submit', enregistrerProfil);
+  document.getElementById('input-avatar').addEventListener('change', changerAvatar);
+  document.getElementById('btn-deconnexion').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = '../client/connexion.html';
+  });
+}
+
+async function enregistrerProfil(e) {
+  e.preventDefault();
+
+  const nom = document.getElementById('champ-nom').value.trim();
+  const telephone = document.getElementById('champ-telephone').value.trim();
+  const zone = document.getElementById('champ-zone').value.trim();
+  const transport = document.getElementById('champ-transport').value;
+
+  // Sécurité : whitelist stricte des colonnes envoyées. Impossible d'inclure
+  // statut/photo1_url/photo2_url/user_id ici, même par erreur — et de toute
+  // façon le trigger proteger_statut_livreur() bloquerait tout changement
+  // de statut côté base si jamais un champ caché était ajouté plus tard.
+  const { error } = await supabase
+    .from('livreurs')
+    .update({
+      nom_complet: nom,
+      telephone: telephone,
+      zone_couverture: zone,
+      moyen_transport: transport
+    })
+    .eq('user_id', currentUser.id); // jamais .eq('id', ...) avec une valeur venant du client
+
+  const msg = document.getElementById('msg-confirmation');
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  monLivreur.nom_complet = nom;
+  monLivreur.telephone = telephone;
+  monLivreur.zone_couverture = zone;
+  monLivreur.moyen_transport = transport;
+
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 2500);
+}
+
+async function changerAvatar(e) {
+  const fichier = e.target.files[0];
+  if (!fichier) return;
+
+  const extension = fichier.name.split('.').pop();
+  // Chemin préfixé par l'UID : cohérent avec le pattern déjà utilisé
+  // pour livreurs-identite (empêche d'écraser le fichier d'un autre user
+  // si la policy de bucket est un jour resserrée par dossier).
+  const chemin = `${currentUser.id}/avatar_${Date.now()}.${extension}`;
+
+  const { error: erreurUpload } = await supabase.storage
+    .from(BUCKET_AVATARS)
+    .upload(chemin, fichier, { upsert: true });
+
+  if (erreurUpload) {
+    alert('Erreur upload : ' + erreurUpload.message);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from(BUCKET_AVATARS).getPublicUrl(chemin);
+
+  const { error: erreurUser } = await supabase.auth.updateUser({
+    data: { avatar_url: urlData.publicUrl }
+  });
+
+  if (erreurUser) {
+    alert('Erreur : ' + erreurUser.message);
+    return;
+  }
+
+  document.getElementById('avatar-img').src = urlData.publicUrl;
+  document.getElementById('avatar-img').style.opacity = 1;
+}
+
+init();
+</script>
+</body>
+</html>

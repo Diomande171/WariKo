@@ -13,7 +13,6 @@
 <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
 
 <link rel="stylesheet" href="../style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:0 0 90px; }
 
@@ -70,7 +69,7 @@
   <h1>Mon profil</h1>
 </div>
 
-<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement... (v3)</p></div>
+<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement... (v4)</p></div>
 
 <div class="bottom-nav">
   <a href="index.html">
@@ -92,6 +91,40 @@
 </div>
 
 <script>
+  // Filet de sécurité le plus précoce possible : si une erreur JS se produit
+  // n'importe où, à n'importe quel moment (même avant que le reste du code
+  // n'ait pu s'enregistrer), on l'affiche quand même à l'écran.
+  window.addEventListener('error', function (e) {
+    var c = document.getElementById('contenu');
+    if (c) {
+      c.innerHTML = '<div class="erreur-globale">⚠️ Erreur JavaScript.<br><span style="opacity:0.7;font-size:11.5px;">' + e.message + '</span><br><button onclick="location.reload()">Réessayer</button></div>';
+    }
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var c = document.getElementById('contenu');
+    if (c) {
+      c.innerHTML = '<div class="erreur-globale">⚠️ Erreur (promesse).<br><span style="opacity:0.7;font-size:11.5px;">' + (e.reason && e.reason.message ? e.reason.message : e.reason) + '</span><br><button onclick="location.reload()">Réessayer</button></div>';
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  onerror="document.getElementById('contenu').innerHTML = '&lt;div class=&quot;erreur-globale&quot;&gt;⚠️ La librairie Supabase n\'a pas pu se charger.&lt;br&gt;&lt;span style=&quot;opacity:0.7;font-size:11.5px;&quot;&gt;Vérifie ta connexion internet (Wi-Fi ou données mobiles) puis réessaie.&lt;/span&gt;&lt;br&gt;&lt;button onclick=&quot;location.reload()&quot;&gt;Réessayer&lt;/button&gt;&lt;/div&gt;';">
+</script>
+
+<script>
+if (typeof window.supabase === 'undefined') {
+  // La librairie ne s'est pas chargée (le onerror ci-dessus aura déjà affiché
+  // le message dans la plupart des cas, ceci est une double sécurité).
+  document.getElementById('contenu').innerHTML = `
+    <div class="erreur-globale">
+      ⚠️ La librairie Supabase n'a pas pu se charger.<br>
+      <span style="opacity:0.7; font-size:11.5px;">Vérifie ta connexion internet puis réessaie.</span><br>
+      <button onclick="location.reload()">Réessayer</button>
+    </div>
+  `;
+} else {
+
 const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
 const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -115,9 +148,6 @@ function afficherErreur(message) {
   `;
 }
 
-// Empêche tout blocage silencieux : si une promesse Supabase ne répond pas
-// dans le délai imparti, on force une erreur visible au lieu de rester
-// bloqué sur "Chargement..." indéfiniment.
 function avecTimeout(promesse, ms, label) {
   return Promise.race([
     promesse,
@@ -126,15 +156,6 @@ function avecTimeout(promesse, ms, label) {
     )
   ]);
 }
-
-// Filets de sécurité globaux : si une erreur JS ou une promesse rejetée
-// passe à travers, on l'affiche quand même au lieu de laisser la page figée.
-window.addEventListener('error', (e) => {
-  afficherErreur('Erreur JS : ' + e.message);
-});
-window.addEventListener('unhandledrejection', (e) => {
-  afficherErreur('Promesse rejetée : ' + (e.reason?.message || e.reason));
-});
 
 async function init() {
   try {
@@ -173,15 +194,21 @@ async function init() {
 async function afficherProfil() {
   const contenu = document.getElementById('contenu');
 
-  const { data: avis } = await avecTimeout(
-    supabase.from('avis_livreurs').select('note').eq('livreur_id', monLivreur.id),
-    8000, 'select avis_livreurs'
-  ).catch(() => ({ data: [] }));
+  let avis = [];
+  try {
+    const resultat = await avecTimeout(
+      supabase.from('avis_livreurs').select('note').eq('livreur_id', monLivreur.id),
+      8000, 'select avis_livreurs'
+    );
+    avis = resultat.data || [];
+  } catch (e) {
+    avis = [];
+  }
 
-  const noteMoyenne = avis && avis.length > 0
+  const noteMoyenne = avis.length > 0
     ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)
     : '—';
-  const nbAvis = avis ? avis.length : 0;
+  const nbAvis = avis.length;
 
   const avatarUrl = currentUser.user_metadata?.avatar_url || '';
 
@@ -343,6 +370,8 @@ async function changerAvatar(e) {
 }
 
 init();
+
+}
 </script>
 </body>
 </html>

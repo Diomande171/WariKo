@@ -54,7 +54,8 @@
   .champ input, .champ select { width:100%; box-sizing:border-box; background:#f5f5f7; border:1px solid #ddd; border-radius:10px; padding:11px 12px; color:#222; font-family:inherit; font-size:13.5px; }
 
   .msg-confirmation { text-align:center; font-size:12.5px; color:#1a9e4c; margin-top:8px; display:none; }
-  .erreur-globale { padding:30px 20px; text-align:center; color:var(--blanc); font-size:13px; }
+  .erreur-globale { padding:30px 20px; text-align:center; color:var(--blanc); font-size:13px; line-height:1.6; }
+  .erreur-globale button { margin-top:16px; background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:20px; padding:10px 20px; font-weight:bold; font-family:inherit; }
 
   .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
   .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
@@ -69,7 +70,7 @@
   <h1>Mon profil</h1>
 </div>
 
-<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement... (v2)</p></div>
+<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement... (v3)</p></div>
 
 <div class="bottom-nav">
   <a href="index.html">
@@ -108,14 +109,38 @@ function afficherErreur(message) {
   document.getElementById('contenu').innerHTML = `
     <div class="erreur-globale">
       ⚠️ Impossible de charger le profil.<br>
-      <span style="opacity:0.6; font-size:11px;">${message}</span>
+      <span style="opacity:0.7; font-size:11.5px;">${message}</span><br>
+      <button onclick="location.reload()">Réessayer</button>
     </div>
   `;
 }
 
+// Empêche tout blocage silencieux : si une promesse Supabase ne répond pas
+// dans le délai imparti, on force une erreur visible au lieu de rester
+// bloqué sur "Chargement..." indéfiniment.
+function avecTimeout(promesse, ms, label) {
+  return Promise.race([
+    promesse,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout après ${ms / 1000}s sur : ${label}`)), ms)
+    )
+  ]);
+}
+
+// Filets de sécurité globaux : si une erreur JS ou une promesse rejetée
+// passe à travers, on l'affiche quand même au lieu de laisser la page figée.
+window.addEventListener('error', (e) => {
+  afficherErreur('Erreur JS : ' + e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+  afficherErreur('Promesse rejetée : ' + (e.reason?.message || e.reason));
+});
+
 async function init() {
   try {
-    const { data: { user }, error: erreurUser } = await supabase.auth.getUser();
+    const { data: { user }, error: erreurUser } = await avecTimeout(
+      supabase.auth.getUser(), 8000, 'auth.getUser()'
+    );
     if (erreurUser) { afficherErreur(erreurUser.message); return; }
     if (!user) {
       window.location.href = '../client/connexion.html';
@@ -123,11 +148,10 @@ async function init() {
     }
     currentUser = user;
 
-    const { data: livreur, error: erreurLivreur } = await supabase
-      .from('livreurs')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+    const { data: livreur, error: erreurLivreur } = await avecTimeout(
+      supabase.from('livreurs').select('*').eq('user_id', user.id).single(),
+      8000, 'select livreurs'
+    );
 
     if (erreurLivreur) { afficherErreur(erreurLivreur.message); return; }
     if (!livreur) {
@@ -149,10 +173,10 @@ async function init() {
 async function afficherProfil() {
   const contenu = document.getElementById('contenu');
 
-  const { data: avis } = await supabase
-    .from('avis_livreurs')
-    .select('note')
-    .eq('livreur_id', monLivreur.id);
+  const { data: avis } = await avecTimeout(
+    supabase.from('avis_livreurs').select('note').eq('livreur_id', monLivreur.id),
+    8000, 'select avis_livreurs'
+  ).catch(() => ({ data: [] }));
 
   const noteMoyenne = avis && avis.length > 0
     ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)

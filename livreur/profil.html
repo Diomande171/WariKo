@@ -15,39 +15,46 @@
 <link rel="stylesheet" href="../style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 90px; }
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:0 0 90px; }
 
-  .top-bar { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .top-bar { display:flex; align-items:center; gap:12px; padding:16px 20px 10px; }
   .top-bar a { color:var(--blanc); text-decoration:none; font-size:20px; }
   .top-bar h1 { font-family:'Playfair Display',serif; font-size:17px; margin:0; }
 
-  .header { display:flex; flex-direction:column; align-items:center; margin-bottom:20px; }
-  .avatar-wrap { position:relative; width:88px; height:88px; margin-bottom:10px; }
-  .avatar { width:88px; height:88px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); border:3px solid var(--jaune); display:block; }
-  .avatar-edit { position:absolute; bottom:0; right:0; background:var(--jaune); color:var(--violet-fonce); width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--violet-fonce); cursor:pointer; font-size:13px; }
+  .bandeau-violet { background:var(--violet-fonce); padding:6px 20px 26px; text-align:center; }
+  .avatar-wrap { position:relative; width:96px; height:96px; margin:0 auto 12px; }
+  .avatar { width:96px; height:96px; border-radius:50%; object-fit:cover; background:rgba(255,255,255,0.1); border:3px solid rgba(255,255,255,0.3); display:block; }
+  .avatar-edit { position:absolute; bottom:0; right:0; background:var(--blanc); color:var(--violet-fonce); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--violet-fonce); cursor:pointer; font-size:14px; }
   .avatar-edit input { display:none; }
-  .nom-livreur { font-family:'Playfair Display',serif; font-size:18px; font-weight:bold; margin:2px 0; }
-  .membre-depuis { font-size:11.5px; opacity:0.65; }
+  .nom-livreur { font-family:'Playfair Display',serif; font-size:19px; font-weight:bold; margin:0 0 8px; }
+  .badge-confirme { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:5px 14px; font-size:12px; font-weight:600; margin-bottom:8px; }
+  .note-ligne { font-size:14px; font-weight:700; }
+  .note-ligne .etoile { color:var(--jaune); }
 
-  .stats-row { display:flex; justify-content:center; gap:26px; margin:14px 0 4px; }
-  .stat-item { text-align:center; }
-  .stat-item .valeur { font-size:16px; font-weight:bold; color:var(--jaune); }
-  .stat-item .titre { font-size:10.5px; opacity:0.75; margin-top:2px; }
+  .fiche { background:var(--blanc); color:#222; border-radius:22px 22px 0 0; padding:24px 20px 20px; margin-top:-14px; }
+  .section-titre { font-size:13px; font-weight:700; color:var(--violet-fonce); margin:0 0 12px; }
+  .section-titre.espace { margin-top:22px; }
 
-  .carte { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px; margin-top:18px; }
-  .carte h3 { font-size:13px; color:var(--jaune); margin:0 0 12px; }
+  .ligne-info { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid #eee; font-size:13px; }
+  .ligne-info:last-child { border-bottom:none; }
+  .ligne-info .gauche { display:flex; align-items:center; gap:8px; color:#777; }
+  .ligne-info .droite { font-weight:600; color:#222; text-align:right; }
+
+  .btn { width:100%; border:none; border-radius:30px; padding:14px; font-size:14px; font-weight:bold; font-family:inherit; margin-top:22px; cursor:pointer; }
+  .btn-violet { background:var(--violet-fonce); color:var(--blanc); }
+  .btn-jaune { background:var(--jaune); color:var(--violet-fonce); }
+  .btn-danger { background:transparent; border:2px solid #ff5c5c; color:#ff5c5c; margin-top:10px; }
+
+  .zone-edition { display:none; }
+  .zone-edition.visible { display:block; }
+  .zone-lecture.cachee { display:none; }
 
   .champ { margin-bottom:14px; }
-  .champ label { display:block; font-size:12px; opacity:0.75; margin-bottom:6px; }
-  .champ input, .champ select { width:100%; box-sizing:border-box; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:11px 12px; color:var(--blanc); font-family:inherit; font-size:13.5px; }
-  .champ input:disabled, .champ select:disabled { opacity:0.6; }
+  .champ label { display:block; font-size:12px; color:#777; margin-bottom:6px; }
+  .champ input, .champ select { width:100%; box-sizing:border-box; background:#f5f5f7; border:1px solid #ddd; border-radius:10px; padding:11px 12px; color:#222; font-family:inherit; font-size:13.5px; }
 
-  .btn { width:100%; border:none; border-radius:30px; padding:13px; font-size:14px; font-weight:bold; font-family:inherit; margin-top:6px; cursor:pointer; }
-  .btn-jaune { background:var(--jaune); color:var(--violet-fonce); }
-  .btn-contour { background:transparent; border:2px solid rgba(255,255,255,0.25); color:var(--blanc); }
-  .btn-danger { background:transparent; border:2px solid rgba(255,92,92,0.4); color:#ff5c5c; }
-
-  .msg-confirmation { text-align:center; font-size:12.5px; color:#4CAF50; margin-top:8px; display:none; }
+  .msg-confirmation { text-align:center; font-size:12.5px; color:#1a9e4c; margin-top:8px; display:none; }
+  .erreur-globale { padding:30px 20px; text-align:center; color:var(--blanc); font-size:13px; }
 
   .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-around; padding:9px 0; }
   .bottom-nav a { display:flex; flex-direction:column; align-items:center; gap:3px; color:rgba(255,255,255,0.6); text-decoration:none; font-size:9.5px; }
@@ -62,7 +69,7 @@
   <h1>Mon profil</h1>
 </div>
 
-<div id="contenu">Chargement...</div>
+<div id="contenu"><p style="text-align:center; padding:40px 20px; opacity:0.7;">Chargement...</p></div>
 
 <div class="bottom-nav">
   <a href="index.html">
@@ -73,7 +80,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M9 18h4.5l1.5-4h3l2 3"/><path d="M4 14l3-6h4l2 3h2.5"/><path d="M13 8h2.5l1.5 3"/></svg>
     Livraisons
   </a>
-  <a href="#" onclick="pasEncoreDisponible(event)">
+  <a href="portefeuille.html">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="7" cy="14" r="1"/></svg>
     Portefeuille
   </a>
@@ -97,33 +104,48 @@ function pasEncoreDisponible(e) {
   alert('🚧 Cette fonctionnalité n\'est pas encore disponible.');
 }
 
+function afficherErreur(message) {
+  document.getElementById('contenu').innerHTML = `
+    <div class="erreur-globale">
+      ⚠️ Impossible de charger le profil.<br>
+      <span style="opacity:0.6; font-size:11px;">${message}</span>
+    </div>
+  `;
+}
+
 async function init() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    window.location.href = '../client/connexion.html';
-    return;
-  }
-  currentUser = user;
+  try {
+    const { data: { user }, error: erreurUser } = await supabase.auth.getUser();
+    if (erreurUser) { afficherErreur(erreurUser.message); return; }
+    if (!user) {
+      window.location.href = '../client/connexion.html';
+      return;
+    }
+    currentUser = user;
 
-  // Sécurité : select filtré par user_id ; RLS "livreur_lit_sa_propre_ligne"
-  // empêche de toute façon de récupérer la ligne d'un autre livreur.
-  const { data: livreur } = await supabase
-    .from('livreurs')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
+    // Sécurité : select filtré par user_id ; RLS empêche de toute façon
+    // de récupérer la ligne d'un autre livreur.
+    const { data: livreur, error: erreurLivreur } = await supabase
+      .from('livreurs')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-  if (!livreur) {
-    window.location.href = 'inscription.html';
-    return;
-  }
-  if (livreur.statut !== 'approuve') {
-    window.location.href = 'inscription.html';
-    return;
-  }
+    if (erreurLivreur) { afficherErreur(erreurLivreur.message); return; }
+    if (!livreur) {
+      window.location.href = 'inscription.html';
+      return;
+    }
+    if (livreur.statut !== 'approuve') {
+      window.location.href = 'inscription.html';
+      return;
+    }
 
-  monLivreur = livreur;
-  await afficherProfil();
+    monLivreur = livreur;
+    await afficherProfil();
+  } catch (e) {
+    afficherErreur(e.message || 'Erreur inconnue');
+  }
 }
 
 async function afficherProfil() {
@@ -137,17 +159,9 @@ async function afficherProfil() {
   const noteMoyenne = avis && avis.length > 0
     ? (avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)
     : '—';
-
-  const { count: nbLivraisonsTotal } = await supabase
-    .from('livraisons')
-    .select('*', { count: 'exact', head: true })
-    .eq('livreur_id', monLivreur.id)
-    .eq('statut', 'livree');
+  const nbAvis = avis ? avis.length : 0;
 
   const avatarUrl = currentUser.user_metadata?.avatar_url || '';
-  const dateInscription = monLivreur.created_at
-    ? new Date(monLivreur.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-    : '';
 
   const optionsTransport = ['Moto', 'Vélo', 'Voiture', 'Tricycle', 'À pied'];
   const optionsHtml = optionsTransport.map(o =>
@@ -155,7 +169,7 @@ async function afficherProfil() {
   ).join('');
 
   contenu.innerHTML = `
-    <div class="header">
+    <div class="bandeau-violet">
       <div class="avatar-wrap">
         <img class="avatar" id="avatar-img" src="${avatarUrl}" onerror="this.style.opacity=0">
         <label class="avatar-edit">
@@ -164,48 +178,77 @@ async function afficherProfil() {
         </label>
       </div>
       <div class="nom-livreur">${monLivreur.nom_complet || 'Livreur'}</div>
-      <div class="membre-depuis">Livreur depuis ${dateInscription}</div>
+      <div class="badge-confirme">🛡️ Livreur confirmé</div>
+      <div class="note-ligne"><span class="etoile">★</span> ${noteMoyenne} (${nbAvis} avis)</div>
+    </div>
 
-      <div class="stats-row">
-        <div class="stat-item">
-          <div class="valeur">⭐ ${noteMoyenne}</div>
-          <div class="titre">note</div>
+    <div class="fiche">
+
+      <div class="zone-lecture" id="zone-lecture">
+        <div class="section-titre">Informations personnelles</div>
+        <div class="ligne-info">
+          <span class="gauche">👤 Nom</span>
+          <span class="droite">${monLivreur.nom_complet || '—'}</span>
         </div>
-        <div class="stat-item">
-          <div class="valeur">${nbLivraisonsTotal || 0}</div>
-          <div class="titre">livraisons</div>
+        <div class="ligne-info">
+          <span class="gauche">📞 Téléphone</span>
+          <span class="droite">${monLivreur.telephone || '—'}</span>
         </div>
+        <div class="ligne-info">
+          <span class="gauche">✉️ Email</span>
+          <span class="droite">${currentUser.email || '—'}</span>
+        </div>
+
+        <div class="section-titre espace">Informations de livraison</div>
+        <div class="ligne-info">
+          <span class="gauche">🛵 Véhicule</span>
+          <span class="droite">${monLivreur.moyen_transport || '—'}</span>
+        </div>
+        <div class="ligne-info">
+          <span class="gauche">📍 Zone d'activité</span>
+          <span class="droite">${monLivreur.zone_couverture || '—'}</span>
+        </div>
+
+        <button class="btn btn-violet" id="btn-ouvrir-edition">Modifier mon profil</button>
+        <button class="btn btn-danger" id="btn-deconnexion">Déconnexion</button>
       </div>
-    </div>
 
-    <div class="carte">
-      <h3>Informations personnelles</h3>
-      <form id="form-profil">
-        <div class="champ">
-          <label>Nom complet</label>
-          <input type="text" id="champ-nom" value="${monLivreur.nom_complet || ''}" required>
-        </div>
-        <div class="champ">
-          <label>Téléphone</label>
-          <input type="tel" id="champ-telephone" value="${monLivreur.telephone || ''}" required>
-        </div>
-        <div class="champ">
-          <label>Zone de couverture</label>
-          <input type="text" id="champ-zone" value="${monLivreur.zone_couverture || ''}" required>
-        </div>
-        <div class="champ">
-          <label>Moyen de transport</label>
-          <select id="champ-transport">${optionsHtml}</select>
-        </div>
-        <button type="submit" class="btn btn-jaune">Enregistrer les modifications</button>
-        <div class="msg-confirmation" id="msg-confirmation">✅ Profil mis à jour</div>
-      </form>
-    </div>
+      <div class="zone-edition" id="zone-edition">
+        <div class="section-titre">Modifier mes informations</div>
+        <form id="form-profil">
+          <div class="champ">
+            <label>Nom complet</label>
+            <input type="text" id="champ-nom" value="${monLivreur.nom_complet || ''}" required>
+          </div>
+          <div class="champ">
+            <label>Téléphone</label>
+            <input type="tel" id="champ-telephone" value="${monLivreur.telephone || ''}" required>
+          </div>
+          <div class="champ">
+            <label>Zone de couverture</label>
+            <input type="text" id="champ-zone" value="${monLivreur.zone_couverture || ''}" required>
+          </div>
+          <div class="champ">
+            <label>Véhicule</label>
+            <select id="champ-transport">${optionsHtml}</select>
+          </div>
+          <button type="submit" class="btn btn-jaune">Enregistrer</button>
+          <div class="msg-confirmation" id="msg-confirmation">✅ Profil mis à jour</div>
+        </form>
+        <button class="btn btn-violet" id="btn-annuler-edition" style="background:transparent; border:2px solid var(--violet-fonce); color:var(--violet-fonce);">Annuler</button>
+      </div>
 
-    <button class="btn btn-contour" style="margin-top:14px;" onclick="pasEncoreDisponible()">Voir mes documents (à venir)</button>
-    <button class="btn btn-danger" id="btn-deconnexion">Déconnexion</button>
+    </div>
   `;
 
+  document.getElementById('btn-ouvrir-edition').addEventListener('click', () => {
+    document.getElementById('zone-lecture').classList.add('cachee');
+    document.getElementById('zone-edition').classList.add('visible');
+  });
+  document.getElementById('btn-annuler-edition').addEventListener('click', () => {
+    document.getElementById('zone-edition').classList.remove('visible');
+    document.getElementById('zone-lecture').classList.remove('cachee');
+  });
   document.getElementById('form-profil').addEventListener('submit', enregistrerProfil);
   document.getElementById('input-avatar').addEventListener('change', changerAvatar);
   document.getElementById('btn-deconnexion').addEventListener('click', async () => {
@@ -222,10 +265,9 @@ async function enregistrerProfil(e) {
   const zone = document.getElementById('champ-zone').value.trim();
   const transport = document.getElementById('champ-transport').value;
 
-  // Sécurité : whitelist stricte des colonnes envoyées. Impossible d'inclure
-  // statut/photo1_url/photo2_url/user_id ici, même par erreur — et de toute
-  // façon le trigger proteger_statut_livreur() bloquerait tout changement
-  // de statut côté base si jamais un champ caché était ajouté plus tard.
+  // Sécurité : whitelist stricte des colonnes envoyées — jamais statut,
+  // photo1_url, photo2_url ou user_id. Le trigger proteger_statut_livreur()
+  // bloque de toute façon tout changement de statut côté base.
   const { error } = await supabase
     .from('livreurs')
     .update({
@@ -236,7 +278,6 @@ async function enregistrerProfil(e) {
     })
     .eq('user_id', currentUser.id); // jamais .eq('id', ...) avec une valeur venant du client
 
-  const msg = document.getElementById('msg-confirmation');
   if (error) {
     alert('Erreur : ' + error.message);
     return;
@@ -247,8 +288,8 @@ async function enregistrerProfil(e) {
   monLivreur.zone_couverture = zone;
   monLivreur.moyen_transport = transport;
 
-  msg.style.display = 'block';
-  setTimeout(() => { msg.style.display = 'none'; }, 2500);
+  await afficherProfil();
+  document.getElementById('msg-confirmation').style.display = 'block';
 }
 
 async function changerAvatar(e) {
@@ -256,9 +297,6 @@ async function changerAvatar(e) {
   if (!fichier) return;
 
   const extension = fichier.name.split('.').pop();
-  // Chemin préfixé par l'UID : cohérent avec le pattern déjà utilisé
-  // pour livreurs-identite (empêche d'écraser le fichier d'un autre user
-  // si la policy de bucket est un jour resserrée par dossier).
   const chemin = `${currentUser.id}/avatar_${Date.now()}.${extension}`;
 
   const { error: erreurUpload } = await supabase.storage

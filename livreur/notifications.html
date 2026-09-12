@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing:border-box; }
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:0 0 40px; }
+
+  .en-tete { position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:12px; padding:16px; background:var(--violet-fonce); border-bottom:1px solid rgba(255,255,255,0.08); }
+  .btn-retour { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; color:var(--blanc); text-decoration:none; font-size:17px; flex-shrink:0; }
+  .en-tete h1 { font-family:'Playfair Display', serif; font-size:18px; color:var(--jaune); margin:0; }
+
+  .liste { padding:8px 16px; }
+  .item-notif { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06); text-decoration:none; color:var(--blanc); }
+  .item-notif.non-lu { background:rgba(255,209,0,0.04); }
+  .icone-notif { width:38px; height:38px; border-radius:12px; background:rgba(255,209,0,0.1); color:var(--jaune); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:17px; }
+  .item-corps { flex:1; min-width:0; }
+  .item-titre { font-size:13.5px; font-weight:700; margin-bottom:2px; }
+  .item-message { font-size:12px; opacity:0.75; line-height:1.4; }
+  .item-heure { font-size:10.5px; opacity:0.5; margin-top:5px; }
+  .point-non-lu { width:7px; height:7px; border-radius:50%; background:var(--jaune); flex-shrink:0; margin-top:6px; }
+
+  .vide { text-align:center; padding:70px 24px; opacity:0.55; font-size:13px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .vide .icone-vide { font-size:34px; opacity:0.5; }
+</style>
+</head>
+<body>
+
+<div class="en-tete">
+  <a class="btn-retour" href="index.html">←</a>
+  <h1>Notifications</h1>
+</div>
+
+<div id="contenu">
+  <div class="vide"><span class="icone-vide">🔔</span>Chargement...</div>
+</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function heureRelative(dateStr) {
+  const d = new Date(dateStr);
+  const auj = new Date();
+  const estAujourdhui = d.toDateString() === auj.toDateString();
+  const heure = d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  return (estAujourdhui ? "Aujourd'hui" : d.toLocaleDateString('fr-FR')) + ' · ' + heure;
+}
+
+async function init() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data: notifs } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .ilike('lien', '%livreur%')
+    .order('created_at', { ascending: false });
+
+  const contenu = document.getElementById('contenu');
+
+  if (!notifs || notifs.length === 0) {
+    contenu.innerHTML = '<div class="vide"><span class="icone-vide">🔔</span>Aucune notification de livraison pour le moment.</div>';
+    return;
+  }
+
+  contenu.innerHTML = `<div class="liste">${notifs.map(n => `
+    <a class="item-notif ${n.lu ? '' : 'non-lu'}" href="${n.lien || 'index.html'}">
+      <div class="icone-notif">🛵</div>
+      <div class="item-corps">
+        <div class="item-titre">${escapeHTML(n.titre)}</div>
+        <div class="item-message">${escapeHTML(n.message)}</div>
+        <div class="item-heure">${heureRelative(n.created_at)}</div>
+      </div>
+      ${n.lu ? '' : '<span class="point-non-lu"></span>'}
+    </a>
+  `).join('')}</div>`;
+
+  const idsNonLus = notifs.filter(n => !n.lu).map(n => n.id);
+  if (idsNonLus.length > 0) {
+    await supabase.from('notifications').update({ lu: true }).in('id', idsNonLus);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

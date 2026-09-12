@@ -57,11 +57,14 @@
   .badge.acceptee { background:rgba(76,175,80,0.18); color:#8fd98f; }
   .badge.encours { background:rgba(33,150,243,0.18); color:#8fc8f5; }
 
-  .actions { display:flex; gap:8px; margin-top:2px; }
-  .actions button, .actions a { flex:1; padding:10px; border-radius:10px; border:none; font-size:12px; font-weight:600; text-align:center; text-decoration:none; }
-  .btn-progresser { background:rgba(255,255,255,0.12); color:var(--blanc); }
+  .actions { display:flex; flex-direction:column; gap:8px; margin-top:2px; }
+  .actions button, .actions a { padding:10px; border-radius:10px; border:none; font-size:12px; font-weight:600; text-align:center; text-decoration:none; }
+  .btn-progresser { background:rgba(255,255,255,0.12); color:var(--blanc); width:100%; }
   .btn-progresser:active { background:rgba(255,255,255,0.18); }
+  .ligne-contacts { display:flex; gap:8px; }
+  .ligne-contacts a { flex:1; }
   .btn-contacter { background:rgba(255,209,0,0.08); color:var(--jaune); border:1px solid rgba(255,209,0,0.4); }
+  .btn-contacter-pro { background:rgba(100,181,246,0.08); color:#8fc8f5; border:1px solid rgba(100,181,246,0.4); }
 
   .vide { text-align:center; opacity:0.55; font-size:13px; padding:50px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; }
   .vide .icone-vide { font-size:34px; opacity:0.5; }
@@ -346,7 +349,10 @@ function carteEnCours(l, nbArticles) {
       <span class="badge ${badgeClasse}">${badgeTexte}</span>
       <div class="actions">
         ${boutonAction}
-        <a class="btn-contacter" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id}">Contacter</a>
+        <div class="ligne-contacts">
+          <a class="btn-contacter" href="messagerie.html?livraison=${l.id}&avec=client">💬 Client</a>
+          <a class="btn-contacter-pro" href="messagerie.html?livraison=${l.id}&avec=pro">💬 ${type === 'prestation' ? 'Prestataire' : 'Vendeur'}</a>
+        </div>
       </div>
     </div>
   `;

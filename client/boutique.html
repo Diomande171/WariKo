@@ -322,6 +322,90 @@
             opacity: 0.5;
         }
 
+        .avis-reponse {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-left: 3px solid var(--jaune);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .avis-reponse-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--jaune);
+            margin-bottom: 4px;
+        }
+
+        .avis-reponse-texte {
+            font-size: 12.5px;
+            color: var(--blanc);
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .avis-repondre-btn {
+            margin-top: 10px;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--blanc);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-family: inherit;
+        }
+
+        .avis-reponse-form {
+            margin-top: 10px;
+        }
+
+        .avis-reponse-form textarea {
+            width: 100%;
+            min-height: 60px;
+            border-radius: 10px;
+            border: none;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 12.5px;
+            resize: vertical;
+            background: var(--blanc);
+            color: var(--violet-fonce);
+        }
+
+        .avis-reponse-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .avis-reponse-actions button {
+            flex: 1;
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 11.5px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .avis-reponse-envoyer {
+            background: var(--jaune);
+            color: var(--violet-fonce);
+        }
+
+        .avis-reponse-annuler {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            color: var(--blanc);
+        }
+
+        .statut-reponse {
+            margin-top: 6px;
+            font-size: 11px;
+            text-align: center;
+        }
+
         .avis-cta {
             background: rgba(255, 255, 255, 0.06);
             border-radius: 14px;
@@ -853,7 +937,6 @@
                 return;
             }
 
-            // Position obligatoire avant tout envoi de commande
             let position;
             try {
                 statutPanier.style.color = "#FFFFFF";
@@ -1071,6 +1154,43 @@
             return html;
         }
 
+        function templateAvisItem(a, reponse) {
+            const peutRepondre = estProprietaire && !reponse;
+
+            const boutonRepondre = peutRepondre
+                ? `<button class="avis-repondre-btn" data-avis="${a.id}">Répondre</button>`
+                : "";
+
+            const formulaireReponse = peutRepondre ? `
+                <div class="avis-reponse-form" id="reponseForm-${a.id}" style="display:none;">
+                    <textarea id="reponseTexte-${a.id}" placeholder="Réponds à cet avis..."></textarea>
+                    <div class="avis-reponse-actions">
+                        <button class="avis-reponse-annuler" data-annuler="${a.id}">Annuler</button>
+                        <button class="avis-reponse-envoyer" data-envoyer="${a.id}">Envoyer</button>
+                    </div>
+                    <p class="statut-reponse" id="statutReponse-${a.id}"></p>
+                </div>
+            ` : "";
+
+            const blocReponse = reponse ? `
+                <div class="avis-reponse">
+                    <div class="avis-reponse-label">Réponse de la boutique</div>
+                    <div class="avis-reponse-texte">${reponse.reponse}</div>
+                </div>
+            ` : "";
+
+            return `
+                <div class="avis-item" data-avis-id="${a.id}">
+                    <span class="avis-etoiles">${afficherEtoiles(a.note)}</span>
+                    ${a.commentaire ? `<div class="avis-commentaire">${a.commentaire}</div>` : ""}
+                    <div class="avis-date">${new Date(a.created_at).toLocaleDateString("fr-FR")}</div>
+                    ${blocReponse}
+                    ${boutonRepondre}
+                    ${formulaireReponse}
+                </div>
+            `;
+        }
+
         async function chargerAvis() {
             const listeAvis = document.getElementById("listeAvis");
             const avisResume = document.getElementById("avisResume");
@@ -1080,7 +1200,7 @@
 
             const { data, error } = await supabaseClient
                 .from("avis")
-                .select("note, commentaire, created_at")
+                .select("id, note, commentaire, created_at")
                 .eq("cible_type", "boutique")
                 .eq("cible_id", String(boutiqueId))
                 .order("created_at", { ascending: false });
@@ -1113,13 +1233,68 @@
                 `;
             }
 
-            listeAvis.innerHTML = data.map(a => `
-                <div class="avis-item">
-                    <span class="avis-etoiles">${afficherEtoiles(a.note)}</span>
-                    ${a.commentaire ? `<div class="avis-commentaire">${a.commentaire}</div>` : ""}
-                    <div class="avis-date">${new Date(a.created_at).toLocaleDateString("fr-FR")}</div>
-                </div>
-            `).join("");
+            let reponses = {};
+            const { data: repData } = await supabaseClient
+                .from("avis_reponses")
+                .select("*")
+                .in("avis_id", data.map(a => a.id));
+
+            (repData || []).forEach(r => { reponses[r.avis_id] = r; });
+
+            listeAvis.innerHTML = data.map(a => templateAvisItem(a, reponses[a.id])).join("");
+        }
+
+        document.getElementById("listeAvis").addEventListener("click", (e) => {
+            const btnRep = e.target.closest("button[data-avis]");
+            if (btnRep) {
+                document.getElementById("reponseForm-" + btnRep.dataset.avis).style.display = "block";
+                btnRep.style.display = "none";
+                return;
+            }
+
+            const btnAnnuler = e.target.closest("button[data-annuler]");
+            if (btnAnnuler) {
+                const id = btnAnnuler.dataset.annuler;
+                document.getElementById("reponseForm-" + id).style.display = "none";
+                const boutonRepondre = document.querySelector(`button[data-avis="${id}"]`);
+                if (boutonRepondre) boutonRepondre.style.display = "block";
+                return;
+            }
+
+            const btnEnvoyer = e.target.closest("button[data-envoyer]");
+            if (btnEnvoyer) {
+                envoyerReponse(btnEnvoyer.dataset.envoyer);
+                return;
+            }
+        });
+
+        async function envoyerReponse(avisId) {
+            const texte = document.getElementById("reponseTexte-" + avisId).value.trim();
+            const statutEl = document.getElementById("statutReponse-" + avisId);
+
+            if (!texte) {
+                statutEl.style.color = "#FFD6D6";
+                statutEl.textContent = "Écris une réponse avant d'envoyer";
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from("avis_reponses")
+                .insert({
+                    avis_id: avisId,
+                    reponse: texte,
+                    reponse_par: utilisateurActuel.id
+                });
+
+            if (error) {
+                statutEl.style.color = "#FFD6D6";
+                statutEl.textContent = "Erreur : " + error.message;
+                return;
+            }
+
+            statutEl.style.color = "#D6FFD6";
+            statutEl.textContent = "Réponse publiée ✓";
+            setTimeout(() => chargerAvis(), 800);
         }
 
         async function initialiserAvis() {
@@ -1132,7 +1307,6 @@
                 return;
             }
 
-            // Le client a-t-il déjà une commande livrée pour cette boutique ?
             const { data: commandeLivree } = await supabaseClient
                 .from("commandes")
                 .select("id")
@@ -1147,7 +1321,6 @@
                 return;
             }
 
-            // A-t-il déjà laissé un avis ?
             const { data: avisExistant } = await supabaseClient
                 .from("avis")
                 .select("id")

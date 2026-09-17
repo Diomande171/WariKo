@@ -38,6 +38,7 @@
   .btn-media { background: rgba(255,255,255,0.1); color: var(--jaune); border:none; border-radius:50%; width:44px; height:44px; font-size:18px; flex-shrink:0; }
   .conv-item { display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); text-decoration:none; color: var(--blanc); }
   .conv-avatar { width:44px; height:44px; border-radius:50%; background: var(--jaune); color: var(--violet-fonce); display:flex; align-items:center; justify-content:center; font-weight:bold; }
+  .conv-avatar.livraison { background: rgba(255,255,255,0.1); color: var(--jaune); font-size:18px; }
   .conv-info h4 { margin:0; font-size:14px; }
   .conv-info p { margin:2px 0 0; font-size:12px; opacity:0.7; }
   .vide { text-align:center; padding:40px 20px; opacity:0.6; font-size:14px; }
@@ -111,6 +112,8 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const params = new URLSearchParams(window.location.search);
 const boutiqueId = params.get('boutique');
+const livraisonId = params.get('livraison');
+const avecParam = params.get('avec');
 
 const navHTML = `
   <nav class="bottom-nav">
@@ -166,6 +169,12 @@ function contientNumero(texte) {
   return /\d{7,}/.test(nettoye);
 }
 
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 async function init() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -173,12 +182,16 @@ async function init() {
     return;
   }
 
-  if (boutiqueId) {
+  if (livraisonId && avecParam) {
+    await chargerConversationLivraison(user, livraisonId, avecParam);
+  } else if (boutiqueId) {
     await chargerConversation(user, boutiqueId);
   } else {
     await chargerBoiteReception(user);
   }
 }
+
+/* ================= CONVERSATIONS BOUTIQUE (client <-> vendeur) — inchangé ================= */
 
 async function chargerConversation(user, boutiqueId) {
   const { data: boutique, error } = await supabase
@@ -279,12 +292,6 @@ async function afficherMessages(vendeurId, clientId, boutiqueId, currentUserId) 
   }
 }
 
-function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
 async function envoyerMessage(vendeurId, clientId, boutiqueId) {
   const champ = document.getElementById('champ-message');
   const texte = champ.value.trim();
@@ -359,6 +366,196 @@ async function envoyerMedia(vendeurId, clientId, boutiqueId) {
   await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
 }
 
+/* ================= CONVERSATIONS LIVRAISON (vendeur <-> livreur / client <-> livreur) — nouveau ================= */
+
+async function chargerConversationLivraison(user, livraisonId, avec) {
+  const { data: livraison, error } = await supabase
+    .from('livraisons')
+    .select('id, livreur_id')
+    .eq('id', livraisonId)
+    .single();
+
+  if (error || !livraison) {
+    document.getElementById('contenu').innerHTML = '<p class="vide">Livraison introuvable.</p>';
+    return;
+  }
+
+  const livreurId = livraison.livreur_id;
+  if (!livreurId) {
+    document.getElementById('contenu').innerHTML = '<p class="vide">Aucun livreur assigné pour le moment.</p>';
+    return;
+  }
+
+  const { data: livreur } = await supabase
+    .from('livreurs')
+    .select('nom_complet')
+    .eq('id', livreurId)
+    .single();
+
+  document.getElementById('titre-chat').textContent = (livreur ? livreur.nom_complet : 'Livreur') + ' (livreur)';
+
+  const vendeurId = avec === 'pro' ? user.id : '';
+  const clientId = avec === 'client' ? user.id : '';
+
+  document.getElementById('contenu').innerHTML = `
+    <p class="avertissement">🔒 Le partage de numéro de téléphone est interdit pour votre sécurité.</p>
+    <div id="messages"></div>
+    <p class="envoi-cours" id="envoi-cours" style="display:none;">Envoi en cours...</p>
+    <div class="zone-saisie">
+      <button class="btn-media" onclick="document.getElementById('fichier-media').click()">📷</button>
+      <input type="file" id="fichier-media" accept="image/*,video/*" style="display:none;" onchange="envoyerMediaLivraison('${livraisonId}','${avec}','${livreurId}','${vendeurId}','${clientId}')">
+      <input type="text" id="champ-message" placeholder="Écrire un message...">
+      <button onclick="envoyerMessageLivraison('${livraisonId}','${avec}','${livreurId}','${vendeurId}','${clientId}')">➤</button>
+    </div>
+  `;
+
+  await afficherMessagesLivraison(livraisonId, avec, user.id);
+
+  supabase
+    .channel('messages-livraison-' + livraisonId + '-' + avec)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `livraison_id=eq.${livraisonId}` }, () => {
+      afficherMessagesLivraison(livraisonId, avec, user.id);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `livraison_id=eq.${livraisonId}` }, () => {
+      afficherMessagesLivraison(livraisonId, avec, user.id);
+    })
+    .subscribe();
+}
+
+async function afficherMessagesLivraison(livraisonId, avec, currentUserId) {
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('livraison_id', livraisonId)
+    .eq('avec', avec)
+    .order('created_at', { ascending: true });
+
+  const zone = document.getElementById('messages');
+  if (!messages || messages.length === 0) {
+    zone.innerHTML = '<p class="vide">Aucun message. Démarrez la conversation !</p>';
+    return;
+  }
+
+  zone.innerHTML = messages.map(m => {
+    const moi = m.expediteur_id === currentUserId;
+    const heureEnvoi = new Date(m.created_at).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    let media = '';
+    if (m.media_url && m.media_type === 'image') {
+      media = `<img src="${m.media_url}" alt="photo">`;
+    } else if (m.media_url && m.media_type === 'video') {
+      media = `<video src="${m.media_url}" controls></video>`;
+    }
+    const texte = m.contenu ? escapeHTML(m.contenu) : '';
+
+    let pied = `Envoyé à ${heureEnvoi}`;
+    if (moi && m.lu && m.lu_le) {
+      const heureLecture = new Date(m.lu_le).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      pied += ` · Lu à ${heureLecture}`;
+    }
+
+    return `<div class="bulle ${moi ? 'moi' : 'autre'}">${media}${texte}<span class="heure">${pied}</span></div>`;
+  }).join('');
+
+  window.scrollTo(0, document.body.scrollHeight);
+
+  const idsNonLus = messages
+    .filter(m => m.expediteur_id !== currentUserId && !m.lu)
+    .map(m => m.id);
+
+  if (idsNonLus.length > 0) {
+    await supabase
+      .from('messages')
+      .update({ lu: true, lu_le: new Date().toISOString() })
+      .in('id', idsNonLus);
+  }
+}
+
+async function envoyerMessageLivraison(livraisonId, avec, livreurId, vendeurId, clientId) {
+  const champ = document.getElementById('champ-message');
+  const texte = champ.value.trim();
+  if (!texte) return;
+
+  if (contientNumero(texte)) {
+    alert('⚠️ Le partage de numéro de téléphone n\'est pas autorisé sur WariKo.');
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const payload = {
+    livraison_id: livraisonId,
+    livreur_id: livreurId,
+    avec: avec,
+    expediteur_id: user.id,
+    contenu: texte
+  };
+  if (vendeurId) payload.vendeur_id = vendeurId;
+  if (clientId) payload.client_id = clientId;
+
+  const { error } = await supabase.from('messages').insert(payload);
+
+  if (error) {
+    alert('Erreur lors de l\'envoi : ' + error.message);
+    return;
+  }
+
+  champ.value = '';
+  await afficherMessagesLivraison(livraisonId, avec, user.id);
+}
+
+async function envoyerMediaLivraison(livraisonId, avec, livreurId, vendeurId, clientId) {
+  const input = document.getElementById('fichier-media');
+  const fichier = input.files[0];
+  if (!fichier) return;
+
+  const indicateur = document.getElementById('envoi-cours');
+  indicateur.style.display = 'block';
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const type = fichier.type.startsWith('video') ? 'video' : 'image';
+  const cheminFichier = `livraison_${livraisonId}/${Date.now()}_${fichier.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('messages-media')
+    .upload(cheminFichier, fichier);
+
+  if (uploadError) {
+    indicateur.style.display = 'none';
+    alert('Erreur d\'envoi du fichier : ' + uploadError.message);
+    return;
+  }
+
+  const { data: urlData } = supabase.storage.from('messages-media').getPublicUrl(cheminFichier);
+
+  const payload = {
+    livraison_id: livraisonId,
+    livreur_id: livreurId,
+    avec: avec,
+    expediteur_id: user.id,
+    contenu: '',
+    media_url: urlData.publicUrl,
+    media_type: type
+  };
+  if (vendeurId) payload.vendeur_id = vendeurId;
+  if (clientId) payload.client_id = clientId;
+
+  const { error } = await supabase.from('messages').insert(payload);
+
+  indicateur.style.display = 'none';
+  input.value = '';
+
+  if (error) {
+    alert('Erreur : ' + error.message);
+    return;
+  }
+
+  await afficherMessagesLivraison(livraisonId, avec, user.id);
+}
+
+/* ================= BOÎTE DE RÉCEPTION (boutique + livraison mélangées) ================= */
+
 async function chargerBoiteReception(user) {
   const { data: messages } = await supabase
     .from('messages')
@@ -376,18 +573,37 @@ async function chargerBoiteReception(user) {
     return;
   }
 
-  const conversations = {};
+  const conversationsBoutique = {};
+  const messagesLivraison = [];
+
   messages.forEach(m => {
-    const cle = m.boutique_id + '-' + m.client_id;
-    if (!conversations[cle]) conversations[cle] = m;
+    if (m.livraison_id) {
+      messagesLivraison.push(m);
+    } else {
+      const cle = m.boutique_id + '-' + m.client_id;
+      if (!conversationsBoutique[cle]) conversationsBoutique[cle] = m;
+    }
   });
 
-  const liste = Object.values(conversations).map(m => {
+  const conversationsLivraison = {};
+  messagesLivraison.forEach(m => {
+    const cle = m.livraison_id + '-' + m.avec;
+    if (!conversationsLivraison[cle]) conversationsLivraison[cle] = m;
+  });
+
+  let nomsLivreurs = {};
+  const idsLivreurs = [...new Set(Object.values(conversationsLivraison).map(m => m.livreur_id).filter(Boolean))];
+  if (idsLivreurs.length > 0) {
+    const { data: livreurs } = await supabase.from('livreurs').select('id, nom_complet').in('id', idsLivreurs);
+    (livreurs || []).forEach(l => { nomsLivreurs[l.id] = l.nom_complet; });
+  }
+
+  const listeBoutique = Object.values(conversationsBoutique).map(m => {
     const estVendeur = m.vendeur_id === user.id;
     const lienClient = estVendeur ? `&client=${m.client_id}` : '';
     const nomBoutique = m.boutiques ? m.boutiques.nom_boutique : 'Boutique';
     const initiale = nomBoutique.charAt(0).toUpperCase();
-    const apercu = m.media_url ? (m.media_type === 'video' ? '🎥 Vidéo' : '📷 Photo') : `${m.contenu.substring(0, 40)}${m.contenu.length > 40 ? '...' : ''}`;
+    const apercu = m.media_url ? (m.media_type === 'video' ? '🎥 Vidéo' : '📷 Photo') : `${(m.contenu || '').substring(0, 40)}${(m.contenu || '').length > 40 ? '...' : ''}`;
     return `
       <a class="conv-item" href="messagerie.html?boutique=${m.boutique_id}${lienClient}">
         <div class="conv-avatar">${initiale}</div>
@@ -399,8 +615,22 @@ async function chargerBoiteReception(user) {
     `;
   }).join('');
 
+  const listeLivraison = Object.values(conversationsLivraison).map(m => {
+    const nom = nomsLivreurs[m.livreur_id] || 'Livreur';
+    const apercu = m.media_url ? (m.media_type === 'video' ? '🎥 Vidéo' : '📷 Photo') : `${(m.contenu || '').substring(0, 40)}${(m.contenu || '').length > 40 ? '...' : ''}`;
+    return `
+      <a class="conv-item" href="messagerie.html?livraison=${m.livraison_id}&avec=${m.avec}">
+        <div class="conv-avatar livraison">🛵</div>
+        <div class="conv-info">
+          <h4>${escapeHTML(nom)} (livreur)</h4>
+          <p>${escapeHTML(apercu)}</p>
+        </div>
+      </a>
+    `;
+  }).join('');
+
   contenu.innerHTML = `
-    <div>${liste}</div>
+    <div>${listeBoutique}${listeLivraison}</div>
     ${navHTML}
   `;
 }

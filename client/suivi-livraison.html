@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Suivi de livraison</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/geo-utils.js"></script>
+    <script src="../assets/livraison-tracker.js"></script>
+
+    <style>
+        html, body {
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--violet-fonce);
+        }
+
+        .app {
+            background: var(--violet-fonce);
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 16px 20px;
+            color: var(--blanc);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-link {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .back-link svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--blanc);
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        #carte {
+            flex: 1;
+            min-height: 260px;
+            background: #1a1a2e;
+        }
+
+        .panneau {
+            background: var(--violet-fonce);
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            margin-top: -20px;
+            position: relative;
+            z-index: 10;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+            color: var(--blanc);
+        }
+
+        .statut-ligne {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .statut-icone {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--jaune);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .statut-texte h2 {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .statut-texte p {
+            font-size: 12px;
+            opacity: 0.65;
+            margin-top: 2px;
+        }
+
+        .info-grid {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .info-carte {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .info-carte .valeur {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--jaune);
+        }
+
+        .info-carte .libelle {
+            font-size: 10.5px;
+            opacity: 0.6;
+            margin-top: 3px;
+        }
+
+        .livreur-bloc {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+
+        .livreur-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .livreur-infos {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .livreur-infos h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        .livreur-infos p {
+            font-size: 11.5px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .btn-contacter {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--blanc);
+            border: none;
+            border-radius: 10px;
+            padding: 9px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .derniere-maj {
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        .bandeau-alerte {
+            display: none;
+            background: rgba(255, 107, 107, 0.15);
+            color: #FF6B6B;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+        }
+
+        .bandeau-alerte.visible {
+            display: block;
+        }
+
+        .ecran-plein {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--blanc);
+            text-align: center;
+            padding: 30px;
+            gap: 12px;
+        }
+
+        .ecran-plein .icone {
+            font-size: 44px;
+        }
+
+        .ecran-plein p {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .marqueur-emoji {
+            font-size: 26px;
+            text-align: center;
+            line-height: 1;
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div class="app" id="app">
+
+        <header class="header">
+            <a href="commandes.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                </svg>
+            </a>
+            <h1>Suivi de votre livraison</h1>
+        </header>
+
+        <div id="carte"></div>
+
+        <div class="panneau">
+
+            <div class="bandeau-alerte" id="bandeauAlerte"></div>
+
+            <div class="statut-ligne">
+                <div class="statut-icone" id="statutIcone">🔍</div>
+                <div class="statut-texte">
+                    <h2 id="statutTitre">Chargement...</h2>
+                    <p id="statutSousTitre">Récupération des informations</p>
+                </div>
+            </div>
+
+            <div class="info-grid" id="infoGrid" style="display:none;">
+                <div class="info-carte">
+                    <div class="valeur" id="valeurDistance">–</div>
+                    <div class="libelle">Distance restante</div>
+                </div>
+                <div class="info-carte">
+                    <div class="valeur" id="valeurMontant">–</div>
+                    <div class="libelle">Frais livraison</div>
+                </div>
+            </div>
+
+            <div class="livreur-bloc" id="livreurBloc" style="display:none;">
+                <div class="livreur-avatar">🛵</div>
+                <div class="livreur-infos">
+                    <h3 id="livreurNom">Livreur</h3>
+                    <p id="livreurNote">–</p>
+                </div>
+                <a href="#" id="btnContacter" class="btn-contacter">Contacter</a>
+            </div>
+
+            <div class="derniere-maj" id="derniereMaj"></div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const params = new URLSearchParams(window.location.search);
+        const livraisonId = params.get("livraison");
+
+        let carte = null;
+        let marqueurBoutique = null;
+        let marqueurClient = null;
+        let marqueurLivreur = null;
+        let ligneTrajet = null;
+        let livraisonActuelle = null;
+        let nettoyerRealtime = null;
+        let intervalleMaj = null;
+
+        const LIBELLES_STATUT = {
+            en_attente: { icone: "🔍", titre: "Recherche d'un livreur...", sous: "Nous cherchons un livreur disponible" },
+            livreur_recherche: { icone: "🔍", titre: "Recherche d'un livreur...", sous: "Nous cherchons un livreur disponible" },
+            acceptee: { icone: "✅", titre: "Livreur affecté", sous: "Votre livreur a accepté la livraison" },
+            en_route_vers_vendeur: { icone: "🏪", titre: "En route vers la boutique", sous: "Le livreur va récupérer votre colis" },
+            colis_recupere: { icone: "📦", titre: "Colis récupéré", sous: "Le livreur prépare le trajet vers vous" },
+            en_route_vers_client: { icone: "🚴", titre: "Livreur en route", sous: "Votre livraison arrive" },
+            livree: { icone: "🎉", titre: "Livraison terminée", sous: "Votre colis a été livré" },
+            annulee: { icone: "✖️", titre: "Livraison annulée", sous: "Cette livraison a été annulée" },
+            echec: { icone: "⚠️", titre: "Livraison échouée", sous: "Un problème est survenu" },
+            expiree: { icone: "⏱️", titre: "Livraison expirée", sous: "Aucun livreur n'a été trouvé à temps" }
+        };
+
+        function afficherEcranPlein(icone, message) {
+            document.getElementById("app").innerHTML = `
+                <div class="ecran-plein">
+                    <div class="icone">${icone}</div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function formatPrix(montant) {
+            return Number(montant || 0).toLocaleString("fr-FR") + " F";
+        }
+
+        function initCarte() {
+            carte = L.map("carte", { zoomControl: false }).setView([5.3599, -4.0083], 13);
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap contributors",
+                maxZoom: 19
+            }).addTo(carte);
+
+            L.control.zoom({ position: "bottomright" }).addTo(carte);
+        }
+
+        function icone(emoji) {
+            return L.divIcon({
+                html: `<div class="marqueur-emoji">${emoji}</div>`,
+                className: "",
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+        }
+
+        function ajusterVue() {
+            const points = [];
+            if (marqueurBoutique) points.push(marqueurBoutique.getLatLng());
+            if (marqueurClient) points.push(marqueurClient.getLatLng());
+            if (marqueurLivreur) points.push(marqueurLivreur.getLatLng());
+
+            if (points.length > 0) {
+                carte.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+            }
+        }
+
+        function destinationActuelle(livraison) {
+            if (["acceptee", "en_route_vers_vendeur"].includes(livraison.statut)) {
+                return { lat: livraison.boutique_lat, lng: livraison.boutique_lng };
+            }
+            if (["colis_recupere", "en_route_vers_client"].includes(livraison.statut)) {
+                return { lat: livraison.adresse_lat, lng: livraison.adresse_lng };
+            }
+            return null;
+        }
+
+        function mettreAJourTrajet(livraison) {
+            if (ligneTrajet) {
+                carte.removeLayer(ligneTrajet);
+                ligneTrajet = null;
+            }
+
+            if (!GeoUtils.coordonneesValides(livraison.livreur_lat, livraison.livreur_lng)) return;
+
+            const dest = destinationActuelle(livraison);
+            if (!dest || !GeoUtils.coordonneesValides(dest.lat, dest.lng)) return;
+
+            ligneTrajet = L.polyline(
+                [[livraison.livreur_lat, livraison.livreur_lng], [dest.lat, dest.lng]],
+                { color: "#F2C230", weight: 3, dashArray: "6, 8", opacity: 0.8 }
+            ).addTo(carte);
+
+            const distanceKm = GeoUtils.distanceVolOiseau(
+                livraison.livreur_lat, livraison.livreur_lng, dest.lat, dest.lng
+            );
+
+            document.getElementById("valeurDistance").textContent =
+                distanceKm < 1 ? Math.round(distanceKm * 1000) + " m" : distanceKm.toFixed(1) + " km";
+        }
+
+        function mettreAJourInterface(livraison) {
+            livraisonActuelle = livraison;
+
+            const infos = LIBELLES_STATUT[livraison.statut] || { icone: "❓", titre: livraison.statut, sous: "" };
+            document.getElementById("statutIcone").textContent = infos.icone;
+            document.getElementById("statutTitre").textContent = infos.titre;
+            document.getElementById("statutSousTitre").textContent = infos.sous;
+
+            document.getElementById("infoGrid").style.display = "flex";
+            document.getElementById("valeurMontant").textContent = formatPrix(livraison.montant_livraison);
+
+            if (!["acceptee", "en_route_vers_vendeur", "colis_recupere", "en_route_vers_client"].includes(livraison.statut)) {
+                document.getElementById("valeurDistance").textContent = "–";
+            }
+
+            // Marqueur boutique
+            if (GeoUtils.coordonneesValides(livraison.boutique_lat, livraison.boutique_lng)) {
+                if (!marqueurBoutique) {
+                    marqueurBoutique = L.marker([livraison.boutique_lat, livraison.boutique_lng], { icon: icone("📍") }).addTo(carte);
+                }
+            }
+
+            // Marqueur client
+            if (GeoUtils.coordonneesValides(livraison.adresse_lat, livraison.adresse_lng)) {
+                if (!marqueurClient) {
+                    marqueurClient = L.marker([livraison.adresse_lat, livraison.adresse_lng], { icon: icone("🏠") }).addTo(carte);
+                }
+            }
+
+            // Marqueur livreur (avec animation si déjà présent)
+            if (GeoUtils.coordonneesValides(livraison.livreur_lat, livraison.livreur_lng)) {
+                if (!marqueurLivreur) {
+                    marqueurLivreur = L.marker([livraison.livreur_lat, livraison.livreur_lng], { icon: icone("🚴") }).addTo(carte);
+                } else {
+                    const pos = marqueurLivreur.getLatLng();
+                    LivraisonTracker.animerMarqueur(
+                        marqueurLivreur, pos.lat, pos.lng, livraison.livreur_lat, livraison.livreur_lng
+                    );
+                }
+                document.getElementById("livreurBloc").style.display = "flex";
+            }
+
+            mettreAJourTrajet(livraison);
+            ajusterVue();
+
+            if (livraison.derniere_maj_gps) {
+                document.getElementById("derniereMaj").dataset.timestamp = livraison.derniere_maj_gps;
+            }
+
+            if (LivraisonTracker.livraisonEstTerminee(livraison.statut)) {
+                if (nettoyerRealtime) { nettoyerRealtime(); nettoyerRealtime = null; }
+                if (intervalleMaj) { clearInterval(intervalleMaj); intervalleMaj = null; }
+            }
+        }
+
+        function majDerniereMaj() {
+            const el = document.getElementById("derniereMaj");
+            const timestamp = el.dataset.timestamp;
+
+            if (!timestamp) {
+                el.textContent = "";
+                return;
+            }
+
+            const secondes = Math.max(0, Math.round((Date.now() - new Date(timestamp).getTime()) / 1000));
+
+            if (secondes < 60) {
+                el.textContent = "Mise à jour il y a " + secondes + "s";
+            } else {
+                el.textContent = "Mise à jour il y a " + Math.round(secondes / 60) + " min";
+            }
+        }
+
+        async function chargerLivreur(livreurId) {
+            const { data } = await supabaseClient
+                .from("livreurs")
+                .select("nom_complet")
+                .eq("id", livreurId)
+                .maybeSingle();
+
+            if (data) {
+                document.getElementById("livreurNom").textContent = data.nom_complet || "Votre livreur";
+            }
+
+            document.getElementById("btnContacter").href =
+                "messagerie.html?livraison=" + livreurId ? "messagerie.html?livraison=" + livraisonId + "&avec=client" : "#";
+        }
+
+        function gererConnexion() {
+            const bandeau = document.getElementById("bandeauAlerte");
+
+            window.addEventListener("offline", () => {
+                bandeau.textContent = "Connexion perdue — dernière position conservée.";
+                bandeau.classList.add("visible");
+            });
+
+            window.addEventListener("online", () => {
+                bandeau.classList.remove("visible");
+            });
+        }
+
+        async function init() {
+            if (!livraisonId) {
+                afficherEcranPlein("⚠️", "Aucune livraison spécifiée.");
+                return;
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                window.location.href = "connexion.html";
+                return;
+            }
+
+            const { data: livraison, error } = await supabaseClient
+                .from("livraisons")
+                .select("*")
+                .eq("id", livraisonId)
+                .eq("client_id", session.user.id)
+                .maybeSingle();
+
+            if (error || !livraison) {
+                afficherEcranPlein("🚫", "Cette livraison n'existe pas ou ne vous appartient pas.");
+                return;
+            }
+
+            initCarte();
+            mettreAJourInterface(livraison);
+            gererConnexion();
+
+            if (livraison.livreur_id) {
+                chargerLivreur(livraison.livreur_id);
+            }
+
+            if (!LivraisonTracker.livraisonEstTerminee(livraison.statut)) {
+                nettoyerRealtime = LivraisonTracker.suivreLivraisonRealtime(livraisonId, (nouvelleLivraison) => {
+                    mettreAJourInterface(nouvelleLivraison);
+                    if (nouvelleLivraison.livreur_id && !document.getElementById("livreurBloc").style.display !== "flex") {
+                        chargerLivreur(nouvelleLivraison.livreur_id);
+                    }
+                });
+
+                intervalleMaj = setInterval(majDerniereMaj, 1000);
+            }
+
+            window.addEventListener("beforeunload", () => {
+                if (nettoyerRealtime) nettoyerRealtime();
+                if (intervalleMaj) clearInterval(intervalleMaj);
+            });
+        }
+
+        init();
+    </script>
+
+</body>
+
+</html>

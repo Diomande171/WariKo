@@ -58,6 +58,12 @@
             text-decoration: none;
         }
 
+        .top-bar-icons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .icon-btn {
             width: 38px;
             height: 38px;
@@ -501,13 +507,21 @@
         <header class="header">
             <div class="top-bar">
                 <a href="../client/accueil.html" class="back-link">← Accueil</a>
-                <a href="../notifications.html" class="icon-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    <span class="badge" id="badgeNotifs" style="display:none;">0</span>
-                </a>
+                <div class="top-bar-icons">
+                    <a href="../client/messagerie.html" class="icon-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span class="badge" id="badgeMessages" style="display:none;">0</span>
+                    </a>
+                    <a href="../notifications.html" class="icon-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="badge" id="badgeNotifs" style="display:none;">0</span>
+                    </a>
+                </div>
             </div>
 
             <div class="boutique-row">
@@ -832,6 +846,21 @@
             }).join("");
         }
 
+        async function chargerBadgeMessages(userId) {
+            const badge = document.getElementById("badgeMessages");
+
+            const { count } = await supabaseClient
+                .from("messages")
+                .select("*", { count: "exact", head: true })
+                .eq("vendeur_id", userId)
+                .eq("lu", false);
+
+            if (count && count > 0) {
+                badge.textContent = count > 9 ? "9+" : count;
+                badge.style.display = "flex";
+            }
+        }
+
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -841,6 +870,7 @@
             }
 
             await chargerBoutique(session.user.id);
+            await chargerBadgeMessages(session.user.id);
 
             const badge = document.getElementById("badgeNotifs");
             const { count } = await supabaseClient

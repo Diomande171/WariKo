@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes commandes - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<link rel="stylesheet" href="../style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/geo-utils.js"></script>
+<style>
+  * { box-sizing:border-box; }
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:0 16px 40px; }
+
+  .en-tete { position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:12px; padding:16px 0 14px; background:linear-gradient(180deg, var(--violet-fonce) 80%, rgba(61,3,122,0)); }
+  .btn-retour { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; color:var(--blanc); text-decoration:none; font-size:17px; flex-shrink:0; }
+  .en-tete h1 { font-family:'Playfair Display',serif; font-size:19px; color:var(--jaune); margin:0; letter-spacing:0.2px; }
+
+  .carte-commande { background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:14px 14px 12px; margin-bottom:12px; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
+
+  .commande-haut { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .commande-numero { font-size:12px; font-weight:700; color:var(--jaune); letter-spacing:0.3px; }
+  .commande-heure { font-size:11px; opacity:0.55; }
+
+  .commande-ligne { display:flex; align-items:center; gap:6px; font-size:12.5px; opacity:0.8; margin:3px 0; line-height:1.35; }
+  .commande-ligne .puce { flex-shrink:0; }
+
+  .badge-statut-commande { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:8px; display:inline-block; margin-bottom:8px; }
+  .badge-statut-commande.en_attente { background:rgba(255,209,0,0.15); color:var(--jaune); }
+  .badge-statut-commande.acceptee { background:rgba(33,150,243,0.18); color:#8fc8f5; }
+  .badge-statut-commande.livree { background:rgba(76,175,80,0.18); color:#8fd98f; }
+  .badge-statut-commande.refusee, .badge-statut-commande.annulee { background:rgba(244,67,54,0.18); color:#f5a09a; }
+
+  .separateur { height:1px; background:rgba(255,255,255,0.07); margin:10px 0; }
+
+  .commande-bas { display:flex; justify-content:space-between; align-items:center; }
+  .prix-bloc { display:flex; flex-direction:column; }
+  .prix-label { font-size:10px; opacity:0.5; margin-bottom:1px; }
+  .prix-total { font-size:16px; font-weight:700; color:var(--blanc); }
+
+  .btn-demander { background:var(--jaune); color:var(--violet-fonce); border:none; border-radius:10px; padding:10px 16px; font-size:12px; font-weight:700; box-shadow:0 3px 10px rgba(255,209,0,0.2); }
+  .btn-demander:active { transform:scale(0.96); }
+  .btn-demander:disabled { opacity:0.5; }
+
+  .bloc-livraison { margin-top:10px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1); }
+  .badge-livraison { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:8px; display:inline-block; margin-bottom:6px; }
+  .badge-livraison.en_attente { background:rgba(255,209,0,0.15); color:var(--jaune); }
+  .badge-livraison.acceptee, .badge-livraison.en_cours { background:rgba(33,150,243,0.18); color:#8fc8f5; }
+  .badge-livraison.livree { background:rgba(76,175,80,0.18); color:#8fd98f; }
+  .badge-livraison.annulee, .badge-livraison.echec, .badge-livraison.expiree { background:rgba(244,67,54,0.18); color:#f5a09a; }
+  .info-livreur { font-size:12px; opacity:0.8; margin:4px 0; }
+  .lien-contact-livreur { display:inline-block; margin-top:4px; font-size:11.5px; font-weight:600; color:var(--jaune); text-decoration:none; }
+
+  .vide { text-align:center; opacity:0.55; font-size:13px; padding:50px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .vide .icone-vide { font-size:34px; opacity:0.5; }
+
+  .squelette { background:rgba(255,255,255,0.05); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .squelette-ligne { height:11px; border-radius:6px; background:rgba(255,255,255,0.08); margin-bottom:8px; animation:pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+</style>
+</head>
+<body>
+
+<div class="en-tete">
+  <a class="btn-retour" href="index.html">←</a>
+  <h1>Mes commandes</h1>
+</div>
+
+<div id="contenu">
+  <div class="squelette"><div class="squelette-ligne" style="width:40%"></div><div class="squelette-ligne" style="width:70%"></div><div class="squelette-ligne" style="width:50%"></div></div>
+  <div class="squelette"><div class="squelette-ligne" style="width:40%"></div><div class="squelette-ligne" style="width:70%"></div><div class="squelette-ligne" style="width:50%"></div></div>
+</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let monUserId = null;
+let livraisonsParCommande = {};
+
+const labelsCommande = { en_attente:'En attente', acceptee:'Acceptée', livree:'Livrée', refusee:'Refusée', annulee:'Annulée' };
+const labelsLivraison = {
+  en_attente: "En attente d'un livreur",
+  acceptee: 'Livreur trouvé',
+  en_cours: 'En cours de livraison',
+  livree: 'Livrée',
+  annulee: 'Annulée',
+  echec: 'Échec de livraison',
+  expiree: 'Expirée'
+};
+
+function numeroCommande(id) {
+  return 'CMD-' + id.replace(/-/g, '').slice(-4).toUpperCase();
+}
+
+function heureCommande(dateStr) {
+  const d = new Date(dateStr);
+  const auj = new Date();
+  const estAujourdhui = d.toDateString() === auj.toDateString();
+  const heure = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return (estAujourdhui ? "Aujourd'hui" : d.toLocaleDateString('fr-FR')) + ' · ' + heure;
+}
+
+function formatPrix(prix) {
+  return Number(prix || 0).toLocaleString('fr-FR') + ' FCFA';
+}
+
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+  monUserId = session.user.id;
+  await charger();
+}
+
+async function charger() {
+  const contenu = document.getElementById('contenu');
+
+  const { data: commandes, error } = await supabase
+    .from('commandes')
+    .select('*, boutiques(id, nom_boutique, lat, lng)')
+    .eq('vendeur_id', monUserId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    contenu.innerHTML = '<p class="vide">Erreur de chargement des commandes.</p>';
+    return;
+  }
+
+  if (!commandes || commandes.length === 0) {
+    contenu.innerHTML = '<div class="vide"><span class="icone-vide">📭</span>Aucune commande pour le moment.</div>';
+    return;
+  }
+
+  const idsCommandes = commandes.map(c => c.id);
+
+  const [{ data: lignesProduits }, { data: livraisons }] = await Promise.all([
+    supabase.from('commande_produits').select('commande_id').in('commande_id', idsCommandes),
+    supabase.from('livraisons').select('*, livreurs(nom_complet, telephone)').in('commande_id', idsCommandes)
+  ]);
+
+  const nbArticlesParCommande = {};
+  (lignesProduits || []).forEach(l => {
+    nbArticlesParCommande[l.commande_id] = (nbArticlesParCommande[l.commande_id] || 0) + 1;
+  });
+
+  livraisonsParCommande = {};
+  (livraisons || []).forEach(l => { livraisonsParCommande[l.commande_id] = l; });
+
+  contenu.innerHTML = commandes.map(c => carteCommande(c, nbArticlesParCommande[c.id])).join('');
+}
+
+function carteCommande(c, nbArticles) {
+  const livraison = livraisonsParCommande[c.id];
+
+  let blocLivraison;
+  if (livraison) {
+    const nomLivreur = livraison.livreurs ? livraison.livreurs.nom_complet : null;
+    const telLivreur = livraison.livreurs ? livraison.livreurs.telephone : null;
+    blocLivraison = `
+      <div class="bloc-livraison">
+        <span class="badge-livraison ${livraison.statut}">${labelsLivraison[livraison.statut] || livraison.statut}</span>
+        ${nomLivreur ? `<div class="info-livreur">🛵 ${nomLivreur}${telLivreur ? ' · ' + telLivreur : ''}</div>` : ''}
+        ${livraison.prix_livraison ? `<div class="info-livreur">Frais de livraison : ${formatPrix(livraison.prix_livraison)}</div>` : ''}
+        ${nomLivreur ? `<a class="lien-contact-livreur" href="../client/messagerie.html?livraison=${livraison.id}&avec=pro">💬 Contacter le livreur</a>` : ''}
+      </div>
+    `;
+  } else {
+    blocLivraison = `
+      <div class="bloc-livraison">
+        <button class="btn-demander" onclick="demanderLivraison('${c.id}')" id="btn-livraison-${c.id}">🛵 Demander une livraison</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="carte-commande">
+      <div class="commande-haut">
+        <span class="commande-numero">#${numeroCommande(c.id)}</span>
+        <span class="commande-heure">${heureCommande(c.created_at)}</span>
+      </div>
+      <span class="badge-statut-commande ${c.statut}">${labelsCommande[c.statut] || c.statut}</span>
+      <div class="commande-ligne"><span class="puce">👤</span>${c.client_nom || 'Client'}</div>
+      <div class="commande-ligne"><span class="puce">📦</span>${nbArticles || 0} article${nbArticles > 1 ? 's' : ''}</div>
+      <div class="separateur"></div>
+      <div class="commande-bas">
+        <div class="prix-bloc">
+          <span class="prix-label">Total commande</span>
+          <span class="prix-total">${formatPrix(c.total)}</span>
+        </div>
+      </div>
+      ${blocLivraison}
+    </div>
+  `;
+}
+
+async function demanderLivraison(commandeId) {
+  const bouton = document.getElementById('btn-livraison-' + commandeId);
+
+  const { data: commande, error: erreurCommande } = await supabase
+    .from('commandes')
+    .select('*, boutiques(id, lat, lng)')
+    .eq('id', commandeId)
+    .single();
+
+  if (erreurCommande || !commande) {
+    alert("Impossible de récupérer les informations de la commande.");
+    return;
+  }
+
+  const boutique = commande.boutiques;
+
+  if (!boutique || !GeoUtils.coordonneesValides(boutique.lat, boutique.lng)) {
+    alert("Position de la boutique manquante — impossible de calculer la distance.");
+    return;
+  }
+  if (!GeoUtils.coordonneesValides(commande.client_lat, commande.client_lng)) {
+    alert("Position du client manquante sur cette commande — impossible de calculer la distance.");
+    return;
+  }
+
+  bouton.disabled = true;
+  bouton.textContent = 'Envoi...';
+
+  const distanceKm = GeoUtils.distanceLivraisonKm(
+    boutique.lat, boutique.lng, commande.client_lat, commande.client_lng
+  );
+  const prixLivraison = Math.round(distanceKm * GeoUtils.COEFFICIENT_ROUTE * 0 + distanceKm * 300);
+
+  const { error } = await supabase.from('livraisons').insert({
+    boutique_id: boutique.id,
+    client_id: commande.client_id,
+    vendeur_id: monUserId,
+    commande_id: commande.id,
+    type: 'commande',
+    adresse_client: commande.client_nom || 'Adresse non précisée',
+    adresse_lat: commande.client_lat,
+    adresse_lng: commande.client_lng,
+    boutique_lat: boutique.lat,
+    boutique_lng: boutique.lng,
+    distance_km: distanceKm,
+    prix_livraison: prixLivraison,
+    statut: 'en_attente'
+  });
+
+  if (error) {
+    alert("Erreur lors de la demande de livraison : " + error.message);
+    bouton.disabled = false;
+    bouton.textContent = '🛵 Demander une livraison';
+    return;
+  }
+
+  await charger();
+}
+
+init();
+</script>
+</body>
+</html>

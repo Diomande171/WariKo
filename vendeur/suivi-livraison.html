@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi de livraison - WariKo</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#3D037A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WariKo">
+<link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/geo-utils.js"></script>
+<script src="../assets/livraison-tracker.js"></script>
+<style>
+  * { box-sizing:border-box; }
+  body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:0 0 30px; }
+
+  .en-tete { display:flex; align-items:center; gap:12px; padding:16px; }
+  .btn-retour { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; color:var(--blanc); text-decoration:none; font-size:17px; flex-shrink:0; }
+  .en-tete h1 { font-family:'Playfair Display',serif; font-size:18px; color:var(--jaune); margin:0; }
+
+  #carte { width:100%; height:260px; background:#222; }
+
+  .panneau { padding:16px; }
+  .badge-statut { font-size:11px; font-weight:600; padding:4px 10px; border-radius:8px; display:inline-block; margin-bottom:10px; }
+  .badge-statut.en_attente { background:rgba(255,209,0,0.15); color:var(--jaune); }
+  .badge-statut.acceptee, .badge-statut.en_cours { background:rgba(33,150,243,0.18); color:#8fc8f5; }
+  .badge-statut.livree { background:rgba(76,175,80,0.18); color:#8fd98f; }
+  .badge-statut.annulee, .badge-statut.echec, .badge-statut.expiree { background:rgba(244,67,54,0.18); color:#f5a09a; }
+
+  .carte-info { background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .ligne-info { display:flex; justify-content:space-between; align-items:center; font-size:13px; margin:6px 0; }
+  .ligne-info span:first-child { opacity:0.6; }
+  .ligne-info span:last-child { font-weight:600; }
+
+  .maj-timer { font-size:11px; opacity:0.5; text-align:center; margin-top:8px; }
+
+  .ligne-contacts { display:flex; gap:8px; margin-top:12px; }
+  .ligne-contacts a { flex:1; text-align:center; padding:10px; border-radius:10px; font-size:12px; font-weight:600; text-decoration:none; }
+  .btn-contacter { background:rgba(255,209,0,0.08); color:var(--jaune); border:1px solid rgba(255,209,0,0.4); }
+  .btn-contacter-client { background:rgba(100,181,246,0.08); color:#8fc8f5; border:1px solid rgba(100,181,246,0.4); }
+
+  .msg-fin { text-align:center; padding:30px 16px; opacity:0.7; font-size:13px; }
+</style>
+</head>
+<body>
+
+<div class="en-tete">
+  <a class="btn-retour" href="commandes.html">←</a>
+  <h1>Suivi de la livraison</h1>
+</div>
+
+<div id="carte"></div>
+
+<div class="panneau">
+  <div id="contenu-panneau">
+    <p style="opacity:0.6; font-size:13px;">Chargement...</p>
+  </div>
+</div>
+
+<script>
+const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
+const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+const labelsStatut = {
+  en_attente: "En attente d'un livreur",
+  acceptee: 'Livreur en route vers la boutique',
+  en_cours: 'En route vers le client',
+  livree: 'Livrée',
+  annulee: 'Annulée',
+  echec: 'Échec de livraison',
+  expiree: 'Expirée'
+};
+
+const params = new URLSearchParams(window.location.search);
+const livraisonId = params.get('livraison');
+
+let carte = null;
+let marqueurBoutique = null;
+let marqueurClient = null;
+let marqueurLivreur = null;
+let derniereMajTs = null;
+let intervalleTimer = null;
+let arreterRealtime = null;
+let livraisonCourante = null;
+
+function formatDepuis(ts) {
+  if (!ts) return '—';
+  const secondes = Math.floor((Date.now() - ts) / 1000);
+  if (secondes < 5) return "à l'instant";
+  if (secondes < 60) return `il y a ${secondes}s`;
+  const minutes = Math.floor(secondes / 60);
+  return `il y a ${minutes} min`;
+}
+
+function demarrerTimerMaj() {
+  if (intervalleTimer) clearInterval(intervalleTimer);
+  intervalleTimer = setInterval(() => {
+    const el = document.getElementById('maj-timer-texte');
+    if (el) el.textContent = 'Mise à jour ' + formatDepuis(derniereMajTs);
+  }, 1000);
+}
+
+function arreterTimerMaj() {
+  if (intervalleTimer) clearInterval(intervalleTimer);
+  intervalleTimer = null;
+}
+
+async function init() {
+  if (!livraisonId) {
+    document.getElementById('contenu-panneau').innerHTML = '<p class="msg-fin">Livraison introuvable.</p>';
+    return;
+  }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = '../client/connexion.html';
+    return;
+  }
+
+  const { data: livraison, error } = await supabaseClient
+    .from('livraisons')
+    .select('*, livreurs(nom_complet, telephone)')
+    .eq('id', livraisonId)
+    .single();
+
+  if (error || !livraison) {
+    document.getElementById('contenu-panneau').innerHTML = '<p class="msg-fin">Livraison introuvable ou accès refusé.</p>';
+    return;
+  }
+
+  livraisonCourante = livraison;
+  initialiserCarte(livraison);
+  afficherPanneau(livraison);
+
+  if (LivraisonTracker.livraisonEstTerminee(livraison.statut)) {
+    return; // pas de suivi temps réel sur une livraison terminée
+  }
+
+  derniereMajTs = livraison.derniere_maj_gps ? new Date(livraison.derniere_maj_gps).getTime() : Date.now();
+  demarrerTimerMaj();
+
+  arreterRealtime = LivraisonTracker.suivreLivraisonRealtime(livraisonId, (miseAJour) => {
+    livraisonCourante = miseAJour;
+    derniereMajTs = Date.now();
+
+    if (marqueurLivreur && miseAJour.livreur_lat && miseAJour.livreur_lng) {
+      const pos = marqueurLivreur.getLatLng();
+      LivraisonTracker.animerMarqueur(marqueurLivreur, pos.lat, pos.lng, miseAJour.livreur_lat, miseAJour.livreur_lng);
+    } else if (miseAJour.livreur_lat && miseAJour.livreur_lng) {
+      marqueurLivreur = ajouterMarqueur(miseAJour.livreur_lat, miseAJour.livreur_lng, '#FFD100', '🛵');
+    }
+
+    afficherPanneau(miseAJour);
+
+    if (LivraisonTracker.livraisonEstTerminee(miseAJour.statut)) {
+      arreterTimerMaj();
+      if (arreterRealtime) arreterRealtime();
+    }
+  });
+}
+
+function ajouterMarqueur(lat, lng, couleur, emoji) {
+  const icone = L.divIcon({
+    html: `<div style="background:${couleur}; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4);">${emoji}</div>`,
+    className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+  });
+  return L.marker([lat, lng], { icon: icone }).addTo(carte);
+}
+
+function initialiserCarte(livraison) {
+  const pointsValides = [];
+
+  carte = L.map('carte', { zoomControl: false, attributionControl: false });
+
+  if (GeoUtils.coordonneesValides(livraison.boutique_lat, livraison.boutique_lng)) {
+    marqueurBoutique = ajouterMarqueur(livraison.boutique_lat, livraison.boutique_lng, '#3D037A', '🏪');
+    pointsValides.push([livraison.boutique_lat, livraison.boutique_lng]);
+  }
+  if (GeoUtils.coordonneesValides(livraison.adresse_lat, livraison.adresse_lng)) {
+    marqueurClient = ajouterMarqueur(livraison.adresse_lat, livraison.adresse_lng, '#4CAF50', '🏠');
+    pointsValides.push([livraison.adresse_lat, livraison.adresse_lng]);
+  }
+  if (GeoUtils.coordonneesValides(livraison.livreur_lat, livraison.livreur_lng)) {
+    marqueurLivreur = ajouterMarqueur(livraison.livreur_lat, livraison.livreur_lng, '#FFD100', '🛵');
+    pointsValides.push([livraison.livreur_lat, livraison.livreur_lng]);
+  }
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(carte);
+
+  if (pointsValides.length > 0) {
+    carte.fitBounds(pointsValides, { padding: [30, 30] });
+  } else {
+    carte.setView([5.3599, -4.0083], 12); // Abidjan par défaut
+  }
+}
+
+function afficherPanneau(livraison) {
+  const conteneur = document.getElementById('contenu-panneau');
+  const statut = livraison.statut;
+  const nomLivreur = livraison.livreurs ? livraison.livreurs.nom_complet : null;
+  const telLivreur = livraison.livreurs ? livraison.livreurs.telephone : null;
+
+  let distanceRestante = null;
+  if (GeoUtils.coordonneesValides(livraison.livreur_lat, livraison.livreur_lng) &&
+      GeoUtils.coordonneesValides(livraison.adresse_lat, livraison.adresse_lng)) {
+    distanceRestante = GeoUtils.distanceVolOiseau(
+      livraison.livreur_lat, livraison.livreur_lng, livraison.adresse_lat, livraison.adresse_lng
+    );
+  }
+
+  const termine = LivraisonTracker.livraisonEstTerminee(statut);
+
+  conteneur.innerHTML = `
+    <span class="badge-statut ${statut}">${labelsStatut[statut] || statut}</span>
+    <div class="carte-info">
+      ${nomLivreur ? `<div class="ligne-info"><span>Livreur</span><span>${nomLivreur}</span></div>` : ''}
+      ${telLivreur ? `<div class="ligne-info"><span>Téléphone</span><span>${telLivreur}</span></div>` : ''}
+      ${distanceRestante !== null ? `<div class="ligne-info"><span>Distance restante</span><span>${distanceRestante.toFixed(1)} km (à vol d'oiseau)</span></div>` : ''}
+      ${livraison.prix_livraison ? `<div class="ligne-info"><span>Frais de livraison</span><span>${Number(livraison.prix_livraison).toLocaleString('fr-FR')} FCFA</span></div>` : ''}
+      ${!termine ? `<p class="maj-timer" id="maj-timer-texte">Mise à jour ${formatDepuis(derniereMajTs)}</p>` : ''}
+    </div>
+    ${!termine && nomLivreur ? `
+      <div class="ligne-contacts">
+        <a class="btn-contacter" href="../client/messagerie.html?livraison=${livraisonId}&avec=pro">💬 Livreur</a>
+        <a class="btn-contacter-client" href="../client/messagerie.html?livraison=${livraisonId}&avec=client">💬 Client</a>
+      </div>
+    ` : ''}
+    ${termine ? '<p class="msg-fin">Cette livraison est terminée — le suivi en temps réel est arrêté.</p>' : ''}
+  `;
+}
+
+window.addEventListener('beforeunload', () => {
+  arreterTimerMaj();
+  if (arreterRealtime) arreterRealtime();
+});
+
+init();
+</script>
+</body>
+</html>

@@ -56,7 +56,7 @@
   .badge-livraison.livree { background:rgba(76,175,80,0.18); color:#8fd98f; }
   .badge-livraison.annulee, .badge-livraison.echec, .badge-livraison.expiree { background:rgba(244,67,54,0.18); color:#f5a09a; }
   .info-livreur { font-size:12px; opacity:0.8; margin:4px 0; }
-  .lien-contact-livreur { display:inline-block; margin-top:4px; font-size:11.5px; font-weight:600; color:var(--jaune); text-decoration:none; }
+  .lien-contact-livreur { display:block; margin-top:4px; font-size:11.5px; font-weight:600; color:var(--jaune); text-decoration:none; }
 
   .vide { text-align:center; opacity:0.55; font-size:13px; padding:50px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; }
   .vide .icone-vide { font-size:34px; opacity:0.5; }
@@ -167,12 +167,16 @@ function carteCommande(c, nbArticles) {
   if (livraison) {
     const nomLivreur = livraison.livreurs ? livraison.livreurs.nom_complet : null;
     const telLivreur = livraison.livreurs ? livraison.livreurs.telephone : null;
+    const suivi = (livraison.statut === 'acceptee' || livraison.statut === 'en_cours')
+      ? `<a class="lien-contact-livreur" href="suivi-livraison.html?livraison=${livraison.id}">📍 Suivre en temps réel</a>`
+      : '';
     blocLivraison = `
       <div class="bloc-livraison">
         <span class="badge-livraison ${livraison.statut}">${labelsLivraison[livraison.statut] || livraison.statut}</span>
         ${nomLivreur ? `<div class="info-livreur">🛵 ${nomLivreur}${telLivreur ? ' · ' + telLivreur : ''}</div>` : ''}
         ${livraison.prix_livraison ? `<div class="info-livreur">Frais de livraison : ${formatPrix(livraison.prix_livraison)}</div>` : ''}
         ${nomLivreur ? `<a class="lien-contact-livreur" href="../client/messagerie.html?livraison=${livraison.id}&avec=pro">💬 Contacter le livreur</a>` : ''}
+        ${suivi}
       </div>
     `;
   } else {
@@ -235,7 +239,7 @@ async function demanderLivraison(commandeId) {
   const distanceKm = GeoUtils.distanceLivraisonKm(
     boutique.lat, boutique.lng, commande.client_lat, commande.client_lng
   );
-  const prixLivraison = Math.round(distanceKm * GeoUtils.COEFFICIENT_ROUTE * 0 + distanceKm * 300);
+  const prixLivraison = Math.round(distanceKm * 300);
 
   const { error } = await supabase.from('livraisons').insert({
     boutique_id: boutique.id,

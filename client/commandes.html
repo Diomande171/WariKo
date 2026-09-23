@@ -174,6 +174,34 @@
   .badge-statut.terminee { background: #DFF5E4; color: #1E7B3E; }
   .badge-statut.annulee { background: #FDE4E1; color: #D0453A; }
 
+  .bloc-livraison {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #eee;
+    width: 100%;
+  }
+  .badge-livraison {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  .badge-livraison.en_attente { background: #FFF3D6; color: #B8860B; }
+  .badge-livraison.acceptee, .badge-livraison.en_cours { background: #E3EEFF; color: #2E6BE0; }
+  .badge-livraison.livree { background: #DFF5E4; color: #1E7B3E; }
+  .badge-livraison.annulee, .badge-livraison.echec, .badge-livraison.expiree { background: #FDE4E1; color: #D0453A; }
+  .lien-suivi {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--violet-fonce);
+    text-decoration: none;
+  }
+
   .carte-panier {
     background: var(--blanc);
     border-radius: 16px;
@@ -406,6 +434,15 @@ function normaliserEtat(statut) {
 }
 
 const labelsEtat = { attente: "En attente", cours: "En cours", terminee: "Terminée", annulee: "Annulée" };
+const labelsLivraison = {
+  en_attente: "En attente d'un livreur",
+  acceptee: "Livreur trouvé",
+  en_cours: "En cours de livraison",
+  livree: "Livrée",
+  annulee: "Annulée",
+  echec: "Échec de livraison",
+  expiree: "Expirée"
+};
 
 function changerTabPrincipal(nom) {
   document.querySelectorAll(".tab-principal").forEach(t => t.classList.toggle("actif", t.dataset.tab === nom));
@@ -494,6 +531,32 @@ async function chargerToutesLesCommandes() {
     });
   }
 
+  // ---------- Livraisons liées (commandes ET demandes) ----------
+  let livraisonsParCommande = {};
+  let livraisonsParDemande = {};
+  const idsDemandes = (demandes || []).map(d => d.id);
+
+  if (idsCommandes.length > 0 || idsDemandes.length > 0) {
+    const requetes = [];
+    if (idsCommandes.length > 0) {
+      requetes.push(
+        supabaseClient.from("livraisons").select("*").in("commande_id", idsCommandes)
+      );
+    }
+    if (idsDemandes.length > 0) {
+      requetes.push(
+        supabaseClient.from("livraisons").select("*").in("demande_id", idsDemandes)
+      );
+    }
+    const resultats = await Promise.all(requetes);
+    resultats.forEach(r => {
+      (r.data || []).forEach(l => {
+        if (l.commande_id) livraisonsParCommande[l.commande_id] = l;
+        if (l.demande_id) livraisonsParDemande[l.demande_id] = l;
+      });
+    });
+  }
+
   const elementsProduits = (commandes || []).map(c => {
     const lignes = produitsParCommande[c.id] || [];
     const titre = lignes.length > 0
@@ -508,7 +571,8 @@ async function chargerToutesLesCommandes() {
       date: c.created_at,
       etat: normaliserEtat(c.statut),
       prix: c.total,
-      commission: c.total ? Math.round(c.total * 0.05) : null
+      commission: c.total ? Math.round(c.total * 0.05) : null,
+      livraison: livraisonsParCommande[c.id] || null
     };
   });
 
@@ -522,7 +586,8 @@ async function chargerToutesLesCommandes() {
       date: d.created_at,
       etat: normaliserEtat(d.statut),
       prix: null,
-      commission: null
+      commission: null,
+      livraison: livraisonsParDemande[d.id] || null
     };
   });
 
@@ -532,6 +597,19 @@ async function chargerToutesLesCommandes() {
   document.getElementById("compteur-cours").textContent = tousLesElements.filter(e => e.etat === "cours").length;
 
   afficherElements();
+}
+
+function blocLivraison(livraison) {
+  if (!livraison) return "";
+  const suivi = (livraison.statut === "acceptee" || livraison.statut === "en_cours")
+    ? `<a class="lien-suivi" href="suivi-livraison.html?livraison=${livraison.id}">📍 Suivre ma livraison</a>`
+    : "";
+  return `
+    <div class="bloc-livraison">
+      <span class="badge-livraison ${livraison.statut}">${labelsLivraison[livraison.statut] || livraison.statut}</span><br>
+      ${suivi}
+    </div>
+  `;
 }
 
 function afficherElements() {
@@ -554,7 +632,7 @@ function afficherElements() {
   conteneur.innerHTML = Object.keys(groupes).map(libelle => `
     <div class="titre-jour">${libelle}</div>
     ${groupes[libelle].map(e => `
-      <div class="carte-commande">
+      <div class="carte-commande" style="flex-wrap:wrap;">
         <div class="icone-vignette">${e.type === "produit" ? "🛍️" : "🔧"}</div>
         <div class="infos-commande">
           <span class="badge-type">${e.type === "produit" ? "Produit" : "Prestation"}</span>
@@ -569,6 +647,7 @@ function afficherElements() {
           </div>
           <span class="badge-statut ${e.etat}">${labelsEtat[e.etat]}</span>
         </div>
+        ${blocLivraison(e.livraison)}
       </div>
     `).join("")}
   `).join("");

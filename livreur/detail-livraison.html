@@ -14,6 +14,8 @@
 
 <link rel="stylesheet" href="../style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/geo-utils.js"></script>
+<script src="../assets/livraison-tracker.js"></script>
 <style>
   body { max-width:430px; margin:0 auto; background:var(--violet-fonce); color:var(--blanc); font-family:'Poppins',sans-serif; padding:16px 16px 30px; }
   .en-tete { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
@@ -24,6 +26,10 @@
   .badge-statut.encours { background:rgba(33,150,243,0.2); color:#8fc8f5; }
   .badge-statut.acceptee { background:rgba(76,175,80,0.2); color:#8fd98f; }
   .badge-statut.livree { background:rgba(76,175,80,0.2); color:#8fd98f; }
+
+  .bandeau-gps { font-size:11.5px; text-align:center; padding:8px; border-radius:10px; margin-bottom:12px; }
+  .bandeau-gps.ok { background:rgba(76,175,80,0.15); color:#8fd98f; }
+  .bandeau-gps.erreur { background:rgba(244,67,54,0.15); color:#f5a09a; }
 
   .carte-infos { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px; margin-bottom:14px; }
   .info-boutique, .info-client, .info-prix { display:flex; align-items:center; gap:8px; font-size:13.5px; margin:4px 0; }
@@ -73,11 +79,13 @@
 <script>
 const supabaseUrl = 'https://ezjpgnzaksygcfxxasrz.supabase.co';
 const supabaseKey = 'sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let monLivreur = null;
 let livraisonId = null;
 let livraisonActuelle = null;
+let partageDemarrePourStatut = null; // évite de relancer watchPosition à chaque re-render
+let messageGPS = '';
 
 function pasEncoreDisponible(e) {
   if (e) e.preventDefault();
@@ -104,13 +112,13 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   livraisonId = params.get('id');
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     window.location.href = '../client/connexion.html';
     return;
   }
 
-  const { data: livreur } = await supabase
+  const { data: livreur } = await supabaseClient
     .from('livreurs')
     .select('*')
     .eq('user_id', user.id)
@@ -138,18 +146,18 @@ async function init() {
 
 async function recupererNomClient(l) {
   if (l.commande_id) {
-    const { data } = await supabase.from('commandes').select('client_nom').eq('id', l.commande_id).single();
+    const { data } = await supabaseClient.from('commandes').select('client_nom').eq('id', l.commande_id).single();
     if (data && data.client_nom) return data.client_nom;
   }
   if (l.demande_id) {
-    const { data } = await supabase.from('demandes').select('client_nom').eq('id', l.demande_id).single();
+    const { data } = await supabaseClient.from('demandes').select('client_nom').eq('id', l.demande_id).single();
     if (data && data.client_nom) return data.client_nom;
   }
   return 'Client';
 }
 
 async function charger() {
-  const { data: l } = await supabase
+  const { data: l } = await supabaseClient
     .from('livraisons')
     .select('*, boutiques(nom_boutique)')
     .eq('id', livraisonId)
@@ -161,6 +169,7 @@ async function charger() {
   }
 
   livraisonActuelle = l;
+  gererPartageGPS(l);
 
   if (l.statut === 'livree') {
     afficherRecap(l);
@@ -168,6 +177,31 @@ async function charger() {
     const clientNom = await recupererNomClient(l);
     afficherDetail(l, clientNom);
   }
+}
+
+function gererPartageGPS(l) {
+  const doitPartager = l.statut === 'acceptee' || l.statut === 'en_cours';
+
+  if (doitPartager && partageDemarrePourStatut !== l.id) {
+    partageDemarrePourStatut = l.id;
+    LivraisonTracker.demarrerPartageGPS(
+      l.id,
+      (msg) => { messageGPS = msg; if (livraisonActuelle) rafraichirBandeauGPS('erreur'); },
+      () => { messageGPS = 'Position partagée avec le client et le vendeur.'; rafraichirBandeauGPS('ok'); }
+    );
+  }
+
+  if (!doitPartager && partageDemarrePourStatut !== null) {
+    LivraisonTracker.arreterPartageGPS();
+    partageDemarrePourStatut = null;
+  }
+}
+
+function rafraichirBandeauGPS(type) {
+  const el = document.getElementById('bandeau-gps');
+  if (!el) return;
+  el.className = 'bandeau-gps ' + type;
+  el.textContent = messageGPS;
 }
 
 function afficherDetail(l, clientNom) {
@@ -191,6 +225,8 @@ function afficherDetail(l, clientNom) {
       </div>
       <span class="badge-statut ${badgeClasse}">${badgeTexte}</span>
     </div>
+
+    <div class="bandeau-gps" id="bandeau-gps"></div>
 
     <div class="carte-infos">
       <div class="info-boutique">🏪 ${boutiqueNom}</div>
@@ -216,6 +252,8 @@ function afficherDetail(l, clientNom) {
     ${bouton}
     <a class="btn-secondaire" href="../client/messagerie.html?livraison=${l.id}&client=${l.client_id || ''}">Contacter le client</a>
   `;
+
+  rafraichirBandeauGPS(messageGPS.startsWith('Erreur') || messageGPS.includes('Autorisez') || messageGPS.includes('indisponible') ? 'erreur' : 'ok');
 }
 
 function afficherRecap(l) {
@@ -238,7 +276,7 @@ function afficherRecap(l) {
 }
 
 async function demarrerLivraison() {
-  const { error } = await supabase.from('livraisons').update({ statut: 'en_cours' }).eq('id', livraisonId);
+  const { error } = await supabaseClient.from('livraisons').update({ statut: 'en_cours' }).eq('id', livraisonId);
   if (error) {
     alert('Erreur : ' + error.message);
     return;
@@ -259,7 +297,7 @@ async function confirmerAvecPhoto() {
 
   const cheminFichier = `${livraisonId}/livreur_${Date.now()}.jpg`;
 
-  const { error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabaseClient.storage
     .from('livraison-preuves')
     .upload(cheminFichier, fichier);
 
@@ -268,9 +306,9 @@ async function confirmerAvecPhoto() {
     return;
   }
 
-  const { data: urlData } = supabase.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
+  const { data: urlData } = supabaseClient.storage.from('livraison-preuves').getPublicUrl(cheminFichier);
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('livraisons')
     .update({ statut: 'livree', photo_livreur: urlData.publicUrl })
     .eq('id', livraisonId);
@@ -284,6 +322,10 @@ async function confirmerAvecPhoto() {
 
   await charger();
 }
+
+window.addEventListener('beforeunload', () => {
+  LivraisonTracker.arreterPartageGPS();
+});
 
 init();
 </script>

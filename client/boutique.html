@@ -176,6 +176,12 @@
             margin-bottom: 14px;
         }
 
+        .produit-lien {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
         .produit-media {
             width: 100%;
             border-radius: 10px;
@@ -842,6 +848,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const boutiqueId = params.get("id");
+        const ouvrirPanierAuto = params.get("ouvrir") === "panier";
         const cleParnier = "panier_" + boutiqueId;
 
         const boutiqueHeader = document.getElementById("boutiqueHeader");
@@ -1091,6 +1098,10 @@
                 chargerGalerie();
                 chargerProduits(boutique.id);
                 initialiserAvis();
+
+                if (!estProprietaire && ouvrirPanierAuto) {
+                    ouvrirPanier();
+                }
             } catch (e) {
                 boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Exception : ${escapeHtml(e.message)}</p>`;
                 listeProduits.innerHTML = "";
@@ -1137,13 +1148,15 @@
 
                 return `
                     <div class="produit-card">
-                        ${media}
-                        <div class="produit-top">
-                            <div class="produit-nom">${escapeHtml(p.nom)}</div>
-                            <div class="produit-prix">${formatPrix(p.prix)}</div>
-                        </div>
-                        ${p.description ? `<div class="produit-desc">${escapeHtml(p.description)}</div>` : ""}
-                        <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
+                        <a class="produit-lien" href="produit.html?id=${encodeURIComponent(p.id)}&boutique=${encodeURIComponent(boutiqueId)}">
+                            ${media}
+                            <div class="produit-top">
+                                <div class="produit-nom">${escapeHtml(p.nom)}</div>
+                                <div class="produit-prix">${formatPrix(p.prix)}</div>
+                            </div>
+                            ${p.description ? `<div class="produit-desc">${escapeHtml(p.description)}</div>` : ""}
+                            <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
+                        </a>
                         ${controlePanier}
                     </div>
                 `;

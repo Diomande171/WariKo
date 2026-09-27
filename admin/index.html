@@ -204,6 +204,16 @@
         const accesRefuseEl = document.getElementById("acces-refuse-zone");
         const navEl = document.getElementById("nav-admin");
 
+        function escapeHtml(str) {
+            return String(str ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
+        }
+
         (async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -226,7 +236,7 @@
 
             if (error) {
                 document.getElementById("cartes-stats").innerHTML =
-                    `<p class="empty">Erreur : ${error.message}</p>`;
+                    `<p class="empty">Erreur : ${escapeHtml(error.message)}</p>`;
                 return;
             }
 
@@ -270,7 +280,7 @@
             const { data, error } = await supabaseClient.rpc("admin_produits_populaires");
 
             if (error) {
-                zone.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                zone.innerHTML = `<p class="empty">Erreur : ${escapeHtml(error.message)}</p>`;
                 return;
             }
 
@@ -281,8 +291,8 @@
 
             zone.innerHTML = data.map(p => `
                 <div class="produit-ligne">
-                    <span>${p.nom_produit}</span>
-                    <span class="quantite">${p.quantite_totale} vendus</span>
+                    <span>${escapeHtml(p.nom_produit)}</span>
+                    <span class="quantite">${Number(p.quantite_totale) || 0} vendus</span>
                 </div>
             `).join("");
         }

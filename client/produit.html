@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WariKo - Produit</title>
+
+    <link rel="stylesheet" href="../style.css">
+
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3D037A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WariKo">
+    <link rel="apple-touch-icon" href="../assets/IMG_9862.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { background: var(--violet-fonce); }
+
+        .app { background: var(--violet-fonce); min-height: 100vh; padding-bottom: 110px; }
+
+        .header { padding: 18px 20px 0; color: var(--blanc); }
+
+        .back-link { font-size: 13px; color: var(--blanc); opacity: 0.75; text-decoration: none; }
+
+        .media-produit {
+            width: 100%;
+            max-height: 320px;
+            object-fit: cover;
+            display: block;
+            margin-top: 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .contenu-produit { padding: 18px 20px 0; }
+
+        .nom-produit { color: var(--blanc); font-size: 20px; font-weight: 800; }
+
+        .prix-produit { color: var(--jaune); font-size: 18px; font-weight: 800; margin-top: 6px; }
+
+        .statut-produit {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            color: var(--blanc);
+        }
+
+        .statut-produit.epuise, .statut-produit.vendu { opacity: 0.6; }
+
+        .desc-produit { margin-top: 14px; color: var(--blanc); opacity: 0.85; font-size: 14px; line-height: 1.5; }
+
+        .nom-boutique-lien {
+            display: block;
+            margin-top: 16px;
+            color: var(--jaune);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .zone-action {
+            margin-top: 22px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .qte-ligne {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .qte-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .qte-valeur {
+            color: var(--blanc);
+            font-size: 16px;
+            font-weight: 800;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .btn-ajouter {
+            margin-top: 14px;
+            width: 100%;
+            background: var(--jaune);
+            color: var(--violet-fonce);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 800;
+            font-family: inherit;
+        }
+
+        .btn-ajouter:disabled { opacity: 0.5; }
+
+        .btn-contacter {
+            margin-top: 10px;
+            display: block;
+            width: 100%;
+            background: transparent;
+            border: 2px solid var(--jaune);
+            color: var(--jaune);
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        #statutAjout { margin-top: 10px; font-size: 12px; text-align: center; color: var(--blanc); }
+
+        .empty { color: var(--blanc); opacity: 0.6; text-align: center; padding: 40px 20px; font-size: 13px; }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 430px;
+            margin: 0 auto;
+            background: var(--violet-fonce);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 6px;
+            z-index: 25;
+        }
+
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+        }
+
+        .bottom-nav a svg { width: 22px; height: 22px; stroke: rgba(255, 255, 255, 0.6); }
+
+        .bottom-nav a.active { color: var(--jaune); }
+
+        .bottom-nav a.active svg { stroke: var(--jaune); }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <a href="marketplace.html" class="back-link" id="lienRetour">← Retour à la boutique</a>
+        </header>
+
+        <div id="contenuProduit">
+            <p class="empty">Chargement...</p>
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+
+        <a href="accueil.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <path d="M9 22V12h6v10"/>
+            </svg>
+            <span>Accueil</span>
+        </a>
+
+        <a href="recherche.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <span>Recherche</span>
+        </a>
+
+        <a href="messagerie.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>Messages</span>
+        </a>
+
+        <a href="marketplace.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 2l1.5 4h9L18 2"/>
+                <path d="M4 6h16l-1.5 14a2 2 0 0 1-2 1.8H7.5a2 2 0 0 1-2-1.8L4 6z"/>
+                <path d="M9 10a3 3 0 0 0 6 0"/>
+            </svg>
+            <span>Marketplace</span>
+        </a>
+
+        <a href="commandes.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+                <path d="M3 8v8l9 5 9-5V8"/>
+                <path d="M12 13v8"/>
+            </svg>
+            <span>Commandes</span>
+        </a>
+
+        <a href="profil.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
+            </svg>
+            <span>Profil</span>
+        </a>
+
+    </nav>
+
+    <script>
+        const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function escapeHtml(str) {
+            return String(str ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
+        }
+
+        function formatPrix(prix) {
+            return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
+        }
+
+        function estVideo(url) {
+            return /\.(mp4|mov|webm)(\?.*)?$/i.test(url || "");
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const produitId = params.get("id");
+        const boutiqueId = params.get("boutique");
+
+        document.getElementById("lienRetour").href = boutiqueId
+            ? `boutique.html?id=${encodeURIComponent(boutiqueId)}`
+            : "marketplace.html";
+
+        const statutLabels = {
+            disponible: "Disponible",
+            epuise: "Épuisé",
+            vendu: "Vendu"
+        };
+
+        let quantiteChoisie = 1;
+        let produitActuel = null;
+        let utilisateurActuel = null;
+
+        function chargerPanier(cle) {
+            try {
+                return JSON.parse(localStorage.getItem(cle)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function sauvegarderPanier(cle, panier) {
+            localStorage.setItem(cle, JSON.stringify(panier));
+        }
+
+        async function chargerProduit() {
+            const conteneur = document.getElementById("contenuProduit");
+
+            if (!produitId) {
+                conteneur.innerHTML = '<p class="empty">Produit introuvable</p>';
+                return;
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            utilisateurActuel = session ? session.user : null;
+
+            const { data: produit, error } = await supabaseClient
+                .from("produits")
+                .select("*")
+                .eq("id", produitId)
+                .maybeSingle();
+
+            if (error || !produit) {
+                conteneur.innerHTML = '<p class="empty">Produit introuvable</p>';
+                return;
+            }
+
+            produitActuel = produit;
+
+            let nomBoutique = "";
+            let estProprietaire = false;
+
+            if (boutiqueId) {
+                const { data: boutique } = await supabaseClient
+                    .from("boutiques_publiques")
+                    .select("nom_boutique, user_id")
+                    .eq("id", boutiqueId)
+                    .maybeSingle();
+
+                if (boutique) {
+                    nomBoutique = boutique.nom_boutique;
+                    estProprietaire = utilisateurActuel && utilisateurActuel.id === boutique.user_id;
+                }
+            }
+
+            const statut = produit.statut || "disponible";
+            const disponible = statut === "disponible";
+
+            let media = "";
+            if (produit.image_url) {
+                media = estVideo(produit.image_url)
+                    ? `<video class="media-produit" src="${produit.image_url}" controls></video>`
+                    : `<img class="media-produit" src="${produit.image_url}" alt="${escapeHtml(produit.nom)}">`;
+            }
+
+            const zoneAction = estProprietaire
+                ? ""
+                : (disponible ? `
+                    <div class="zone-action">
+                        <div class="qte-ligne">
+                            <button class="qte-btn" id="btnMoins">−</button>
+                            <span class="qte-valeur" id="qteAffichee">1</span>
+                            <button class="qte-btn" id="btnPlus">+</button>
+                        </div>
+                        <button class="btn-ajouter" id="btnAjouter" ${boutiqueId ? "" : "disabled"}>Ajouter au panier et commander</button>
+                        <p id="statutAjout"></p>
+                    </div>
+                    ${boutiqueId ? `<a href="messagerie.html?boutique=${encodeURIComponent(boutiqueId)}" class="btn-contacter">💬 Contacter le vendeur</a>` : ""}
+                ` : `<p class="empty">Ce produit n'est plus disponible à la commande.</p>`);
+
+            conteneur.innerHTML = `
+                ${media}
+                <div class="contenu-produit">
+                    <div class="nom-produit">${escapeHtml(produit.nom)}</div>
+                    <div class="prix-produit">${formatPrix(produit.prix)}</div>
+                    <span class="statut-produit ${statut}">${statutLabels[statut] || statut}</span>
+                    ${produit.description ? `<div class="desc-produit">${escapeHtml(produit.description)}</div>` : ""}
+                    ${nomBoutique && boutiqueId ? `<a href="boutique.html?id=${encodeURIComponent(boutiqueId)}" class="nom-boutique-lien">🏪 ${escapeHtml(nomBoutique)}</a>` : ""}
+                    ${zoneAction}
+                </div>
+            `;
+
+            if (!estProprietaire && disponible && boutiqueId) {
+                document.getElementById("btnMoins").addEventListener("click", () => {
+                    if (quantiteChoisie > 1) quantiteChoisie--;
+                    document.getElementById("qteAffichee").textContent = quantiteChoisie;
+                });
+                document.getElementById("btnPlus").addEventListener("click", () => {
+                    quantiteChoisie++;
+                    document.getElementById("qteAffichee").textContent = quantiteChoisie;
+                });
+                document.getElementById("btnAjouter").addEventListener("click", ajouterEtCommander);
+            }
+        }
+
+        function ajouterEtCommander() {
+            if (!boutiqueId || !produitActuel) return;
+
+            const cle = "panier_" + boutiqueId;
+            let panier = chargerPanier(cle);
+            let ligne = panier.find(l => l.produit_id === produitActuel.id);
+
+            if (ligne) {
+                ligne.quantite += quantiteChoisie;
+            } else {
+                panier.push({
+                    produit_id: produitActuel.id,
+                    nom: produitActuel.nom,
+                    prix: produitActuel.prix,
+                    quantite: quantiteChoisie
+                });
+            }
+
+            sauvegarderPanier(cle, panier);
+
+            const statutAjout = document.getElementById("statutAjout");
+            statutAjout.style.color = "#D6FFD6";
+            statutAjout.textContent = "Ajouté au panier ✓ Redirection...";
+
+            setTimeout(() => {
+                window.location.href = `boutique.html?id=${encodeURIComponent(boutiqueId)}&ouvrir=panier`;
+            }, 700);
+        }
+
+        chargerProduit();
+    </script>
+
+</body>
+
+</html>

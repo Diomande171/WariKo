@@ -384,6 +384,16 @@ const SUPABASE_URL = "https://ezjpgnzaksygcfxxasrz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[c]));
+}
+
 function formatPrix(prix) {
   return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
 }
@@ -486,9 +496,9 @@ function chargerPaniersLocaux() {
   conteneur.innerHTML = paniers.map(p => `
     <div class="carte-panier">
       <h3>Boutique</h3>
-      ${p.lignes.map(l => `<p>${l.nom} × ${l.quantite}</p>`).join("")}
+      ${p.lignes.map(l => `<p>${escapeHtml(l.nom)} × ${l.quantite}</p>`).join("")}
       <div class="total-panier">${formatPrix(p.total)}</div>
-      <a class="lien-boutique" href="boutique.html?id=${p.boutiqueId}">Voir la boutique et valider →</a>
+      <a class="lien-boutique" href="boutique.html?id=${encodeURIComponent(p.boutiqueId)}">Voir la boutique et valider →</a>
     </div>
   `).join("");
 }
@@ -602,11 +612,11 @@ async function chargerToutesLesCommandes() {
 function blocLivraison(livraison) {
   if (!livraison) return "";
   const suivi = (livraison.statut === "acceptee" || livraison.statut === "en_cours")
-    ? `<a class="lien-suivi" href="suivi-livraison.html?livraison=${livraison.id}">📍 Suivre ma livraison</a>`
+    ? `<a class="lien-suivi" href="suivi-livraison.html?livraison=${encodeURIComponent(livraison.id)}">📍 Suivre ma livraison</a>`
     : "";
   return `
     <div class="bloc-livraison">
-      <span class="badge-livraison ${livraison.statut}">${labelsLivraison[livraison.statut] || livraison.statut}</span><br>
+      <span class="badge-livraison ${livraison.statut}">${labelsLivraison[livraison.statut] || escapeHtml(livraison.statut)}</span><br>
       ${suivi}
     </div>
   `;
@@ -630,14 +640,14 @@ function afficherElements() {
   });
 
   conteneur.innerHTML = Object.keys(groupes).map(libelle => `
-    <div class="titre-jour">${libelle}</div>
+    <div class="titre-jour">${escapeHtml(libelle)}</div>
     ${groupes[libelle].map(e => `
       <div class="carte-commande" style="flex-wrap:wrap;">
         <div class="icone-vignette">${e.type === "produit" ? "🛍️" : "🔧"}</div>
         <div class="infos-commande">
           <span class="badge-type">${e.type === "produit" ? "Produit" : "Prestation"}</span>
-          <h3>${e.titre}</h3>
-          <div class="par-ligne">Par ${e.nomVendeur} ${e.verifie ? '<span class="badge-verifie-inline">✔</span>' : ""}</div>
+          <h3>${escapeHtml(e.titre)}</h3>
+          <div class="par-ligne">Par ${escapeHtml(e.nomVendeur)} ${e.verifie ? '<span class="badge-verifie-inline">✔</span>' : ""}</div>
           <div class="date-ligne">📅 ${formatDateLigne(e.date)}</div>
         </div>
         <div class="colonne-droite">

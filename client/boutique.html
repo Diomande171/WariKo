@@ -818,6 +818,16 @@
             vendu: "Vendu"
         };
 
+        function escapeHtml(str) {
+            return String(str ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
+        }
+
         function formatPrix(prix) {
             return Number(prix).toLocaleString("fr-FR") + " FCFA";
         }
@@ -907,7 +917,7 @@
             } else {
                 contenu.innerHTML = panier.map(l => `
                     <div class="ligne-panier">
-                        <span class="nom">${l.nom} × ${l.quantite}</span>
+                        <span class="nom">${escapeHtml(l.nom)} × ${l.quantite}</span>
                         <span class="prix">${formatPrix(l.quantite * l.prix)}</span>
                     </div>
                 `).join("");
@@ -1044,7 +1054,7 @@
                     .maybeSingle();
 
                 if (error) {
-                    boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Erreur : ${error.message}</p>`;
+                    boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Erreur : ${escapeHtml(error.message)}</p>`;
                     listeProduits.innerHTML = "";
                     return;
                 }
@@ -1068,12 +1078,12 @@
                 boutiqueHeader.innerHTML = `
                     <div class="top-row">
                         <div>
-                            <h1>${boutique.nom_boutique}</h1>
-                            <span class="categorie-tag">${categorieLabels[boutique.categorie] || boutique.categorie || ""}</span>
+                            <h1>${escapeHtml(boutique.nom_boutique)}</h1>
+                            <span class="categorie-tag">${escapeHtml(categorieLabels[boutique.categorie] || boutique.categorie || "")}</span>
                         </div>
                         <span class="badge">Ouverte</span>
                     </div>
-                    ${boutique.description ? `<p class="description">${boutique.description}</p>` : ""}
+                    ${boutique.description ? `<p class="description">${escapeHtml(boutique.description)}</p>` : ""}
                     <div class="rating-line" id="ratingLigneHeader"></div>
                     ${boutonsAction}
                 `;
@@ -1082,7 +1092,7 @@
                 chargerProduits(boutique.id);
                 initialiserAvis();
             } catch (e) {
-                boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Exception : ${e.message}</p>`;
+                boutiqueHeader.innerHTML = `<p class="empty" style="padding:0;">Exception : ${escapeHtml(e.message)}</p>`;
                 listeProduits.innerHTML = "";
             }
         }
@@ -1095,7 +1105,7 @@
                 .order("id", { ascending: false });
 
             if (error) {
-                listeProduits.innerHTML = `<p class="empty">Erreur : ${error.message}</p>`;
+                listeProduits.innerHTML = `<p class="empty">Erreur : ${escapeHtml(error.message)}</p>`;
                 return;
             }
 
@@ -1112,14 +1122,16 @@
                 if (p.image_url) {
                     media = estVideo(p.image_url)
                         ? `<video class="produit-media" src="${p.image_url}" controls></video>`
-                        : `<img class="produit-media" src="${p.image_url}" alt="${p.nom}">`;
+                        : `<img class="produit-media" src="${p.image_url}" alt="${escapeHtml(p.nom)}">`;
                 }
+
+                const produitJson = JSON.stringify(p).replace(/'/g, "&#39;");
 
                 const controlePanier = (!estProprietaire && disponible) ? `
                     <div class="panier-controle">
-                        <button class="qte-btn" onclick='changerQuantite(${JSON.stringify(p)}, -1)'>−</button>
+                        <button class="qte-btn" onclick='changerQuantite(${produitJson}, -1)'>−</button>
                         <span class="qte-valeur" data-produit="${p.id}">0</span>
-                        <button class="qte-btn" onclick='changerQuantite(${JSON.stringify(p)}, 1)'>+</button>
+                        <button class="qte-btn" onclick='changerQuantite(${produitJson}, 1)'>+</button>
                     </div>
                 ` : "";
 
@@ -1127,10 +1139,10 @@
                     <div class="produit-card">
                         ${media}
                         <div class="produit-top">
-                            <div class="produit-nom">${p.nom}</div>
+                            <div class="produit-nom">${escapeHtml(p.nom)}</div>
                             <div class="produit-prix">${formatPrix(p.prix)}</div>
                         </div>
-                        ${p.description ? `<div class="produit-desc">${p.description}</div>` : ""}
+                        ${p.description ? `<div class="produit-desc">${escapeHtml(p.description)}</div>` : ""}
                         <div class="produit-statut ${statut}">${statutLabels[statut] || statut}</div>
                         ${controlePanier}
                     </div>
@@ -1175,14 +1187,14 @@
             const blocReponse = reponse ? `
                 <div class="avis-reponse">
                     <div class="avis-reponse-label">Réponse de la boutique</div>
-                    <div class="avis-reponse-texte">${reponse.reponse}</div>
+                    <div class="avis-reponse-texte">${escapeHtml(reponse.reponse)}</div>
                 </div>
             ` : "";
 
             return `
                 <div class="avis-item" data-avis-id="${a.id}">
                     <span class="avis-etoiles">${afficherEtoiles(a.note)}</span>
-                    ${a.commentaire ? `<div class="avis-commentaire">${a.commentaire}</div>` : ""}
+                    ${a.commentaire ? `<div class="avis-commentaire">${escapeHtml(a.commentaire)}</div>` : ""}
                     <div class="avis-date">${new Date(a.created_at).toLocaleDateString("fr-FR")}</div>
                     ${blocReponse}
                     ${boutonRepondre}

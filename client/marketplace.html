@@ -158,6 +158,9 @@
             border-radius: 20px;
             border: none;
             font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
         }
 
         .filter-chip.active {
@@ -541,7 +544,7 @@
                     </svg>
                     <input type="text" id="champRecherche" placeholder="Rechercher un produit, une boutique...">
                 </div>
-                <button class="btn-filtre" onclick="bientotDisponible()">
+                <button class="btn-filtre" onclick="pasEncoreDisponible()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/>
                         <line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/>
@@ -556,7 +559,7 @@
                 <button class="filter-chip" data-cat="mode">Mode</button>
                 <button class="filter-chip" data-cat="electronique">Électronique</button>
                 <button class="filter-chip" data-cat="maison">Maison</button>
-                <button class="filter-chip" data-cat="beaute">Beauté</button>
+                <a href="prestataires.html?recherche=coiffure" class="filter-chip">💇 Coiffure</a>
             </div>
         </header>
 
@@ -564,7 +567,7 @@
         <section class="section">
             <div class="section-head">
                 <h2>Boutiques populaires</h2>
-                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout ›</a>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); pasEncoreDisponible()">Voir tout ›</a>
             </div>
             <div class="boutiques-scroll" id="listeBoutiques">
                 <p class="empty">Chargement...</p>
@@ -575,7 +578,7 @@
         <section class="section">
             <div class="section-head">
                 <h2>Produits en vedette</h2>
-                <a href="#" class="voir-tout" onclick="event.preventDefault(); bientotDisponible()">Voir tout ›</a>
+                <a href="#" class="voir-tout" onclick="event.preventDefault(); pasEncoreDisponible()">Voir tout ›</a>
             </div>
             <div id="listeProduits">
                 <p class="empty">Chargement...</p>
@@ -592,7 +595,7 @@
                     <h4>Achetez en toute confiance</h4>
                     <p>Paiement sécurisé et protection sur toutes vos commandes.</p>
                 </div>
-                <button class="fleche-confiance" onclick="bientotDisponible()">
+                <button class="fleche-confiance" onclick="pasEncoreDisponible()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
                     </svg>
@@ -666,8 +669,18 @@
         const SUPABASE_ANON_KEY = "sb_publishable_hKEuNeb48yjt1sS62MeM0w_RIgTSOxC";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function bientotDisponible() {
-            alert("Bientôt disponible ✨");
+        function pasEncoreDisponible() {
+            alert("PAS ENCORE DISPONIBLE");
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
         }
 
         function formatPrix(prix) {
@@ -684,12 +697,20 @@
             telephones: "Téléphones & Accessoires",
             mode: "Mode & Accessoires",
             electronique: "Électronique",
-            maison: "Maison",
-            beaute: "Beauté"
+            maison: "Maison"
         };
 
         let toutesLesBoutiques = [];
         let notesBoutiques = {};
+        let tousLesProduits = [];
+        let notesProduits = {};
+
+        let filtreCategorieActif = "tout";
+        let termeRecherche = "";
+
+        function texteCorrespond(champ, terme) {
+            return (champ || "").toLowerCase().includes(terme);
+        }
 
         // ---------- Boutiques populaires ----------
         async function chargerBoutiques() {
@@ -726,14 +747,30 @@
                 }
             } catch (e) {}
 
-            afficherBoutiques(toutesLesBoutiques);
+            appliquerFiltreBoutiques();
+        }
+
+        function appliquerFiltreBoutiques() {
+            let liste = toutesLesBoutiques;
+
+            if (filtreCategorieActif !== "tout") {
+                liste = liste.filter(b => b.categorie === filtreCategorieActif);
+            }
+
+            if (termeRecherche) {
+                liste = liste.filter(b => texteCorrespond(b.nom_boutique, termeRecherche));
+            }
+
+            afficherBoutiques(liste);
         }
 
         function afficherBoutiques(liste) {
             const conteneur = document.getElementById("listeBoutiques");
 
             if (!liste || liste.length === 0) {
-                conteneur.innerHTML = '<p class="empty">Aucune boutique pour le moment</p>';
+                conteneur.innerHTML = termeRecherche
+                    ? '<p class="empty">Aucun résultat pour cette recherche</p>'
+                    : '<p class="empty">Aucune boutique pour le moment</p>';
                 return;
             }
 
@@ -750,15 +787,15 @@
                 }
 
                 return `
-                    <a href="boutique.html?id=${b.id}" class="carte-boutique">
+                    <a href="boutique.html?id=${encodeURIComponent(b.id)}" class="carte-boutique">
                         ${badgeHtml}
                         <div class="logo-boutique-wrapper">
                             <div class="logo-boutique">
-                                ${b.logo_url ? `<img src="${b.logo_url}" alt="${b.nom_boutique}">` : initiales(b.nom_boutique)}
+                                ${b.logo_url ? `<img src="${b.logo_url}" alt="${escapeHtml(b.nom_boutique)}">` : escapeHtml(initiales(b.nom_boutique))}
                             </div>
                         </div>
-                        <h3>${b.nom_boutique}</h3>
-                        <span class="categorie-tag">${categorieLabels[b.categorie] || b.categorie || ""}</span>
+                        <h3>${escapeHtml(b.nom_boutique)}</h3>
+                        <span class="categorie-tag">${escapeHtml(categorieLabels[b.categorie] || b.categorie || "")}</span>
                         <div class="rating-loc">
                             ${moyenne ? `<span class="etoile">★</span> ${moyenne} (${notes.length}) •` : ""}
                             📍 Abidjan
@@ -785,16 +822,15 @@
                 return;
             }
 
-            const produits = data || [];
+            tousLesProduits = data || [];
 
-            if (produits.length === 0) {
-                conteneur.innerHTML = '<p class="empty">Aucun produit pour le moment</p>';
+            if (tousLesProduits.length === 0) {
+                appliquerFiltreProduits();
                 return;
             }
 
-            let notesProduits = {};
             try {
-                const ids = produits.map(p => String(p.id));
+                const ids = tousLesProduits.map(p => String(p.id));
                 const { data: avis } = await supabaseClient
                     .from("avis")
                     .select("cible_id, note")
@@ -807,23 +843,49 @@
                 });
             } catch (e) {}
 
+            appliquerFiltreProduits();
+        }
+
+        function appliquerFiltreProduits() {
+            let liste = tousLesProduits;
+
+            if (termeRecherche) {
+                liste = liste.filter(p =>
+                    texteCorrespond(p.nom, termeRecherche) ||
+                    texteCorrespond(p.boutiques ? p.boutiques.nom_boutique : "", termeRecherche)
+                );
+            }
+
+            afficherProduits(liste);
+        }
+
+        function afficherProduits(produits) {
+            const conteneur = document.getElementById("listeProduits");
+
+            if (!produits || produits.length === 0) {
+                conteneur.innerHTML = termeRecherche
+                    ? '<p class="empty">Aucun résultat pour cette recherche</p>'
+                    : '<p class="empty">Aucun produit pour le moment</p>';
+                return;
+            }
+
             conteneur.innerHTML = produits.map(p => {
                 const notes = notesProduits[String(p.id)] || [];
                 const moyenne = notes.length > 0 ? (notes.reduce((s, n) => s + n, 0) / notes.length).toFixed(1) : null;
 
                 return `
-                    <a href="boutique.html?id=${p.boutique_id || ''}" class="carte-produit">
+                    <a href="boutique.html?id=${p.boutique_id ? encodeURIComponent(p.boutique_id) : ''}" class="carte-produit">
                         <div class="image-produit">
-                            ${p.image_url ? `<img src="${p.image_url}" alt="${p.nom}">` : ""}
+                            ${p.image_url ? `<img src="${p.image_url}" alt="${escapeHtml(p.nom)}">` : ""}
                         </div>
                         <div class="infos-produit">
-                            <h3>${p.nom}</h3>
-                            <div class="nom-boutique-produit">${p.boutiques ? p.boutiques.nom_boutique : ""}</div>
+                            <h3>${escapeHtml(p.nom)}</h3>
+                            <div class="nom-boutique-produit">${escapeHtml(p.boutiques ? p.boutiques.nom_boutique : "")}</div>
                             ${moyenne ? `<div class="note-produit"><span class="etoile">★</span> ${moyenne}</div>` : ""}
                         </div>
                         <div class="droite-produit">
                             <span class="prix-produit">${formatPrix(p.prix)}</span>
-                            <button class="btn-favori" onclick="event.preventDefault(); bientotDisponible()">
+                            <button class="btn-favori" onclick="event.preventDefault(); pasEncoreDisponible()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>
                                 </svg>
@@ -836,17 +898,19 @@
 
         document.getElementById("filtres").addEventListener("click", function (e) {
             const btn = e.target.closest(".filter-chip");
-            if (!btn) return;
+            if (!btn || !btn.dataset.cat) return; // laisse le lien "Coiffure" naviguer normalement
 
-            document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+            document.querySelectorAll(".filter-chip[data-cat]").forEach(c => c.classList.remove("active"));
             btn.classList.add("active");
 
-            const cat = btn.dataset.cat;
-            if (cat === "tout") {
-                afficherBoutiques(toutesLesBoutiques);
-            } else {
-                afficherBoutiques(toutesLesBoutiques.filter(b => b.categorie === cat));
-            }
+            filtreCategorieActif = btn.dataset.cat;
+            appliquerFiltreBoutiques();
+        });
+
+        document.getElementById("champRecherche").addEventListener("input", function (e) {
+            termeRecherche = e.target.value.trim().toLowerCase();
+            appliquerFiltreBoutiques();
+            appliquerFiltreProduits();
         });
 
         chargerBoutiques();

@@ -423,6 +423,16 @@
             return Number(prix || 0).toLocaleString("fr-FR") + " FCFA";
         }
 
+        function escapeHtml(str) {
+            return String(str ?? "").replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
+        }
+
         document.getElementById("pro-name").textContent = proNom;
         document.getElementById("pro-category").textContent = proCategorie;
         document.getElementById("pro-avatar").textContent = initials(proNom);
@@ -443,10 +453,10 @@
             }
 
             listeServicesEl.innerHTML = services.map(s => `
-                <div class="carte-service-choix" data-id="${s.id}" data-nom="${s.nom.replace(/"/g, '&quot;')}" onclick="selectionnerService(${s.id})">
-                    ${s.photo_url ? `<img src="${s.photo_url}" alt="${s.nom}">` : `<div class="vignette-vide">🔧</div>`}
+                <div class="carte-service-choix" data-id="${s.id}" data-nom="${escapeHtml(s.nom)}" onclick="selectionnerService(${s.id})">
+                    ${s.photo_url ? `<img src="${s.photo_url}" alt="${escapeHtml(s.nom)}">` : `<div class="vignette-vide">🔧</div>`}
                     <div class="infos-service-choix">
-                        <h4>${s.nom}</h4>
+                        <h4>${escapeHtml(s.nom)}</h4>
                         <div class="prix-service">à partir de ${formatPrix(s.prix)}</div>
                     </div>
                     <div class="radio-service"></div>

@@ -20,7 +20,7 @@
     margin: 0;
     padding: 0;
   }
-  body { max-width: 430px; margin: 0 auto; background: var(--violet-fonce); color: var(--blanc); font-family: 'Poppins', sans-serif; padding-bottom: 110px; }
+  body { max-width: 430px; margin: 0 auto; background: var(--violet-fonce); color: var(--blanc); font-family: 'Poppins', sans-serif; padding-bottom: 170px; }
   .header-chat { display:flex; align-items:center; gap:10px; padding:16px; background: var(--violet-fonce); border-bottom:1px solid rgba(255,255,255,0.1); position:sticky; top:0; z-index:10; }
   .header-chat a { color: var(--jaune); text-decoration:none; font-size:22px; }
   .header-chat h2 { font-family:'Playfair Display', serif; font-size:18px; margin:0; }
@@ -31,7 +31,7 @@
   .bulle.autre { align-self:flex-start; background: rgba(255,255,255,0.08); color: var(--blanc); border-bottom-left-radius:4px; }
   .bulle img, .bulle video { max-width:100%; border-radius:10px; display:block; margin-bottom:4px; }
   .heure { font-size:10px; opacity:0.6; margin-top:4px; display:block; }
-  .zone-saisie { position:fixed; bottom:0; left:0; right:0; max-width:430px; margin:0 auto; background: var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); padding:10px 12px; display:flex; gap:8px; align-items:center; z-index:100; }
+  .zone-saisie { position:fixed; bottom:64px; left:0; right:0; max-width:430px; margin:0 auto; background: var(--violet-fonce); border-top:1px solid rgba(255,255,255,0.1); padding:10px 12px; display:flex; gap:8px; align-items:center; z-index:90; }
   .zone-saisie input[type="text"] { flex:1; border:none; border-radius:20px; padding:12px 16px; background: rgba(255,255,255,0.08); color: var(--blanc); font-size:14px; }
   .zone-saisie input::placeholder { color: rgba(255,255,255,0.5); }
   .zone-saisie button { background: var(--jaune); color: var(--violet-fonce); border:none; border-radius:50%; width:44px; height:44px; font-size:18px; font-weight:bold; flex-shrink:0; }
@@ -191,17 +191,17 @@ async function init() {
   }
 }
 
-/* ================= CONVERSATIONS BOUTIQUE (client <-> vendeur) — inchangé ================= */
+/* ================= CONVERSATIONS BOUTIQUE (client <-> vendeur) ================= */
 
 async function chargerConversation(user, boutiqueId) {
   const { data: boutique, error } = await supabase
-    .from('boutiques')
+    .from('boutiques_publiques')
     .select('id, nom_boutique, user_id')
     .eq('id', boutiqueId)
     .single();
 
   if (error || !boutique) {
-    document.getElementById('contenu').innerHTML = '<p class="vide">Boutique introuvable.</p>';
+    document.getElementById('contenu').innerHTML = '<p class="vide">Boutique introuvable.</p>' + navHTML;
     return;
   }
 
@@ -210,7 +210,7 @@ async function chargerConversation(user, boutiqueId) {
   const clientId = estVendeur ? params.get('client') : user.id;
 
   if (!clientId) {
-    document.getElementById('contenu').innerHTML = '<p class="vide">Conversation introuvable.</p>';
+    document.getElementById('contenu').innerHTML = '<p class="vide">Conversation introuvable.</p>' + navHTML;
     return;
   }
 
@@ -226,6 +226,7 @@ async function chargerConversation(user, boutiqueId) {
       <input type="text" id="champ-message" placeholder="Écrire un message...">
       <button onclick="envoyerMessage('${vendeurId}','${clientId}','${boutiqueId}')">➤</button>
     </div>
+    ${navHTML}
   `;
 
   await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
@@ -366,7 +367,7 @@ async function envoyerMedia(vendeurId, clientId, boutiqueId) {
   await afficherMessages(vendeurId, clientId, boutiqueId, user.id);
 }
 
-/* ================= CONVERSATIONS LIVRAISON (vendeur <-> livreur / client <-> livreur) — nouveau ================= */
+/* ================= CONVERSATIONS LIVRAISON (vendeur <-> livreur / client <-> livreur) ================= */
 
 async function chargerConversationLivraison(user, livraisonId, avec) {
   const { data: livraison, error } = await supabase
@@ -376,13 +377,13 @@ async function chargerConversationLivraison(user, livraisonId, avec) {
     .single();
 
   if (error || !livraison) {
-    document.getElementById('contenu').innerHTML = '<p class="vide">Livraison introuvable.</p>';
+    document.getElementById('contenu').innerHTML = '<p class="vide">Livraison introuvable.</p>' + navHTML;
     return;
   }
 
   const livreurId = livraison.livreur_id;
   if (!livreurId) {
-    document.getElementById('contenu').innerHTML = '<p class="vide">Aucun livreur assigné pour le moment.</p>';
+    document.getElementById('contenu').innerHTML = '<p class="vide">Aucun livreur assigné pour le moment.</p>' + navHTML;
     return;
   }
 
@@ -407,6 +408,7 @@ async function chargerConversationLivraison(user, livraisonId, avec) {
       <input type="text" id="champ-message" placeholder="Écrire un message...">
       <button onclick="envoyerMessageLivraison('${livraisonId}','${avec}','${livreurId}','${vendeurId}','${clientId}')">➤</button>
     </div>
+    ${navHTML}
   `;
 
   await afficherMessagesLivraison(livraisonId, avec, user.id);

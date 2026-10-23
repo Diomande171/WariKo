@@ -208,10 +208,10 @@
         <header class="header">
             <div class="top-bar">
                 <div class="gauche">
-                    <a href="javascript:history.back()" class="retour">←</a>
+                    <a href="#" id="btn-retour" class="retour">←</a>
                     <div class="logo">WariKo Pro</div>
                 </div>
-                <a href="../notifications.html" class="notification">🔔</a>
+                <a href="../client/notifications.html" class="notification">🔔</a>
             </div>
             <h1 id="titre-bienvenue">Mes demandes</h1>
             <p>Toutes tes demandes clients en un coup d'œil</p>
@@ -240,6 +240,26 @@
         const container = document.getElementById("liste-demandes");
 
         let monPrestataireId = null;
+
+        // Protection contre l'injection de code (XSS) sur tout texte venant d'un utilisateur
+        function escapeHtml(valeur) {
+            return String(valeur === null || valeur === undefined ? "" : valeur)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // Bouton retour : revient en arrière, ou va à l'accueil si la page est ouverte directement
+        document.getElementById("btn-retour").addEventListener("click", function (e) {
+            e.preventDefault();
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "../client/accueil.html";
+            }
+        });
 
         function badgeLabel(statut) {
             if (statut === "acceptee") return "Acceptée";
@@ -282,7 +302,7 @@
                 .order("created_at", { ascending: false });
 
             if (error) {
-                container.innerHTML = '<p class="empty">Erreur : ' + error.message + '</p>';
+                container.innerHTML = '<p class="empty">Erreur : ' + escapeHtml(error.message) + '</p>';
                 return;
             }
 
@@ -294,23 +314,24 @@
             container.innerHTML = data.map(function (d) {
                 const enAttente = !d.statut || d.statut === "en_attente";
                 const acceptee = d.statut === "acceptee";
+                const idSur = escapeHtml(d.id);
                 return `
                     <div class="demande-card">
                         <div class="top-row">
-                            <h3>${d.client_nom || "Client"}</h3>
+                            <h3>${escapeHtml(d.client_nom || "Client")}</h3>
                             <span class="badge">${badgeLabel(d.statut)}</span>
                         </div>
-                        <span class="categorie-tag">📂 ${d.categorie || "-"}</span>
-                        <p class="description">${d.description || ""}</p>
-                        <div class="infos">📞 ${d.client_telephone || "-"}</div>
+                        <span class="categorie-tag">📂 ${escapeHtml(d.categorie || "-")}</span>
+                        <p class="description">${escapeHtml(d.description || "")}</p>
+                        <div class="infos">📞 ${escapeHtml(d.client_telephone || "-")}</div>
                         ${enAttente ? `
                         <div class="actions">
-                            <button class="btn-accepter" onclick="mettreAJourStatut('${d.id}', 'acceptee')">Accepter</button>
-                            <button class="btn-refuser" onclick="mettreAJourStatut('${d.id}', 'refusee')">Refuser</button>
+                            <button class="btn-accepter" onclick="mettreAJourStatut('${idSur}', 'acceptee')">Accepter</button>
+                            <button class="btn-refuser" onclick="mettreAJourStatut('${idSur}', 'refusee')">Refuser</button>
                         </div>` : ""}
                         ${acceptee ? `
                         <div class="actions">
-                            <button class="btn-terminer" onclick="mettreAJourStatut('${d.id}', 'terminee')">Marquer terminée</button>
+                            <button class="btn-terminer" onclick="mettreAJourStatut('${idSur}', 'terminee')">Marquer terminée</button>
                         </div>` : ""}
                     </div>
                 `;

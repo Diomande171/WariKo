@@ -197,6 +197,7 @@
 
 
                     <button
+                        id="btn-connexion"
                         type="submit"
                         class="primary-button"
                     >
@@ -262,9 +263,18 @@
 
         const form = document.getElementById("login-form");
         const errorMessage = document.getElementById("error-message");
+        const btnConnexion = document.getElementById("btn-connexion");
+
+        function afficherErreur(texte) {
+            errorMessage.textContent = texte;
+            errorMessage.style.display = "block";
+        }
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            errorMessage.style.display = "none";
+            btnConnexion.disabled = true;
 
             const saisie = document.getElementById("identifier").value.trim();
             const password = document.getElementById("password").value;
@@ -278,18 +288,43 @@
                 password: password
             });
 
-            if (error) {
-                errorMessage.textContent = "Identifiants incorrects. Réessayez.";
-                errorMessage.style.display = "block";
+            if (error || !data || !data.user) {
+                afficherErreur("Identifiants incorrects. Réessayez.");
+                btnConnexion.disabled = false;
                 return;
             }
 
-            // Vérification supplémentaire : seul le compte admin va vers le panneau admin
-            if (data.user && data.user.id === ADMIN_UID) {
+            // Le compte admin ne peut jamais être désactivé : accès direct au panneau admin
+            if (data.user.id === ADMIN_UID) {
                 window.location.href = "../admin/index.html";
-            } else {
-                window.location.href = "accueil.html";
+                return;
             }
+
+            // Vérification du statut du compte (désactivé par l'admin ?)
+            try {
+                const { data: statut, error: errStatut } = await supabaseClient
+                    .from("comptes_status")
+                    .select("desactive, raison")
+                    .eq("user_id", data.user.id)
+                    .maybeSingle();
+
+                if (errStatut) {
+                    console.error("Vérification du statut du compte impossible :", errStatut);
+                } else if (statut && statut.desactive === true) {
+                    await supabaseClient.auth.signOut();
+                    let message = "Ce compte a été désactivé. Contactez le support WariKo.";
+                    if (statut.raison) {
+                        message += " Motif : " + statut.raison;
+                    }
+                    afficherErreur(message);
+                    btnConnexion.disabled = false;
+                    return;
+                }
+            } catch (err) {
+                console.error("Erreur lors de la vérification du compte :", err);
+            }
+
+            window.location.href = "accueil.html";
         });
     </script>
 
